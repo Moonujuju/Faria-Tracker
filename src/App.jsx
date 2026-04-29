@@ -247,7 +247,7 @@ function ProdModal({ init, onSave, onClose, onDelete }) {
 }
 
 /* ── Generic Tracker Page ── */
-function TrackerPage({ title, subtitle, storageKey, defaults, ModalComponent, extraRowInfo, extraDetailFields, onCelebrate }) {
+function TrackerPage({ title, subtitle, storageKey, defaults, ModalComponent, extraRowInfo, extraDetailFields, onCelebrate, sortField }) {
   const [inits, setInits] = useState(defaults);
   const [sel, setSel] = useState(null);
   const [ready, setReady] = useState(false);
@@ -270,7 +270,7 @@ function TrackerPage({ title, subtitle, storageKey, defaults, ModalComponent, ex
   const delInit = () => { upd(inits.filter(i => i.id !== modal)); if (sel === modal) setSel(null); setModal(null); };
   const reorder = (i, dir) => upd(dir === "up" ? moveUp(inits, i) : moveDn(inits, i));
 
-  const sorted = [...inits].sort((a, b) => (a.owner || "zzz").localeCompare(b.owner || "zzz"));
+  const sorted = [...inits].sort((a, b) => (a[sortField || "owner"] || "zzz").localeCompare(b[sortField || "owner"] || "zzz"));
   const allDone = inits.reduce((a, i) => a + (i.milestones || []).filter(m => m.done).length, 0);
   const allTotal = inits.reduce((a, i) => a + (i.milestones || []).length, 0);
   const allPct = allTotal ? Math.round((allDone / allTotal) * 100) : 0;
@@ -315,12 +315,12 @@ function TrackerPage({ title, subtitle, storageKey, defaults, ModalComponent, ex
             const pctDone = ms.length ? Math.round((doneCt / ms.length) * 100) : 0;
             const color = sC(init.status);
             const done = init.status === "complete";
-            const showOwnerHeader = init.owner !== lastOwner;
-            lastOwner = init.owner;
+            const showHeader = (init[sortField || "owner"]) !== lastOwner;
+            lastOwner = init[sortField || "owner"];
 
             return (
               <div key={init.id}>
-                {showOwnerHeader && <div style={{ padding: "12px 0 6px 24px", fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "1px" }}>{init.owner || "Unassigned"}</div>}
+                {showHeader && <div style={{ padding: "12px 0 6px 24px", fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "1px" }}>{init[sortField || "owner"] || "Unassigned"}</div>}
                 <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 5 }}>
                   <div style={{ display: "flex", flexDirection: "column", gap: 0, width: 18, flexShrink: 0 }}>
                     <button onClick={() => reorder(idx, "up")} style={{ background: "none", border: "none", color: idx === 0 ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.3)", cursor: idx === 0 ? "default" : "pointer", fontSize: 10, padding: 0, lineHeight: 1 }}>&#9650;</button>
@@ -427,7 +427,7 @@ export default function App() {
           {navBtn("ai", "AI Initiatives")}
         </div>
         {page === "product" && <TrackerPage title="Product Transformation Tracker" subtitle="Faria Education Group" storageKey="faria-product-v10" defaults={DEFAULT_PRODUCT} ModalComponent={ProdModal} onCelebrate={setCelName} />}
-        {page === "ai" && <TrackerPage title="AI Initiatives" subtitle="Features, projects, and integrations across Faria products" storageKey="faria-ai-v10" defaults={DEFAULT_AI} ModalComponent={AIModal} onCelebrate={setCelName}
+        {page === "ai" && <TrackerPage title="AI Initiatives" subtitle="Features, projects, and integrations across Faria products" storageKey="faria-ai-v10" sortField="product" defaults={DEFAULT_AI} ModalComponent={AIModal} onCelebrate={setCelName}
           extraRowInfo={(init) => (<>{init.product && <span style={{ fontSize: 10, padding: "1px 6px", borderRadius: 3, background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.4)" }}>{init.product}</span>}{init.priority && <span style={{ fontSize: 10, padding: "1px 6px", borderRadius: 3, background: pC(init.priority), color: "#fff", fontWeight: 700 }}>{init.priority.charAt(0).toUpperCase() + init.priority.slice(1)}</span>}</>)}
           extraDetailFields={(init, setField) => (<><div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>{init.product && <span style={{ fontSize: 11, padding: "3px 8px", borderRadius: 4, background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.5)" }}>{init.product}</span>}{init.type && <span style={{ fontSize: 11, padding: "3px 8px", borderRadius: 4, background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.5)" }}>{init.type}</span>}{init.priority && <span style={{ fontSize: 11, padding: "3px 8px", borderRadius: 4, background: pC(init.priority), color: "#fff", fontWeight: 600 }}>{init.priority}</span>}</div><div style={{ display: "flex", gap: 8, marginBottom: 12 }}><div style={{ flex: 1 }}><div style={lb}>Effort</div><div style={{ fontSize: 13, color: "#f5ede8", fontWeight: 600 }}>{(init.effort||"medium").charAt(0).toUpperCase()+(init.effort||"medium").slice(1)}</div></div><div style={{ flex: 1 }}><div style={lb}>Impact</div><div style={{ fontSize: 13, color: "#f5ede8", fontWeight: 600 }}>{(init.impact||"medium").charAt(0).toUpperCase()+(init.impact||"medium").slice(1)}</div></div></div></>)}
         />}

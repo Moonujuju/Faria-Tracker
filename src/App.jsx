@@ -405,13 +405,13 @@ function TrackerPage({ title, subtitle, storageKey, defaults, ModalComponent, ex
 export default function App() {
   const [page, setPage] = useState("product");
   const [celName, setCelName] = useState(null);
-  const navBtn = (id, label, icon) => (
+  const navBtn = (id, label) => (
     <button onClick={() => setPage(id)} style={{
       padding: "8px 18px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer",
       background: page === id ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.05)",
       border: `1px solid ${page === id ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.06)"}`,
       color: page === id ? "#fff" : "rgba(255,255,255,0.5)", transition: "all 0.15s",
-    }}>{icon} {label}</button>
+    }}>{label}</button>
   );
   return (
     <div style={{
@@ -423,8 +423,8 @@ export default function App() {
       {celName && <Celebration name={celName} onDone={() => setCelName(null)} />}
       <div style={{ maxWidth: 1020, margin: "0 auto" }}>
         <div style={{ display: "flex", gap: 8, marginBottom: 28 }}>
-          {navBtn("product", "Product Transformation", "📋")}
-          {navBtn("ai", "AI Initiatives", "🤖")}
+          {navBtn("product", "Product Transformation")}
+          {navBtn("ai", "AI Initiatives")}
         </div>
         {page === "product" && <TrackerPage title="Product Transformation Tracker" subtitle="Faria Education Group" storageKey="faria-product-v10" defaults={DEFAULT_PRODUCT} ModalComponent={ProdModal} onCelebrate={setCelName} />}
         {page === "ai" && <TrackerPage title="AI Initiatives" subtitle="Features, projects, and integrations across Faria products" storageKey="faria-ai-v10" defaults={DEFAULT_AI} ModalComponent={AIModal} onCelebrate={setCelName}

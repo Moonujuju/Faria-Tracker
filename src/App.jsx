@@ -416,7 +416,7 @@ export default function App() {
   return (
     <div style={{
       fontFamily: "'DM Sans','Segoe UI',sans-serif",
-      background: "linear-gradient(135deg, #2d1038 0%, #4a1d50 20%, #7b2d6b 40%, #a13670 55%, #c4619a 70%, #d4a0c0 85%, #b98bb5 100%)",
+      background: "linear-gradient(135deg, #2d1038 0%, #4a1d50 20%, #7b2d6b 40%, #a13670 55%, #c4619a 70%, #c487b0 85%, #a06b95 100%)",
       minHeight: "100vh", color: "#f5ede8", padding: "28px 24px",
     }}>
       <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />

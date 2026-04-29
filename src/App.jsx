@@ -1,58 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 import { loadState, saveState, subscribeToChanges } from "./storage.js";
-
-const DEFAULT_INITIATIVES = [
-  { id: 1, name: "AI Monetization", description: "Plan for AI monetization across Faria products.", deadline: "2026-06-30", owner: "Steven",
-    milestones: [
-      { label: "Competitive pricing analysis", target: "2026-05-09", done: false },
-      { label: "Draft tiering and packaging model", target: "2026-05-23", done: false },
-      { label: "Review with Daniel and stakeholders", target: "2026-06-06", done: false },
-      { label: "Final monetization plan delivered", target: "2026-06-30", done: false },
-    ], status: "in-progress" },
-  { id: 2, name: "Faria Product Vision", description: 'Define what Faria is across our product suite so anyone can answer "What\'s Faria?"', deadline: "2026-06-30", owner: "Steven",
-    milestones: [
-      { label: "Audit current product positioning", target: "2026-05-09", done: false },
-      { label: "Stakeholder interviews (Sales, CE, Marketing)", target: "2026-05-23", done: false },
-      { label: "Draft vision narrative and PPT", target: "2026-06-13", done: false },
-      { label: "Present and align with leadership", target: "2026-06-30", done: false },
-    ], status: "in-progress" },
-  { id: 3, name: "Prioritization Framework", description: "How we go about prioritizing features and initiatives across products.", deadline: "2026-05-31", owner: "Steven",
-    milestones: [
-      { label: "Research frameworks (RICE, WSJF, etc.)", target: "2026-05-05", done: false },
-      { label: "Draft Faria-specific scoring model", target: "2026-05-16", done: false },
-      { label: "Review with PMs", target: "2026-05-23", done: false },
-      { label: "Pilot on one product backlog", target: "2026-05-31", done: false },
-    ], status: "in-progress" },
-  { id: 4, name: "Customer Discovery", description: "Establish a repeatable process for gathering and synthesizing customer insights across products.", deadline: "2026-06-30", owner: "Steven",
-    milestones: [
-      { label: "Audit current discovery practices per product", target: "2026-05-16", done: false },
-      { label: "Define interview guides and templates", target: "2026-06-06", done: false },
-      { label: "Run first cross-product discovery sprint", target: "2026-06-20", done: false },
-      { label: "Document process and share playbook", target: "2026-06-30", done: false },
-    ], status: "not-started" },
-  { id: 5, name: "Feature Requests", description: "Unified intake and triage process for feature requests across the product suite.", deadline: "2026-06-30", owner: "Steven",
-    milestones: [
-      { label: "Map current intake channels per product", target: "2026-05-16", done: false },
-      { label: "Design unified request form and triage flow", target: "2026-05-30", done: false },
-      { label: "Tool setup and pilot rollout", target: "2026-06-13", done: false },
-      { label: "Full rollout and team training", target: "2026-06-30", done: false },
-    ], status: "not-started" },
-  { id: 6, name: "Product Communication", description: "Consistent communication of what we do, why, and when, both internally and externally.", deadline: "2026-06-30", owner: "Steven",
-    milestones: [
-      { label: "Audit current comms channels and gaps", target: "2026-05-09", done: false },
-      { label: "Design internal update cadence and template", target: "2026-05-23", done: false },
-      { label: "Draft external-facing comms strategy", target: "2026-06-13", done: false },
-      { label: "First full-cycle comms delivered", target: "2026-06-30", done: false },
-    ], status: "not-started" },
-  { id: 7, name: "Product Roadmap", description: "A visible roadmap both internally and externally that shows what's planned, in progress, and shipped.", deadline: "2026-06-30", owner: "Steven",
-    milestones: [
-      { label: "Evaluate roadmap tooling options", target: "2026-05-09", done: false },
-      { label: "Define roadmap structure and taxonomy", target: "2026-05-23", done: false },
-      { label: "Build first version with current plans", target: "2026-06-13", done: false },
-      { label: "Publish internally and gather feedback", target: "2026-06-30", done: false },
-    ], status: "not-started" },
-];
-
 const STATUS_OPTIONS = [
   { value: "not-started", label: "Not Started", color: "#a78baf" },
   { value: "in-progress", label: "In Progress", color: "#d94f8a" },
@@ -61,11 +8,26 @@ const STATUS_OPTIONS = [
 ];
 function sC(s) { return STATUS_OPTIONS.find(o => o.value === s)?.color || "#a78baf"; }
 
+const PRIORITY_OPTIONS = [
+  { value: "critical", label: "Critical", color: "#dc2626" },
+  { value: "high", label: "High", color: "#f59e0b" },
+  { value: "medium", label: "Medium", color: "#3b82f6" },
+  { value: "low", label: "Low", color: "#6b7280" },
+];
+function pC(p) { return PRIORITY_OPTIONS.find(o => o.value === p)?.color || "#6b7280"; }
+
+const TYPE_OPTIONS = [
+  { value: "feature", label: "Feature" },
+  { value: "project", label: "Project" },
+  { value: "integration", label: "Integration" },
+  { value: "infrastructure", label: "Infrastructure" },
+  { value: "research", label: "Research" },
+];
+
 const TL_S = new Date("2026-04-27"), TL_E = new Date("2026-12-31");
 const TD = Math.ceil((TL_E - TL_S) / 864e5);
 function dP(ds) { return Math.max(0, Math.min(100, (Math.ceil((new Date(ds) - TL_S) / 864e5) / TD) * 100)); }
 function fmt(d) { return new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric" }); }
-
 function moveUp(a, i) { if (i <= 0) return a; const b = [...a]; [b[i-1], b[i]] = [b[i], b[i-1]]; return b; }
 function moveDn(a, i) { if (i >= a.length-1) return a; const b = [...a]; [b[i], b[i+1]] = [b[i+1], b[i]]; return b; }
 
@@ -86,6 +48,18 @@ function Ring({ pct, size = 44, stroke = 4.5, color }) {
   );
 }
 
+/* Mini progress bar for overview rows */
+function MiniProgress({ pct, color }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 70 }}>
+      <div style={{ flex: 1, height: 4, borderRadius: 2, background: "rgba(255,255,255,0.08)", overflow: "hidden" }}>
+        <div style={{ width: `${pct}%`, height: "100%", borderRadius: 2, background: color, opacity: 0.8, transition: "width 0.3s" }} />
+      </div>
+      <span style={{ fontSize: 11, fontWeight: 700, color: pct === 100 ? "#27ae60" : "rgba(255,255,255,0.4)", minWidth: 28, textAlign: "right" }}>{pct}%</span>
+    </div>
+  );
+}
+
 const inp = { background: "rgba(0,0,0,0.3)", color: "#f5ede8", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 6, padding: "7px 11px", fontSize: 13, outline: "none", fontFamily: "inherit", boxSizing: "border-box" };
 const bt = (bg) => ({ padding: "5px 12px", borderRadius: 6, border: "none", background: bg || "rgba(255,255,255,0.12)", color: "#f5ede8", fontSize: 12, fontWeight: 600, cursor: "pointer" });
 const lb = { fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.35)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: 5 };
@@ -93,7 +67,7 @@ const lb = { fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.35)", tex
 function Modal({ children, onClose }) {
   return (
     <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 100, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: "rgba(40,20,50,0.97)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 12, padding: "28px 32px", maxWidth: 500, width: "100%", maxHeight: "85vh", overflowY: "auto", backdropFilter: "blur(12px)" }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: "rgba(40,20,50,0.97)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 12, padding: "28px 32px", maxWidth: 540, width: "100%", maxHeight: "85vh", overflowY: "auto", backdropFilter: "blur(12px)" }}>
         {children}
       </div>
     </div>
@@ -148,45 +122,7 @@ function MsEd({ milestones, onChange, color }) {
   );
 }
 
-function InitModal({ init, onSave, onClose, onDelete }) {
-  const [name, setName] = useState(init?.name || "");
-  const [desc, setDesc] = useState(init?.description || "");
-  const [dl, setDl] = useState(init?.deadline || "2026-06-30");
-  const [st, setSt] = useState(init?.status || "not-started");
-  const [owner, setOwner] = useState(init?.owner || "");
-  const [cfm, setCfm] = useState(false);
-  const isNew = !init;
-  return (
-    <Modal onClose={onClose}>
-      <h3 style={{ margin: "0 0 18px", fontSize: 18, fontWeight: 700, color: "#fff" }}>{isNew ? "New Initiative" : "Edit Initiative"}</h3>
-      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-        <div><div style={lb}>Name</div><input value={name} onChange={e => setName(e.target.value)} style={{ ...inp, width: "100%" }} /></div>
-        <div><div style={lb}>Description</div><textarea value={desc} onChange={e => setDesc(e.target.value)} rows={2} style={{ ...inp, width: "100%", resize: "vertical" }} /></div>
-        <div><div style={lb}>Owner</div><input value={owner} onChange={e => setOwner(e.target.value)} placeholder="e.g. Steven" style={{ ...inp, width: "100%" }} /></div>
-        <div style={{ display: "flex", gap: 14 }}>
-          <div style={{ flex: 1 }}><div style={lb}>Deadline</div><input type="date" value={dl} onChange={e => setDl(e.target.value)} style={{ ...inp, width: "100%" }} /></div>
-          <div style={{ flex: 1 }}><div style={lb}>Status</div><select value={st} onChange={e => setSt(e.target.value)} style={{ ...inp, width: "100%", cursor: "pointer" }}>{STATUS_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}</select></div>
-        </div>
-        <div style={{ display: "flex", gap: 8, marginTop: 6, justifyContent: "space-between" }}>
-          <div>
-            {!isNew && !cfm && <button onClick={() => setCfm(true)} style={bt("rgba(192,57,43,0.5)")}>Delete</button>}
-            {!isNew && cfm && <div style={{ display: "flex", gap: 6, alignItems: "center" }}><span style={{ fontSize: 12, color: "#e74c3c" }}>Sure?</span><button onClick={() => { onDelete(); onClose(); }} style={bt("#c0392b")}>Yes</button><button onClick={() => setCfm(false)} style={bt()}>No</button></div>}
-          </div>
-          <div style={{ display: "flex", gap: 8 }}><button onClick={onClose} style={bt()}>Cancel</button><button onClick={() => { if (name.trim()) onSave({ name: name.trim(), description: desc.trim(), deadline: dl, status: st, owner: owner.trim() }); }} style={bt("#d94f8a")}>{isNew ? "Create" : "Save"}</button></div>
-        </div>
-      </div>
-    </Modal>
-  );
-}
-
-const PHRASES = [
-  "YOU ABSOLUTE LEGEND","SHIP IT AND FORGET IT","SOMEBODY GIVE THIS PERSON A RAISE",
-  "THAT'S ONE LESS THING IN YOUR STANDUP","JIRA TICKET? CLOSED. HOTEL? TRIVAGO.",
-  "PRODUCTIVITY LEVEL: OVER 9000","YOU JUST PM'D THE HECK OUT OF THAT",
-  "INITIATIVE? MORE LIKE FINISH-IATIVE","TIME TO UPDATE YOUR LINKEDIN",
-  "YOUR CALENDAR JUST SHED A TEAR OF JOY","EVEN YOUR BACKLOG IS IMPRESSED",
-  "STAKEHOLDERS EVERYWHERE JUST FELT A DISTURBANCE",
-];
+const PHRASES = ["YOU ABSOLUTE LEGEND","SHIP IT AND FORGET IT","SOMEBODY GIVE THIS PERSON A RAISE","THAT'S ONE LESS THING IN YOUR STANDUP","JIRA TICKET? CLOSED. HOTEL? TRIVAGO.","PRODUCTIVITY LEVEL: OVER 9000","YOU JUST PM'D THE HECK OUT OF THAT","INITIATIVE? MORE LIKE FINISH-IATIVE","TIME TO UPDATE YOUR LINKEDIN","YOUR CALENDAR JUST SHED A TEAR OF JOY","EVEN YOUR BACKLOG IS IMPRESSED","STAKEHOLDERS EVERYWHERE JUST FELT A DISTURBANCE"];
 
 function Celebration({ name, onDone }) {
   const canvasRef = useRef(null);
@@ -222,205 +158,280 @@ function Celebration({ name, onDone }) {
   return (<div style={{ position:"fixed",inset:0,zIndex:200,cursor:"pointer",background:"rgba(15,5,25,0.85)" }} onClick={onDone}><canvas ref={canvasRef} style={{ width:"100%",height:"100%" }} /></div>);
 }
 
-export default function App() {
-  const [inits, setInits] = useState(DEFAULT_INITIATIVES);
+/* ── Default Data ── */
+const DEFAULT_PRODUCT = [
+  { id: 1, name: "AI Monetization", description: "Plan for AI monetization across Faria products.", deadline: "2026-06-30", owner: "Steven", milestones: [
+    { label: "Competitive pricing analysis", target: "2026-05-09", done: false },{ label: "Draft tiering and packaging model", target: "2026-05-23", done: false },{ label: "Review with Daniel and stakeholders", target: "2026-06-06", done: false },{ label: "Final monetization plan delivered", target: "2026-06-30", done: false },
+  ], status: "in-progress" },
+  { id: 2, name: "Faria Product Vision", description: 'Define what Faria is across our product suite.', deadline: "2026-06-30", owner: "Steven", milestones: [
+    { label: "Audit current product positioning", target: "2026-05-09", done: false },{ label: "Stakeholder interviews (Sales, CE, Marketing)", target: "2026-05-23", done: false },{ label: "Draft vision narrative and PPT", target: "2026-06-13", done: false },{ label: "Present and align with leadership", target: "2026-06-30", done: false },
+  ], status: "in-progress" },
+  { id: 3, name: "Prioritization Framework", description: "How we prioritize features and initiatives across products.", deadline: "2026-05-31", owner: "Steven", milestones: [
+    { label: "Research frameworks (RICE, WSJF, etc.)", target: "2026-05-05", done: false },{ label: "Draft Faria-specific scoring model", target: "2026-05-16", done: false },{ label: "Review with PMs", target: "2026-05-23", done: false },{ label: "Pilot on one product backlog", target: "2026-05-31", done: false },
+  ], status: "in-progress" },
+  { id: 4, name: "Customer Discovery", description: "Repeatable process for gathering customer insights.", deadline: "2026-06-30", owner: "Steven", milestones: [
+    { label: "Audit current discovery practices", target: "2026-05-16", done: false },{ label: "Define interview guides and templates", target: "2026-06-06", done: false },{ label: "Run first cross-product discovery sprint", target: "2026-06-20", done: false },{ label: "Document process and share playbook", target: "2026-06-30", done: false },
+  ], status: "not-started" },
+  { id: 5, name: "Feature Requests", description: "Unified intake and triage process for feature requests.", deadline: "2026-06-30", owner: "Steven", milestones: [
+    { label: "Map current intake channels", target: "2026-05-16", done: false },{ label: "Design unified triage flow", target: "2026-05-30", done: false },{ label: "Tool setup and pilot", target: "2026-06-13", done: false },{ label: "Full rollout and training", target: "2026-06-30", done: false },
+  ], status: "not-started" },
+  { id: 6, name: "Product Communication", description: "Consistent comms on what we do, why, and when.", deadline: "2026-06-30", owner: "Steven", milestones: [
+    { label: "Audit comms channels and gaps", target: "2026-05-09", done: false },{ label: "Design internal update cadence", target: "2026-05-23", done: false },{ label: "Draft external comms strategy", target: "2026-06-13", done: false },{ label: "First full-cycle comms delivered", target: "2026-06-30", done: false },
+  ], status: "not-started" },
+  { id: 7, name: "Product Roadmap", description: "Visible roadmap showing planned, in progress, and shipped.", deadline: "2026-06-30", owner: "Steven", milestones: [
+    { label: "Evaluate roadmap tooling", target: "2026-05-09", done: false },{ label: "Define structure and taxonomy", target: "2026-05-23", done: false },{ label: "Build first version", target: "2026-06-13", done: false },{ label: "Publish and gather feedback", target: "2026-06-30", done: false },
+  ], status: "not-started" },
+];
+
+const DEFAULT_AI = [
+  { id: 101, name: "AI-Powered Report Comments", description: "Auto-generate student report card comments using AI.", deadline: "2026-08-30", owner: "Steven", product: "ManageBac", type: "feature", priority: "high", effort: "medium", impact: "high", milestones: [
+    { label: "Define prompt templates and guardrails", target: "2026-05-15", done: false },{ label: "Build MVP with teacher review flow", target: "2026-06-15", done: false },{ label: "Beta test with 5 schools", target: "2026-07-15", done: false },{ label: "General availability launch", target: "2026-08-30", done: false },
+  ], status: "in-progress" },
+  { id: 102, name: "Smart Admissions Scoring", description: "AI-assisted applicant evaluation and scoring suggestions.", deadline: "2026-09-30", owner: "Steven", product: "OpenApply", type: "feature", priority: "high", effort: "high", impact: "high", milestones: [
+    { label: "Research scoring models and bias mitigation", target: "2026-05-30", done: false },{ label: "Design scoring UX and override workflow", target: "2026-06-30", done: false },{ label: "Train model on anonymized data", target: "2026-08-15", done: false },{ label: "Pilot with 3 schools", target: "2026-09-30", done: false },
+  ], status: "not-started" },
+  { id: 103, name: "AI Chatbot for Parent Inquiries", description: "Conversational AI for common parent questions.", deadline: "2026-10-31", owner: "", product: "OpenApply", type: "feature", priority: "medium", effort: "medium", impact: "medium", milestones: [
+    { label: "Define FAQ knowledge base scope", target: "2026-06-15", done: false },{ label: "Build RAG pipeline with school data", target: "2026-08-01", done: false },{ label: "Widget integration and styling", target: "2026-09-15", done: false },{ label: "Launch to early adopters", target: "2026-10-31", done: false },
+  ], status: "not-started" },
+  { id: 104, name: "Curriculum Alignment Assistant", description: "AI tool to align lesson plans with IB/AP/national standards.", deadline: "2026-11-30", owner: "", product: "ManageBac", type: "feature", priority: "medium", effort: "high", impact: "high", milestones: [
+    { label: "Ingest curriculum frameworks", target: "2026-06-30", done: false },{ label: "Build matching algorithm prototype", target: "2026-08-30", done: false },{ label: "Teacher UX for suggestions", target: "2026-10-15", done: false },{ label: "Beta launch", target: "2026-11-30", done: false },
+  ], status: "not-started" },
+];
+
+/* ── Modals ── */
+function AIModal({ init, onSave, onClose, onDelete }) {
+  const [name, setName] = useState(init?.name || ""); const [desc, setDesc] = useState(init?.description || "");
+  const [dl, setDl] = useState(init?.deadline || "2026-09-30"); const [st, setSt] = useState(init?.status || "not-started");
+  const [owner, setOwner] = useState(init?.owner || ""); const [product, setProduct] = useState(init?.product || "");
+  const [type, setType] = useState(init?.type || "feature"); const [priority, setPriority] = useState(init?.priority || "medium");
+  const [effort, setEffort] = useState(init?.effort || "medium"); const [impact, setImpact] = useState(init?.impact || "medium");
+  const [cfm, setCfm] = useState(false); const isNew = !init;
+  return (
+    <Modal onClose={onClose}>
+      <h3 style={{ margin: "0 0 18px", fontSize: 18, fontWeight: 700, color: "#fff" }}>{isNew ? "New AI Initiative" : "Edit AI Initiative"}</h3>
+      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <div><div style={lb}>Name</div><input value={name} onChange={e => setName(e.target.value)} style={{ ...inp, width: "100%" }} /></div>
+        <div><div style={lb}>Description</div><textarea value={desc} onChange={e => setDesc(e.target.value)} rows={2} style={{ ...inp, width: "100%", resize: "vertical" }} /></div>
+        <div style={{ display: "flex", gap: 12 }}><div style={{ flex: 1 }}><div style={lb}>Owner</div><input value={owner} onChange={e => setOwner(e.target.value)} style={{ ...inp, width: "100%" }} /></div><div style={{ flex: 1 }}><div style={lb}>Product</div><input value={product} onChange={e => setProduct(e.target.value)} style={{ ...inp, width: "100%" }} /></div></div>
+        <div style={{ display: "flex", gap: 12 }}><div style={{ flex: 1 }}><div style={lb}>Type</div><select value={type} onChange={e => setType(e.target.value)} style={{ ...inp, width: "100%", cursor: "pointer" }}>{TYPE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}</select></div><div style={{ flex: 1 }}><div style={lb}>Priority</div><select value={priority} onChange={e => setPriority(e.target.value)} style={{ ...inp, width: "100%", cursor: "pointer" }}>{PRIORITY_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}</select></div></div>
+        <div style={{ display: "flex", gap: 12 }}><div style={{ flex: 1 }}><div style={lb}>Effort</div><select value={effort} onChange={e => setEffort(e.target.value)} style={{ ...inp, width: "100%", cursor: "pointer" }}>{["low","medium","high"].map(o => <option key={o} value={o}>{o.charAt(0).toUpperCase()+o.slice(1)}</option>)}</select></div><div style={{ flex: 1 }}><div style={lb}>Impact</div><select value={impact} onChange={e => setImpact(e.target.value)} style={{ ...inp, width: "100%", cursor: "pointer" }}>{["low","medium","high"].map(o => <option key={o} value={o}>{o.charAt(0).toUpperCase()+o.slice(1)}</option>)}</select></div></div>
+        <div style={{ display: "flex", gap: 12 }}><div style={{ flex: 1 }}><div style={lb}>Deadline</div><input type="date" value={dl} onChange={e => setDl(e.target.value)} style={{ ...inp, width: "100%" }} /></div><div style={{ flex: 1 }}><div style={lb}>Status</div><select value={st} onChange={e => setSt(e.target.value)} style={{ ...inp, width: "100%", cursor: "pointer" }}>{STATUS_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}</select></div></div>
+        <div style={{ display: "flex", gap: 8, marginTop: 6, justifyContent: "space-between" }}>
+          <div>{!isNew && !cfm && <button onClick={() => setCfm(true)} style={bt("rgba(192,57,43,0.5)")}>Delete</button>}{!isNew && cfm && <div style={{ display: "flex", gap: 6, alignItems: "center" }}><span style={{ fontSize: 12, color: "#e74c3c" }}>Sure?</span><button onClick={() => { onDelete(); onClose(); }} style={bt("#c0392b")}>Yes</button><button onClick={() => setCfm(false)} style={bt()}>No</button></div>}</div>
+          <div style={{ display: "flex", gap: 8 }}><button onClick={onClose} style={bt()}>Cancel</button><button onClick={() => { if (name.trim()) onSave({ name: name.trim(), description: desc.trim(), deadline: dl, status: st, owner: owner.trim(), product: product.trim(), type, priority, effort, impact }); }} style={bt("#d94f8a")}>{isNew ? "Create" : "Save"}</button></div>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+function ProdModal({ init, onSave, onClose, onDelete }) {
+  const [name, setName] = useState(init?.name || ""); const [desc, setDesc] = useState(init?.description || "");
+  const [dl, setDl] = useState(init?.deadline || "2026-06-30"); const [st, setSt] = useState(init?.status || "not-started");
+  const [owner, setOwner] = useState(init?.owner || ""); const [cfm, setCfm] = useState(false); const isNew = !init;
+  return (
+    <Modal onClose={onClose}>
+      <h3 style={{ margin: "0 0 18px", fontSize: 18, fontWeight: 700, color: "#fff" }}>{isNew ? "New Initiative" : "Edit Initiative"}</h3>
+      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        <div><div style={lb}>Name</div><input value={name} onChange={e => setName(e.target.value)} style={{ ...inp, width: "100%" }} /></div>
+        <div><div style={lb}>Description</div><textarea value={desc} onChange={e => setDesc(e.target.value)} rows={2} style={{ ...inp, width: "100%", resize: "vertical" }} /></div>
+        <div><div style={lb}>Owner</div><input value={owner} onChange={e => setOwner(e.target.value)} style={{ ...inp, width: "100%" }} /></div>
+        <div style={{ display: "flex", gap: 14 }}><div style={{ flex: 1 }}><div style={lb}>Deadline</div><input type="date" value={dl} onChange={e => setDl(e.target.value)} style={{ ...inp, width: "100%" }} /></div><div style={{ flex: 1 }}><div style={lb}>Status</div><select value={st} onChange={e => setSt(e.target.value)} style={{ ...inp, width: "100%", cursor: "pointer" }}>{STATUS_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}</select></div></div>
+        <div style={{ display: "flex", gap: 8, marginTop: 6, justifyContent: "space-between" }}>
+          <div>{!isNew && !cfm && <button onClick={() => setCfm(true)} style={bt("rgba(192,57,43,0.5)")}>Delete</button>}{!isNew && cfm && <div style={{ display: "flex", gap: 6, alignItems: "center" }}><span style={{ fontSize: 12, color: "#e74c3c" }}>Sure?</span><button onClick={() => { onDelete(); onClose(); }} style={bt("#c0392b")}>Yes</button><button onClick={() => setCfm(false)} style={bt()}>No</button></div>}</div>
+          <div style={{ display: "flex", gap: 8 }}><button onClick={onClose} style={bt()}>Cancel</button><button onClick={() => { if (name.trim()) onSave({ name: name.trim(), description: desc.trim(), deadline: dl, status: st, owner: owner.trim() }); }} style={bt("#d94f8a")}>{isNew ? "Create" : "Save"}</button></div>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+/* ── Generic Tracker Page ── */
+function TrackerPage({ title, subtitle, storageKey, defaults, ModalComponent, extraRowInfo, extraDetailFields, onCelebrate }) {
+  const [inits, setInits] = useState(defaults);
   const [sel, setSel] = useState(null);
   const [ready, setReady] = useState(false);
   const [modal, setModal] = useState(null);
-  const [celName, setCelName] = useState(null);
   const saveTimeout = useRef(null);
 
-  useEffect(() => {
-    (async () => {
-      const stored = await loadState();
-      if (stored?.inits) setInits(stored.inits);
-      setReady(true);
-    })();
-    const unsub = subscribeToChanges();
-    return unsub;
-  }, []);
-
-  useEffect(() => {
-    if (!ready) return;
-    clearTimeout(saveTimeout.current);
-    saveTimeout.current = setTimeout(() => saveState({ inits }), 1000);
-    return () => clearTimeout(saveTimeout.current);
-  }, [inits, ready]);
+  useEffect(() => { (async () => { const s = await loadState(storageKey); if (s?.inits) setInits(s.inits); setReady(true); })(); }, []);
+  useEffect(() => { if (!ready) return; clearTimeout(saveTimeout.current); saveTimeout.current = setTimeout(() => saveState(storageKey, { inits }), 1000); return () => clearTimeout(saveTimeout.current); }, [inits, ready]);
 
   const prev = useRef({});
-  const upd = (ni) => {
-    for (const n of ni) { if (n.status === "complete" && prev.current[n.id] !== "complete") setCelName(n.name); }
-    const m = {}; ni.forEach(i => m[i.id] = i.status); prev.current = m; setInits(ni);
-  };
+  const upd = (ni) => { for (const n of ni) { if (n.status === "complete" && prev.current[n.id] !== "complete") onCelebrate?.(n.name); } const m = {}; ni.forEach(i => m[i.id] = i.status); prev.current = m; setInits(ni); };
   useEffect(() => { const m = {}; inits.forEach(i => m[i.id] = i.status); prev.current = m; }, [ready]);
 
   const updateMs = (id, ms) => upd(inits.map(i => i.id === id ? { ...i, milestones: ms } : i));
   const setSt = (id, s) => upd(inits.map(i => i.id === id ? { ...i, status: s } : i));
   const setDl = (id, d) => upd(inits.map(i => i.id === id ? { ...i, deadline: d } : i));
   const setOwner = (id, o) => upd(inits.map(i => i.id === id ? { ...i, owner: o } : i));
-  const saveInit = (data) => {
-    if (modal === "new") { const nid = Math.max(0, ...inits.map(i => i.id)) + 1; upd([...inits, { id: nid, ...data, milestones: [] }]); }
-    else { upd(inits.map(i => i.id === modal ? { ...i, ...data } : i)); }
-    setModal(null);
-  };
+  const setField = (id, field, val) => upd(inits.map(i => i.id === id ? { ...i, [field]: val } : i));
+  const saveInit = (data) => { if (modal === "new") { const nid = Math.max(0, ...inits.map(i => i.id)) + 1; upd([...inits, { id: nid, ...data, milestones: [] }]); } else { upd(inits.map(i => i.id === modal ? { ...i, ...data } : i)); } setModal(null); };
   const delInit = () => { upd(inits.filter(i => i.id !== modal)); if (sel === modal) setSel(null); setModal(null); };
   const reorder = (i, dir) => upd(dir === "up" ? moveUp(inits, i) : moveDn(inits, i));
 
-  // Sort by owner
-  const sorted = [...inits].sort((a, b) => (a.owner || "").localeCompare(b.owner || ""));
-
+  const sorted = [...inits].sort((a, b) => (a.owner || "zzz").localeCompare(b.owner || "zzz"));
   const allDone = inits.reduce((a, i) => a + (i.milestones || []).filter(m => m.done).length, 0);
   const allTotal = inits.reduce((a, i) => a + (i.milestones || []).length, 0);
   const allPct = allTotal ? Math.round((allDone / allTotal) * 100) : 0;
   const months = monthMarkers();
   const now = new Date();
   const editInit = modal && modal !== "new" ? inits.find(i => i.id === modal) : null;
+  const LABEL_W = 310;
 
-  const LABEL_W = 280;
+  return (
+    <>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 18, marginBottom: 32 }}>
+        <div>
+          <h1 style={{ fontSize: 24, fontWeight: 700, margin: 0, color: "#fff" }}>{title}</h1>
+          <p style={{ margin: "4px 0 0", fontSize: 13, color: "rgba(255,255,255,0.5)" }}>{subtitle}</p>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <Ring pct={allPct} size={54} stroke={5} color="#d94f8a" />
+            <span style={{ position: "absolute", fontSize: 13, fontWeight: 700, color: "#d94f8a" }}>{allPct}%</span>
+          </div>
+          <div style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", lineHeight: 1.4 }}><div>{allDone} of {allTotal}</div><div>milestones done</div></div>
+          <button onClick={() => setModal("new")} style={{ ...bt("#d94f8a"), padding: "8px 16px", fontSize: 13 }}>+ Initiative</button>
+        </div>
+      </div>
 
+      <div style={{ position: "relative" }}>
+        <div style={{ position: "relative", height: 28, marginBottom: 8, marginLeft: LABEL_W + 24 }}>
+          {months.map(m => <div key={m.label + m.pct} style={{ position: "absolute", left: `${m.pct}%`, fontSize: 11, color: "rgba(255,255,255,0.3)", fontWeight: 600, transform: "translateX(-50%)" }}>{m.label}</div>)}
+        </div>
+
+        {(() => {
+          let lastOwner = null;
+          return sorted.map((init) => {
+            const idx = inits.findIndex(i => i.id === init.id);
+            const active = sel === init.id;
+            const ms = init.milestones || [];
+            const dlPct = dP(init.deadline);
+            const isPast = new Date(init.deadline + "T23:59:59") < now && init.status !== "complete";
+            const firstMs = ms[0]; const startPct = firstMs ? dP(firstMs.target) : dlPct;
+            const barW = Math.max(0, dlPct - startPct);
+            const doneCt = ms.filter(m => m.done).length;
+            const pctDone = ms.length ? Math.round((doneCt / ms.length) * 100) : 0;
+            const color = sC(init.status);
+            const done = init.status === "complete";
+            const showOwnerHeader = init.owner !== lastOwner;
+            lastOwner = init.owner;
+
+            return (
+              <div key={init.id}>
+                {showOwnerHeader && <div style={{ padding: "12px 0 6px 24px", fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "1px" }}>{init.owner || "Unassigned"}</div>}
+                <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 5 }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 0, width: 18, flexShrink: 0 }}>
+                    <button onClick={() => reorder(idx, "up")} style={{ background: "none", border: "none", color: idx === 0 ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.3)", cursor: idx === 0 ? "default" : "pointer", fontSize: 10, padding: 0, lineHeight: 1 }}>&#9650;</button>
+                    <button onClick={() => reorder(idx, "down")} style={{ background: "none", border: "none", color: idx === inits.length-1 ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.3)", cursor: idx === inits.length-1 ? "default" : "pointer", fontSize: 10, padding: 0, lineHeight: 1 }}>&#9660;</button>
+                  </div>
+                  <div onClick={() => setSel(active ? null : init.id)} style={{
+                    display: "flex", alignItems: "stretch", cursor: "pointer", flex: 1, borderRadius: 12, overflow: "hidden",
+                    background: active ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.06)",
+                    border: `1px solid ${active ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.06)"}`,
+                    backdropFilter: "blur(8px)", transition: "all 0.15s", opacity: done ? 0.55 : 1, minHeight: 54,
+                  }}>
+                    <div style={{ width: LABEL_W, minWidth: LABEL_W, padding: "10px 16px", display: "flex", alignItems: "center", gap: 10, borderRight: "1px solid rgba(255,255,255,0.06)" }}>
+                      <div style={{ width: 8, height: 8, borderRadius: "50%", background: color, flexShrink: 0 }} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <span style={{ fontSize: 14, fontWeight: 600, color: "#f5ede8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block", textDecoration: done ? "line-through" : "none" }} title={init.name}>{init.name}</span>
+                        <div style={{ display: "flex", gap: 6, alignItems: "center", marginTop: 2 }}>
+                          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>{init.owner || "No owner"}</span>
+                          {extraRowInfo?.(init)}
+                        </div>
+                        {/* Per-initiative progress bar */}
+                        <MiniProgress pct={pctDone} color={color} />
+                      </div>
+                      {done && <span style={{ fontSize: 16, flexShrink: 0 }}>🏆</span>}
+                    </div>
+                    <div style={{ flex: 1, position: "relative", padding: "14px 16px 14px 0" }}>
+                      {barW > 0 && <div style={{ position: "absolute", left: `${startPct}%`, width: `${barW}%`, top: "50%", transform: "translateY(-50%)", height: 5, borderRadius: 3, background: color, opacity: 0.2 }} />}
+                      {barW > 0 && <div style={{ position: "absolute", left: `${startPct}%`, width: `${barW * (pctDone / 100)}%`, top: "50%", transform: "translateY(-50%)", height: 5, borderRadius: 3, background: color, opacity: 0.7, transition: "width 0.3s" }} />}
+                      {ms.map((m, mi) => (
+                        <div key={mi} style={{ position: "absolute", left: `${dP(m.target)}%`, top: "50%", transform: "translate(-50%,-50%)", zIndex: 2, width: m.done ? 14 : 10, height: m.done ? 14 : 10, borderRadius: "50%", background: m.done ? color : "rgba(0,0,0,0.3)", border: `2.5px solid ${color}`, transition: "all 0.2s" }} title={`${m.label} - ${fmt(m.target)}`} />
+                      ))}
+                      <div style={{ position: "absolute", left: `${dlPct}%`, top: "50%", transform: "translate(-50%,-50%)", zIndex: 2, width: 0, height: 0, borderLeft: "6px solid transparent", borderRight: "6px solid transparent", borderTop: `9px solid ${isPast ? "#c0392b" : "rgba(255,255,255,0.5)"}` }} title={`Deadline: ${fmt(init.deadline)}`} />
+                    </div>
+                  </div>
+                </div>
+
+                {active && (
+                  <div style={{ background: "rgba(255,255,255,0.08)", borderRadius: "0 0 12px 12px", border: "1px solid rgba(255,255,255,0.12)", borderTop: "none", padding: "20px 22px", marginTop: -5, marginBottom: 5, marginLeft: 23, backdropFilter: "blur(8px)" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 }}>
+                      <p style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", margin: 0, lineHeight: 1.5, flex: 1 }}>{init.description}</p>
+                      <button onClick={e => { e.stopPropagation(); setModal(init.id); }} style={{ ...bt("rgba(255,255,255,0.1)"), marginLeft: 14, flexShrink: 0 }}>Edit</button>
+                    </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "1.3fr 0.7fr", gap: 22 }}>
+                      <div>
+                        <div style={lb}>Milestones</div>
+                        <MsEd milestones={ms} onChange={newMs => updateMs(init.id, newMs)} color={color} />
+                      </div>
+                      <div>
+                        {extraDetailFields?.(init, setField)}
+                        <div style={lb}>Owner</div>
+                        <input value={init.owner || ""} onChange={e => { e.stopPropagation(); setOwner(init.id, e.target.value); }} onClick={e => e.stopPropagation()} style={{ ...inp, width: "100%", marginBottom: 12 }} />
+                        <div style={lb}>Status</div>
+                        <select value={init.status} onChange={e => { e.stopPropagation(); setSt(init.id, e.target.value); }} onClick={e => e.stopPropagation()} style={{ ...inp, width: "100%", cursor: "pointer" }}>
+                          {STATUS_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                        </select>
+                        <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 14 }}>
+                          <Ring pct={pctDone} size={42} stroke={4.5} color={color} />
+                          <div><div style={{ fontSize: 20, fontWeight: 700, color: "#fff" }}>{pctDone}%</div><div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)" }}>{doneCt}/{ms.length} milestones</div></div>
+                        </div>
+                        <div style={{ ...lb, marginTop: 16 }}>Deadline</div>
+                        <input type="date" value={init.deadline} onChange={e => { e.stopPropagation(); setDl(init.id, e.target.value); }} onClick={e => e.stopPropagation()} style={{ ...inp, width: "100%" }} />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          });
+        })()}
+      </div>
+
+      <div style={{ display: "flex", gap: 20, marginTop: 26, flexWrap: "wrap", alignItems: "center" }}>
+        {[{ el: <div style={{ width: 8, height: 8, borderRadius: "50%", border: "2px solid #d94f8a" }} />, t: "Open" },{ el: <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#d94f8a" }} />, t: "Done" },{ el: <div style={{ width: 0, height: 0, borderLeft: "5px solid transparent", borderRight: "5px solid transparent", borderTop: "7px solid rgba(255,255,255,0.5)" }} />, t: "Deadline" }].map((item, i) => (
+          <div key={i} style={{ display: "flex", alignItems: "center", gap: 6 }}>{item.el}<span style={{ fontSize: 11, color: "rgba(255,255,255,0.35)" }}>{item.t}</span></div>
+        ))}
+      </div>
+      {modal && <ModalComponent init={modal === "new" ? null : editInit} onSave={saveInit} onClose={() => setModal(null)} onDelete={delInit} />}
+    </>
+  );
+}
+
+/* ── Main App ── */
+export default function App() {
+  const [page, setPage] = useState("product");
+  const [celName, setCelName] = useState(null);
+  const navBtn = (id, label, icon) => (
+    <button onClick={() => setPage(id)} style={{
+      padding: "8px 18px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer",
+      background: page === id ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.05)",
+      border: `1px solid ${page === id ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.06)"}`,
+      color: page === id ? "#fff" : "rgba(255,255,255,0.5)", transition: "all 0.15s",
+    }}>{icon} {label}</button>
+  );
   return (
     <div style={{
       fontFamily: "'DM Sans','Segoe UI',sans-serif",
       background: "linear-gradient(135deg, #2d1038 0%, #4a1d50 20%, #7b2d6b 40%, #a13670 55%, #c4619a 70%, #d4a0c0 85%, #c9a3cb 100%)",
-      minHeight: "100vh", color: "#f5ede8", padding: "36px 24px",
+      minHeight: "100vh", color: "#f5ede8", padding: "28px 24px",
     }}>
       <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
       {celName && <Celebration name={celName} onDone={() => setCelName(null)} />}
       <div style={{ maxWidth: 1020, margin: "0 auto" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 18, marginBottom: 36 }}>
-          <div>
-            <h1 style={{ fontSize: 26, fontWeight: 700, margin: 0, letterSpacing: "-0.3px", color: "#fff" }}>Product Transformation Tracker</h1>
-            <p style={{ margin: "5px 0 0", fontSize: 14, color: "rgba(255,255,255,0.5)" }}>Faria Education Group</p>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <Ring pct={allPct} size={58} stroke={5.5} color="#d94f8a" />
-              <span style={{ position: "absolute", fontSize: 14, fontWeight: 700, color: "#d94f8a" }}>{allPct}%</span>
-            </div>
-            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", lineHeight: 1.4 }}><div>{allDone} of {allTotal}</div><div>milestones done</div></div>
-            <button onClick={() => setModal("new")} style={{ ...bt("#d94f8a"), padding: "8px 18px", fontSize: 13 }}>+ Initiative</button>
-          </div>
+        <div style={{ display: "flex", gap: 8, marginBottom: 28 }}>
+          {navBtn("product", "Product Transformation", "📋")}
+          {navBtn("ai", "AI Initiatives", "🤖")}
         </div>
-
-        <div style={{ position: "relative" }}>
-          {/* Month labels */}
-          <div style={{ position: "relative", height: 28, marginBottom: 8, marginLeft: LABEL_W + 24 }}>
-            {months.map(m => <div key={m.label + m.pct} style={{ position: "absolute", left: `${m.pct}%`, top: 0, fontSize: 11, color: "rgba(255,255,255,0.3)", fontWeight: 600, transform: "translateX(-50%)" }}>{m.label}</div>)}
-          </div>
-
-          {/* Rows grouped by owner */}
-          {(() => {
-            let lastOwner = null;
-            return sorted.map((init) => {
-              const idx = inits.findIndex(i => i.id === init.id);
-              const active = sel === init.id;
-              const ms = init.milestones || [];
-              const dlPct = dP(init.deadline);
-              const isPast = new Date(init.deadline + "T23:59:59") < now && init.status !== "complete";
-              const firstMs = ms[0]; const startPct = firstMs ? dP(firstMs.target) : dlPct;
-              const barW = Math.max(0, dlPct - startPct);
-              const doneCt = ms.filter(m => m.done).length;
-              const pctDone = ms.length ? Math.round((doneCt / ms.length) * 100) : 0;
-              const color = sC(init.status);
-              const done = init.status === "complete";
-
-              const showOwnerHeader = init.owner !== lastOwner;
-              lastOwner = init.owner;
-
-              return (
-                <div key={init.id}>
-                  {showOwnerHeader && (
-                    <div style={{ padding: "12px 0 6px 24px", fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "1px", borderTop: lastOwner !== null ? "1px solid rgba(255,255,255,0.06)" : "none" }}>
-                      {init.owner || "Unassigned"}
-                    </div>
-                  )}
-                  <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 5 }}>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 0, width: 18, flexShrink: 0 }}>
-                      <button onClick={() => reorder(idx, "up")} style={{ background: "none", border: "none", color: idx === 0 ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.3)", cursor: idx === 0 ? "default" : "pointer", fontSize: 10, padding: 0, lineHeight: 1 }}>&#9650;</button>
-                      <button onClick={() => reorder(idx, "down")} style={{ background: "none", border: "none", color: idx === inits.length-1 ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.3)", cursor: idx === inits.length-1 ? "default" : "pointer", fontSize: 10, padding: 0, lineHeight: 1 }}>&#9660;</button>
-                    </div>
-                    <div onClick={() => setSel(active ? null : init.id)} style={{
-                      display: "flex", alignItems: "stretch", cursor: "pointer", flex: 1, borderRadius: 12, overflow: "hidden",
-                      background: active ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.06)",
-                      border: `1px solid ${active ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.06)"}`,
-                      backdropFilter: "blur(8px)", transition: "all 0.15s", opacity: done ? 0.55 : 1, minHeight: 54,
-                    }}>
-                      <div style={{ width: LABEL_W, minWidth: LABEL_W, padding: "14px 16px", display: "flex", alignItems: "center", gap: 10, borderRight: "1px solid rgba(255,255,255,0.06)" }}>
-                        <div style={{ width: 8, height: 8, borderRadius: "50%", background: color, flexShrink: 0 }} />
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <span style={{ fontSize: 14, fontWeight: 600, color: "#f5ede8", lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block", textDecoration: done ? "line-through" : "none" }} title={init.name}>{init.name}</span>
-                          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>{init.owner || "No owner"}</span>
-                        </div>
-                        {done && <span style={{ fontSize: 16, flexShrink: 0 }}>🏆</span>}
-                      </div>
-                      <div style={{ flex: 1, position: "relative", padding: "14px 16px 14px 0" }}>
-                        {barW > 0 && <div style={{ position: "absolute", left: `${startPct}%`, width: `${barW}%`, top: "50%", transform: "translateY(-50%)", height: 5, borderRadius: 3, background: color, opacity: 0.2 }} />}
-                        {barW > 0 && <div style={{ position: "absolute", left: `${startPct}%`, width: `${barW * (pctDone / 100)}%`, top: "50%", transform: "translateY(-50%)", height: 5, borderRadius: 3, background: color, opacity: 0.7, transition: "width 0.3s" }} />}
-                        {ms.map((m, mi) => (
-                          <div key={mi} style={{
-                            position: "absolute", left: `${dP(m.target)}%`, top: "50%", transform: "translate(-50%,-50%)", zIndex: 2,
-                            width: m.done ? 14 : 10, height: m.done ? 14 : 10, borderRadius: "50%",
-                            background: m.done ? color : "rgba(0,0,0,0.3)", border: `2.5px solid ${color}`, transition: "all 0.2s",
-                          }} title={`${m.label} - ${fmt(m.target)}`} />
-                        ))}
-                        <div style={{
-                          position: "absolute", left: `${dlPct}%`, top: "50%", transform: "translate(-50%,-50%)", zIndex: 2,
-                          width: 0, height: 0, borderLeft: "6px solid transparent", borderRight: "6px solid transparent",
-                          borderTop: `9px solid ${isPast ? "#c0392b" : "rgba(255,255,255,0.5)"}`,
-                        }} title={`Deadline: ${fmt(init.deadline)}`} />
-                      </div>
-                    </div>
-                  </div>
-
-                  {active && (
-                    <div style={{ background: "rgba(255,255,255,0.08)", borderRadius: "0 0 12px 12px", border: "1px solid rgba(255,255,255,0.12)", borderTop: "none", padding: "20px 22px", marginTop: -5, marginBottom: 5, marginLeft: 23, backdropFilter: "blur(8px)" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 }}>
-                        <p style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", margin: 0, lineHeight: 1.5, flex: 1 }}>{init.description}</p>
-                        <button onClick={e => { e.stopPropagation(); setModal(init.id); }} style={{ ...bt("rgba(255,255,255,0.1)"), marginLeft: 14, flexShrink: 0 }}>Edit Initiative</button>
-                      </div>
-                      <div style={{ display: "grid", gridTemplateColumns: "1.3fr 0.7fr", gap: 22 }}>
-                        <div>
-                          <div style={lb}>Milestones</div>
-                          <MsEd milestones={ms} onChange={newMs => updateMs(init.id, newMs)} color={color} />
-                        </div>
-                        <div>
-                          <div style={lb}>Owner</div>
-                          <input value={init.owner || ""} onChange={e => { e.stopPropagation(); setOwner(init.id, e.target.value); }} onClick={e => e.stopPropagation()} placeholder="e.g. Steven" style={{ ...inp, width: "100%", marginBottom: 12 }} />
-
-                          <div style={lb}>Status</div>
-                          <select value={init.status} onChange={e => { e.stopPropagation(); setSt(init.id, e.target.value); }} onClick={e => e.stopPropagation()}
-                            style={{ ...inp, width: "100%", cursor: "pointer" }}>
-                            {STATUS_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                          </select>
-                          <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 14 }}>
-                            <Ring pct={pctDone} size={42} stroke={4.5} color={color} />
-                            <div><div style={{ fontSize: 20, fontWeight: 700, color: "#fff" }}>{pctDone}%</div><div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)" }}>{doneCt}/{ms.length} milestones</div></div>
-                          </div>
-                          <div style={{ ...lb, marginTop: 16 }}>Deadline</div>
-                          <input type="date" value={init.deadline} onChange={e => { e.stopPropagation(); setDl(init.id, e.target.value); }} onClick={e => e.stopPropagation()} style={{ ...inp, width: "100%" }} />
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
-            });
-          })()}
-        </div>
-
-        {/* Legend */}
-        <div style={{ display: "flex", gap: 20, marginTop: 26, flexWrap: "wrap", alignItems: "center" }}>
-          {[
-            { el: <div style={{ width: 8, height: 8, borderRadius: "50%", border: "2px solid #d94f8a" }} />, t: "Open" },
-            { el: <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#d94f8a" }} />, t: "Done" },
-            { el: <div style={{ width: 0, height: 0, borderLeft: "5px solid transparent", borderRight: "5px solid transparent", borderTop: "7px solid rgba(255,255,255,0.5)" }} />, t: "Deadline" },
-          ].map((item, i) => (
-            <div key={i} style={{ display: "flex", alignItems: "center", gap: 6 }}>{item.el}<span style={{ fontSize: 11, color: "rgba(255,255,255,0.35)" }}>{item.t}</span></div>
-          ))}
-        </div>
+        {page === "product" && <TrackerPage title="Product Transformation Tracker" subtitle="Faria Education Group" storageKey="faria-product-v10" defaults={DEFAULT_PRODUCT} ModalComponent={ProdModal} onCelebrate={setCelName} />}
+        {page === "ai" && <TrackerPage title="AI Initiatives" subtitle="Features, projects, and integrations across Faria products" storageKey="faria-ai-v10" defaults={DEFAULT_AI} ModalComponent={AIModal} onCelebrate={setCelName}
+          extraRowInfo={(init) => (<>{init.product && <span style={{ fontSize: 10, padding: "1px 6px", borderRadius: 3, background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.4)" }}>{init.product}</span>}{init.priority && <span style={{ fontSize: 10, padding: "1px 6px", borderRadius: 3, background: pC(init.priority), color: "#fff", fontWeight: 700 }}>{init.priority.charAt(0).toUpperCase() + init.priority.slice(1)}</span>}</>)}
+          extraDetailFields={(init, setField) => (<><div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>{init.product && <span style={{ fontSize: 11, padding: "3px 8px", borderRadius: 4, background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.5)" }}>{init.product}</span>}{init.type && <span style={{ fontSize: 11, padding: "3px 8px", borderRadius: 4, background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.5)" }}>{init.type}</span>}{init.priority && <span style={{ fontSize: 11, padding: "3px 8px", borderRadius: 4, background: pC(init.priority), color: "#fff", fontWeight: 600 }}>{init.priority}</span>}</div><div style={{ display: "flex", gap: 8, marginBottom: 12 }}><div style={{ flex: 1 }}><div style={lb}>Effort</div><div style={{ fontSize: 13, color: "#f5ede8", fontWeight: 600 }}>{(init.effort||"medium").charAt(0).toUpperCase()+(init.effort||"medium").slice(1)}</div></div><div style={{ flex: 1 }}><div style={lb}>Impact</div><div style={{ fontSize: 13, color: "#f5ede8", fontWeight: 600 }}>{(init.impact||"medium").charAt(0).toUpperCase()+(init.impact||"medium").slice(1)}</div></div></div></>)}
+        />}
       </div>
-
-      {modal && <InitModal init={modal === "new" ? null : editInit} onSave={saveInit} onClose={() => setModal(null)} onDelete={delInit} />}
     </div>
   );
 }

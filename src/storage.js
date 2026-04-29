@@ -1,19 +1,17 @@
 import { supabase } from './supabase.js'
 
 const TABLE = 'tracker_state'
-const ROW_ID = 'main'
 
-// Guard to ignore realtime echoes of our own writes
 let lastSaveTimestamp = 0
 const ECHO_WINDOW_MS = 3000
 
-export async function loadState() {
+export async function loadState(key = 'main') {
   if (supabase) {
     try {
       const { data, error } = await supabase
         .from(TABLE)
         .select('state')
-        .eq('id', ROW_ID)
+        .eq('id', key)
         .single()
 
       if (!error && data?.state) {
@@ -25,26 +23,25 @@ export async function loadState() {
   }
 
   try {
-    const raw = localStorage.getItem('faria-tracker')
+    const raw = localStorage.getItem(key)
     if (raw) return JSON.parse(raw)
   } catch {}
 
   return null
 }
 
-export async function saveState(state) {
-  // Mark that we just saved so we can ignore the realtime echo
+export async function saveState(key = 'main', state) {
   lastSaveTimestamp = Date.now()
 
   try {
-    localStorage.setItem('faria-tracker', JSON.stringify(state))
+    localStorage.setItem(key, JSON.stringify(state))
   } catch {}
 
   if (supabase) {
     try {
       const { error } = await supabase
         .from(TABLE)
-        .upsert({ id: ROW_ID, state, updated_at: new Date().toISOString() })
+        .upsert({ id: key, state, updated_at: new Date().toISOString() })
 
       if (error) console.warn('Supabase save failed:', error.message)
     } catch (e) {
@@ -53,16 +50,15 @@ export async function saveState(state) {
   }
 }
 
-export function subscribeToChanges(onUpdate) {
+export function subscribeToChanges(key = 'main', onUpdate) {
   if (!supabase) return () => {}
 
   const channel = supabase
-    .channel('tracker-changes')
+    .channel(`tracker-changes-${key}`)
     .on(
       'postgres_changes',
-      { event: '*', schema: 'public', table: TABLE, filter: `id=eq.${ROW_ID}` },
+      { event: '*', schema: 'public', table: TABLE, filter: `id=eq.${key}` },
       (payload) => {
-        // Ignore echoes of our own saves
         if (Date.now() - lastSaveTimestamp < ECHO_WINDOW_MS) return
         if (payload.new?.state) {
           onUpdate(payload.new.state)

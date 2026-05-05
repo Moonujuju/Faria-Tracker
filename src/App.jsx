@@ -1,20 +1,49 @@
 import { useState, useEffect, useRef } from "react";
 import { loadState, saveState, subscribeToChanges } from "./storage.js";
+
+/* ── Faria design tokens ─────────────────────────────── */
+const F = {
+  plum: "#37023C",
+  darkPlum: "#391E38",
+  lightPlum: "#552859",
+  paper: "#F0EBEB",
+  orange: "#F78B43",
+  pink: "#E837AC",
+  yellow: "#F7D35F",
+  lightOrange: "#FBC5A1",
+  lightPink: "#F6AFDE",
+  lightYellow: "#FAE59F",
+  bg: "#FAF7F7",
+  surface: "#FFFFFF",
+  border: "#E6DFE0",
+  borderStrong: "#D5CACB",
+  muted: "#6B5C68",
+  muted2: "#8E7F8C",
+  green: "#1A7A3E",
+  greenSoft: "#D4F0E0",
+  gradient: "linear-gradient(135deg, #F7D35F 0%, #F78B43 45%, #E837AC 100%)",
+  gradientIcon: "linear-gradient(-45deg, #F5D160 0%, #F0A67E 50%, #EC57AD 100%)",
+  shadowSm: "0 1px 2px rgba(55, 2, 60, 0.04)",
+  shadowMd: "0 2px 8px rgba(55, 2, 60, 0.06), 0 1px 2px rgba(55, 2, 60, 0.04)",
+  shadowLg: "0 8px 24px rgba(55, 2, 60, 0.08)",
+  font: "'Nunito Sans','Trebuchet MS',system-ui,sans-serif",
+};
+
 const STATUS_OPTIONS = [
-  { value: "not-started", label: "Not Started", color: "#a78baf" },
-  { value: "in-progress", label: "In Progress", color: "#d94f8a" },
-  { value: "blocked", label: "Blocked", color: "#c0392b" },
-  { value: "complete", label: "Complete", color: "#27ae60" },
+  { value: "not-started", label: "Not Started", color: F.muted2 },
+  { value: "in-progress", label: "In Progress", color: F.orange },
+  { value: "blocked", label: "Blocked", color: F.pink },
+  { value: "complete", label: "Complete", color: F.green },
 ];
-function sC(s) { return STATUS_OPTIONS.find(o => o.value === s)?.color || "#a78baf"; }
+function sC(s) { return STATUS_OPTIONS.find(o => o.value === s)?.color || F.muted2; }
 
 const PRIORITY_OPTIONS = [
-  { value: "critical", label: "Critical", color: "#dc2626" },
-  { value: "high", label: "High", color: "#f59e0b" },
-  { value: "medium", label: "Medium", color: "#3b82f6" },
-  { value: "low", label: "Low", color: "#6b7280" },
+  { value: "critical", label: "Critical", color: F.pink },
+  { value: "high", label: "High", color: F.orange },
+  { value: "medium", label: "Medium", color: F.yellow },
+  { value: "low", label: "Low", color: F.muted2 },
 ];
-function pC(p) { return PRIORITY_OPTIONS.find(o => o.value === p)?.color || "#6b7280"; }
+function pC(p) { return PRIORITY_OPTIONS.find(o => o.value === p)?.color || F.muted2; }
 
 const TYPE_OPTIONS = [
   { value: "feature", label: "Feature" },
@@ -41,7 +70,7 @@ function Ring({ pct, size = 44, stroke = 4.5, color }) {
   const r = (size - stroke) / 2, c = 2 * Math.PI * r, dash = c * (pct / 100);
   return (
     <svg width={size} height={size} style={{ transform: "rotate(-90deg)", flexShrink: 0 }}>
-      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth={stroke} />
+      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={F.border} strokeWidth={stroke} />
       <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth={stroke}
         strokeDasharray={`${dash} ${c - dash}`} strokeLinecap="round" style={{ transition: "stroke-dasharray 0.4s ease" }} />
     </svg>
@@ -52,22 +81,29 @@ function Ring({ pct, size = 44, stroke = 4.5, color }) {
 function MiniProgress({ pct, color }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 70 }}>
-      <div style={{ flex: 1, height: 4, borderRadius: 2, background: "rgba(255,255,255,0.08)", overflow: "hidden" }}>
-        <div style={{ width: `${pct}%`, height: "100%", borderRadius: 2, background: color, opacity: 0.8, transition: "width 0.3s" }} />
+      <div style={{ flex: 1, height: 4, borderRadius: 2, background: F.bg, overflow: "hidden", border: `1px solid ${F.border}` }}>
+        <div style={{ width: `${pct}%`, height: "100%", borderRadius: 2, background: color, transition: "width 0.3s" }} />
       </div>
-      <span style={{ fontSize: 11, fontWeight: 700, color: pct === 100 ? "#27ae60" : "rgba(255,255,255,0.4)", minWidth: 28, textAlign: "right" }}>{pct}%</span>
+      <span style={{ fontSize: 11, fontWeight: 700, color: pct === 100 ? F.green : F.muted, minWidth: 28, textAlign: "right" }}>{pct}%</span>
     </div>
   );
 }
 
-const inp = { background: "rgba(0,0,0,0.3)", color: "#f5ede8", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 6, padding: "7px 11px", fontSize: 13, outline: "none", fontFamily: "inherit", boxSizing: "border-box" };
-const bt = (bg) => ({ padding: "5px 12px", borderRadius: 6, border: "none", background: bg || "rgba(255,255,255,0.12)", color: "#f5ede8", fontSize: 12, fontWeight: 600, cursor: "pointer" });
-const lb = { fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.35)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: 5 };
+const inp = { background: F.surface, color: F.plum, border: `1px solid ${F.borderStrong}`, borderRadius: 7, padding: "8px 11px", fontSize: 13, outline: "none", fontFamily: "inherit", boxSizing: "border-box" };
+const bt = (variant) => {
+  // variant: "primary" (plum filled), "danger" (pink), "success" (green), undefined → secondary white
+  if (variant === "primary") return { padding: "7px 14px", borderRadius: 7, border: "none", background: F.plum, color: F.paper, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" };
+  if (variant === "danger") return { padding: "7px 14px", borderRadius: 7, border: "none", background: F.pink, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" };
+  if (variant === "success") return { padding: "7px 14px", borderRadius: 7, border: "none", background: F.green, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" };
+  if (variant === "ghost") return { padding: "7px 14px", borderRadius: 7, border: "none", background: "transparent", color: F.plum, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" };
+  return { padding: "7px 14px", borderRadius: 7, border: `1px solid ${F.borderStrong}`, background: F.surface, color: F.plum, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" };
+};
+const lb = { fontSize: 10.5, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 };
 
 function Modal({ children, onClose }) {
   return (
-    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 100, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: "rgba(40,20,50,0.97)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 12, padding: "28px 32px", maxWidth: 540, width: "100%", maxHeight: "85vh", overflowY: "auto", backdropFilter: "blur(12px)" }}>
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 100, background: "rgba(55,2,60,0.35)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: F.surface, border: `1px solid ${F.border}`, borderRadius: 12, padding: "24px 28px", maxWidth: 560, width: "100%", maxHeight: "85vh", overflowY: "auto", boxShadow: F.shadowLg, color: F.plum }}>
         {children}
       </div>
     </div>
@@ -82,48 +118,48 @@ function MsEd({ milestones, onChange, color }) {
   return (
     <div>
       {milestones.map((m, i) => (
-        <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, padding: "5px 0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+        <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 0", borderBottom: `1px solid ${F.border}` }}>
           {eI === i ? (
             <>
               <input value={eL} onChange={e => setEL(e.target.value)} style={{ ...inp, flex: 1, fontSize: 12 }} />
               <input type="date" value={eD} onChange={e => setED(e.target.value)} style={{ ...inp, width: 130, fontSize: 12 }} />
-              <button onClick={() => { if (eL.trim() && eD) { onChange(milestones.map((mm,j) => j === i ? { ...mm, label: eL.trim(), target: eD } : mm)); setEI(null); }}} style={bt("#27ae60")}>OK</button>
+              <button onClick={() => { if (eL.trim() && eD) { onChange(milestones.map((mm,j) => j === i ? { ...mm, label: eL.trim(), target: eD } : mm)); setEI(null); }}} style={bt("success")}>OK</button>
               <button onClick={() => setEI(null)} style={bt()}>X</button>
             </>
           ) : (
             <>
               <div style={{ display: "flex", flexDirection: "column", gap: 0, flexShrink: 0 }}>
-                <button onClick={e => { e.stopPropagation(); onChange(moveUp(milestones, i)); }} style={{ background: "none", border: "none", color: i === 0 ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.35)", cursor: i === 0 ? "default" : "pointer", fontSize: 9, padding: 0, lineHeight: 1 }}>&#9650;</button>
-                <button onClick={e => { e.stopPropagation(); onChange(moveDn(milestones, i)); }} style={{ background: "none", border: "none", color: i === milestones.length-1 ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.35)", cursor: i === milestones.length-1 ? "default" : "pointer", fontSize: 9, padding: 0, lineHeight: 1 }}>&#9660;</button>
+                <button onClick={e => { e.stopPropagation(); onChange(moveUp(milestones, i)); }} style={{ background: "none", border: "none", color: i === 0 ? F.border : F.muted2, cursor: i === 0 ? "default" : "pointer", fontSize: 9, padding: 0, lineHeight: 1 }}>&#9650;</button>
+                <button onClick={e => { e.stopPropagation(); onChange(moveDn(milestones, i)); }} style={{ background: "none", border: "none", color: i === milestones.length-1 ? F.border : F.muted2, cursor: i === milestones.length-1 ? "default" : "pointer", fontSize: 9, padding: 0, lineHeight: 1 }}>&#9660;</button>
               </div>
               <div onClick={e => { e.stopPropagation(); onChange(milestones.map((mm,j) => j === i ? { ...mm, done: !mm.done } : mm)); }}
-                style={{ width: 18, height: 18, borderRadius: 4, flexShrink: 0, cursor: "pointer", border: `2px solid ${m.done ? color : "rgba(255,255,255,0.25)"}`, background: m.done ? color : "transparent", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }}>
+                style={{ width: 18, height: 18, borderRadius: 4, flexShrink: 0, cursor: "pointer", border: `2px solid ${m.done ? color : F.borderStrong}`, background: m.done ? color : F.surface, display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }}>
                 {m.done && <svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 5l2.5 2.5L8 3" stroke="#fff" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round"/></svg>}
               </div>
-              <span style={{ fontSize: 13, color: m.done ? "rgba(255,255,255,0.3)" : "#f5ede8", textDecoration: m.done ? "line-through" : "none", flex: 1 }}>{m.label}</span>
-              <span style={{ fontSize: 11, color: "rgba(255,255,255,0.2)", flexShrink: 0 }}>{fmt(m.target)}</span>
-              <button title="Edit" onClick={e => { e.stopPropagation(); setEI(i); setEL(m.label); setED(m.target); }} style={{ background: "transparent", border: "none", color: "rgba(255,255,255,0.4)", cursor: "pointer", fontSize: 12, padding: "2px 6px", lineHeight: 1 }}>&#9998;</button>
-              <button title="Delete" onClick={e => { e.stopPropagation(); onChange(milestones.filter((_,j) => j !== i)); }} style={{ background: "transparent", border: "none", color: "rgba(255,255,255,0.35)", cursor: "pointer", fontSize: 14, padding: "2px 6px", lineHeight: 1 }}>&times;</button>
+              <span style={{ fontSize: 13, color: m.done ? F.muted2 : F.plum, textDecoration: m.done ? "line-through" : "none", flex: 1 }}>{m.label}</span>
+              <span style={{ fontSize: 11, color: F.muted, flexShrink: 0, fontWeight: 600 }}>{fmt(m.target)}</span>
+              <button title="Edit" onClick={e => { e.stopPropagation(); setEI(i); setEL(m.label); setED(m.target); }} style={{ background: "transparent", border: "none", color: F.muted, cursor: "pointer", fontSize: 12, padding: "2px 6px", lineHeight: 1 }}>&#9998;</button>
+              <button title="Delete" onClick={e => { e.stopPropagation(); onChange(milestones.filter((_,j) => j !== i)); }} style={{ background: "transparent", border: "none", color: F.muted, cursor: "pointer", fontSize: 14, padding: "2px 6px", lineHeight: 1 }}>&times;</button>
             </>
           )}
         </div>
       ))}
       {adding ? (
-        <div style={{ display: "flex", gap: 6, marginTop: 6, alignItems: "center" }}>
+        <div style={{ display: "flex", gap: 6, marginTop: 8, alignItems: "center" }}>
           <input placeholder="Milestone name" value={nL} onChange={e => setNL(e.target.value)} style={{ ...inp, flex: 1, fontSize: 12 }} />
           <input type="date" value={nD} onChange={e => setND(e.target.value)} style={{ ...inp, width: 130, fontSize: 12 }} />
-          <button onClick={() => { if (nL.trim() && nD) { onChange([...milestones, { label: nL.trim(), target: nD, done: false }]); setNL(""); setND(""); setAdding(false); }}} style={bt("#27ae60")}>Add</button>
+          <button onClick={() => { if (nL.trim() && nD) { onChange([...milestones, { label: nL.trim(), target: nD, done: false }]); setNL(""); setND(""); setAdding(false); }}} style={bt("success")}>Add</button>
           <button onClick={() => setAdding(false)} style={bt()}>X</button>
         </div>
       ) : (
         <button onClick={e => { e.stopPropagation(); setAdding(true); }} style={{
-          marginTop: 8, width: "100%", padding: "8px 12px",
-          background: "rgba(255,255,255,0.04)",
-          border: "1px dashed rgba(255,255,255,0.18)",
-          borderRadius: 6, color: "rgba(255,255,255,0.55)",
+          marginTop: 10, width: "100%", padding: "9px 12px",
+          background: F.bg,
+          border: `2px dashed ${F.borderStrong}`,
+          borderRadius: 8, color: F.plum,
           fontSize: 12, fontWeight: 600, cursor: "pointer",
-          fontFamily: "inherit", transition: "all 0.15s",
-        }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "#F5EDE8"; }} onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.color = "rgba(255,255,255,0.55)"; }}>+ Add Milestone</button>
+          fontFamily: "inherit", transition: "all 0.1s",
+        }} onMouseEnter={e => { e.currentTarget.style.borderColor = F.pink; e.currentTarget.style.background = F.surface; }} onMouseLeave={e => { e.currentTarget.style.borderColor = F.borderStrong; e.currentTarget.style.background = F.bg; }}>+ Add Milestone</button>
       )}
     </div>
   );
@@ -266,7 +302,7 @@ function AIModal({ init, onSave, onClose, onDelete }) {
   const [cfm, setCfm] = useState(false); const isNew = !init;
   return (
     <Modal onClose={onClose}>
-      <h3 style={{ margin: "0 0 18px", fontSize: 18, fontWeight: 700, color: "#fff" }}>{isNew ? "New AI Initiative" : "Edit AI Initiative"}</h3>
+      <h3 style={{ margin: "0 0 18px", fontSize: 18, fontWeight: 700, color: F.plum }}>{isNew ? "New AI Initiative" : "Edit AI Initiative"}</h3>
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         <div><div style={lb}>Name</div><input value={name} onChange={e => setName(e.target.value)} style={{ ...inp, width: "100%" }} /></div>
         <div><div style={lb}>Description</div><textarea value={desc} onChange={e => setDesc(e.target.value)} rows={2} style={{ ...inp, width: "100%", resize: "vertical" }} /></div>
@@ -275,8 +311,8 @@ function AIModal({ init, onSave, onClose, onDelete }) {
         <div style={{ display: "flex", gap: 12 }}><div style={{ flex: 1 }}><div style={lb}>Effort</div><select value={effort} onChange={e => setEffort(e.target.value)} style={{ ...inp, width: "100%", cursor: "pointer" }}>{["low","medium","high"].map(o => <option key={o} value={o}>{o.charAt(0).toUpperCase()+o.slice(1)}</option>)}</select></div><div style={{ flex: 1 }}><div style={lb}>Impact</div><select value={impact} onChange={e => setImpact(e.target.value)} style={{ ...inp, width: "100%", cursor: "pointer" }}>{["low","medium","high"].map(o => <option key={o} value={o}>{o.charAt(0).toUpperCase()+o.slice(1)}</option>)}</select></div></div>
         <div style={{ display: "flex", gap: 12 }}><div style={{ flex: 1 }}><div style={lb}>Deadline</div><input type="date" value={dl} onChange={e => setDl(e.target.value)} style={{ ...inp, width: "100%" }} /></div><div style={{ flex: 1 }}><div style={lb}>Status</div><select value={st} onChange={e => setSt(e.target.value)} style={{ ...inp, width: "100%", cursor: "pointer" }}>{STATUS_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}</select></div></div>
         <div style={{ display: "flex", gap: 8, marginTop: 6, justifyContent: "space-between" }}>
-          <div>{!isNew && !cfm && <button onClick={() => setCfm(true)} style={bt("rgba(192,57,43,0.5)")}>Delete</button>}{!isNew && cfm && <div style={{ display: "flex", gap: 6, alignItems: "center" }}><span style={{ fontSize: 12, color: "#e74c3c" }}>Sure?</span><button onClick={() => { onDelete(); onClose(); }} style={bt("#c0392b")}>Yes</button><button onClick={() => setCfm(false)} style={bt()}>No</button></div>}</div>
-          <div style={{ display: "flex", gap: 8 }}><button onClick={onClose} style={bt()}>Cancel</button><button onClick={() => { if (name.trim()) onSave({ name: name.trim(), description: desc.trim(), deadline: dl, status: st, owner: owner.trim(), product: product.trim(), type, priority, effort, impact }); }} style={bt("#d94f8a")}>{isNew ? "Create" : "Save"}</button></div>
+          <div>{!isNew && !cfm && <button onClick={() => setCfm(true)} style={bt("danger")}>Delete</button>}{!isNew && cfm && <div style={{ display: "flex", gap: 6, alignItems: "center" }}><span style={{ fontSize: 12, fontWeight: 700, color: F.pink }}>Sure?</span><button onClick={() => { onDelete(); onClose(); }} style={bt("danger")}>Yes</button><button onClick={() => setCfm(false)} style={bt()}>No</button></div>}</div>
+          <div style={{ display: "flex", gap: 8 }}><button onClick={onClose} style={bt()}>Cancel</button><button onClick={() => { if (name.trim()) onSave({ name: name.trim(), description: desc.trim(), deadline: dl, status: st, owner: owner.trim(), product: product.trim(), type, priority, effort, impact }); }} style={bt("primary")}>{isNew ? "Create" : "Save"}</button></div>
         </div>
       </div>
     </Modal>
@@ -289,15 +325,15 @@ function ProdModal({ init, onSave, onClose, onDelete }) {
   const [owner, setOwner] = useState(init?.owner || ""); const [cfm, setCfm] = useState(false); const isNew = !init;
   return (
     <Modal onClose={onClose}>
-      <h3 style={{ margin: "0 0 18px", fontSize: 18, fontWeight: 700, color: "#fff" }}>{isNew ? "New Initiative" : "Edit Initiative"}</h3>
+      <h3 style={{ margin: "0 0 18px", fontSize: 18, fontWeight: 700, color: F.plum }}>{isNew ? "New Initiative" : "Edit Initiative"}</h3>
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         <div><div style={lb}>Name</div><input value={name} onChange={e => setName(e.target.value)} style={{ ...inp, width: "100%" }} /></div>
         <div><div style={lb}>Description</div><textarea value={desc} onChange={e => setDesc(e.target.value)} rows={2} style={{ ...inp, width: "100%", resize: "vertical" }} /></div>
         <div><div style={lb}>Owner</div><input value={owner} onChange={e => setOwner(e.target.value)} style={{ ...inp, width: "100%" }} /></div>
         <div style={{ display: "flex", gap: 14 }}><div style={{ flex: 1 }}><div style={lb}>Deadline</div><input type="date" value={dl} onChange={e => setDl(e.target.value)} style={{ ...inp, width: "100%" }} /></div><div style={{ flex: 1 }}><div style={lb}>Status</div><select value={st} onChange={e => setSt(e.target.value)} style={{ ...inp, width: "100%", cursor: "pointer" }}>{STATUS_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}</select></div></div>
         <div style={{ display: "flex", gap: 8, marginTop: 6, justifyContent: "space-between" }}>
-          <div>{!isNew && !cfm && <button onClick={() => setCfm(true)} style={bt("rgba(192,57,43,0.5)")}>Delete</button>}{!isNew && cfm && <div style={{ display: "flex", gap: 6, alignItems: "center" }}><span style={{ fontSize: 12, color: "#e74c3c" }}>Sure?</span><button onClick={() => { onDelete(); onClose(); }} style={bt("#c0392b")}>Yes</button><button onClick={() => setCfm(false)} style={bt()}>No</button></div>}</div>
-          <div style={{ display: "flex", gap: 8 }}><button onClick={onClose} style={bt()}>Cancel</button><button onClick={() => { if (name.trim()) onSave({ name: name.trim(), description: desc.trim(), deadline: dl, status: st, owner: owner.trim() }); }} style={bt("#d94f8a")}>{isNew ? "Create" : "Save"}</button></div>
+          <div>{!isNew && !cfm && <button onClick={() => setCfm(true)} style={bt("danger")}>Delete</button>}{!isNew && cfm && <div style={{ display: "flex", gap: 6, alignItems: "center" }}><span style={{ fontSize: 12, fontWeight: 700, color: F.pink }}>Sure?</span><button onClick={() => { onDelete(); onClose(); }} style={bt("danger")}>Yes</button><button onClick={() => setCfm(false)} style={bt()}>No</button></div>}</div>
+          <div style={{ display: "flex", gap: 8 }}><button onClick={onClose} style={bt()}>Cancel</button><button onClick={() => { if (name.trim()) onSave({ name: name.trim(), description: desc.trim(), deadline: dl, status: st, owner: owner.trim() }); }} style={bt("primary")}>{isNew ? "Create" : "Save"}</button></div>
         </div>
       </div>
     </Modal>
@@ -305,8 +341,8 @@ function ProdModal({ init, onSave, onClose, onDelete }) {
 }
 
 /* ── Analytics Timeline (interactive overview) ── */
-// Brand-tight palette (Faria style guide). First two are pink + magenta; rest are brand-adjacent gradient/plum tones.
-const ANALYTICS_PALETTE = ["#D94F8A", "#A13670", "#E8A657", "#6B2D6B", "#C4619A", "#7B2D6B", "#D4A0C0", "#5C2250"];
+// Faria brand-tight palette: pink, orange, yellow, plum tones. Used for group color-coding.
+const ANALYTICS_PALETTE = ["#E837AC", "#F78B43", "#F7D35F", "#552859", "#F6AFDE", "#FBC5A1", "#FAE59F", "#37023C"];
 
 function AnalyticsTimeline({ inits, groupField, selGroup, setSelGroup }) {
   const months = monthMarkers();
@@ -345,31 +381,31 @@ function AnalyticsTimeline({ inits, groupField, selGroup, setSelGroup }) {
 
   const chip = (label, count, color, active, onClick) => (
     <button onClick={onClick} style={{
-      fontSize: 11, padding: "4px 10px", borderRadius: 999, fontWeight: 600,
-      border: `1px solid ${active ? (color || "rgba(255,255,255,0.18)") : "rgba(255,255,255,0.06)"}`,
-      background: active ? (color || "rgba(255,255,255,0.1)") : "transparent",
-      color: active ? "#fff" : (color || "rgba(255,255,255,0.7)"),
+      fontSize: 11.5, padding: "4px 10px", borderRadius: 999, fontWeight: 600,
+      border: `1px solid ${active ? F.plum : F.border}`,
+      background: active ? F.plum : F.bg,
+      color: active ? F.paper : F.plum,
       cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6,
-      transition: "all 0.15s",
+      transition: "all 0.1s", fontFamily: "inherit",
     }}>
       {color && <span style={{ width: 8, height: 8, borderRadius: "50%", background: color, display: "inline-block" }} />}
-      {label} <span style={{ opacity: 0.7 }}>({count})</span>
+      {label} <span style={{ opacity: 0.65 }}>({count})</span>
     </button>
   );
 
   return (
-    <div style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 12, padding: 16, marginBottom: 28, backdropFilter: "blur(8px)" }}>
+    <div style={{ background: F.surface, border: `1px solid ${F.border}`, borderRadius: 12, padding: 16, marginBottom: 22, boxShadow: F.shadowSm }}>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 14 }}>
         {chip("All", inits.length, null, selGroup === null, () => setSelGroup(null))}
         {groups.map((g) => chip(g, groupCount(g), colorFor(g), selGroup === g, () => setSelGroup(selGroup === g ? null : g)))}
       </div>
 
       <div style={{ position: "relative", height: 16, marginBottom: 4 }}>
-        {months.map((m) => <div key={m.label + m.pct} style={{ position: "absolute", left: `${m.pct}%`, fontSize: 10, color: "rgba(255,255,255,0.3)", fontWeight: 600, transform: "translateX(-50%)" }}>{m.label}</div>)}
+        {months.map((m) => <div key={m.label + m.pct} style={{ position: "absolute", left: `${m.pct}%`, fontSize: 10, color: F.muted2, fontWeight: 700, transform: "translateX(-50%)", textTransform: "uppercase", letterSpacing: "0.04em" }}>{m.label}</div>)}
       </div>
 
-      <div style={{ position: "relative", height: chartH, background: "rgba(0,0,0,0.18)", borderRadius: 6, overflow: "hidden" }}>
-        {months.map((m) => <div key={"g" + m.label + m.pct} style={{ position: "absolute", left: `${m.pct}%`, top: 0, bottom: 0, width: 1, background: "rgba(255,255,255,0.04)" }} />)}
+      <div style={{ position: "relative", height: chartH, background: F.bg, border: `1px solid ${F.border}`, borderRadius: 8, overflow: "hidden" }}>
+        {months.map((m) => <div key={"g" + m.label + m.pct} style={{ position: "absolute", left: `${m.pct}%`, top: 0, bottom: 0, width: 1, background: F.border }} />)}
         {packed.map((b) => {
           const isDim = dim(b.group);
           return (
@@ -377,7 +413,8 @@ function AnalyticsTimeline({ inits, groupField, selGroup, setSelGroup }) {
               style={{
                 position: "absolute", top: PAD + b.row * ROW_H, left: `${b.startPct}%`, width: `${b.w}%`, height: ROW_H - 4,
                 background: b.color, borderRadius: 4, cursor: "pointer",
-                opacity: isDim ? 0.15 : 0.9, transition: "opacity 0.2s",
+                opacity: isDim ? 0.2 : 0.95, transition: "opacity 0.2s",
+                boxShadow: isDim ? "none" : F.shadowSm,
               }}>
               {b.milestones.map((m, idx) => {
                 const mPct = dP(m.target);
@@ -387,8 +424,8 @@ function AnalyticsTimeline({ inits, groupField, selGroup, setSelGroup }) {
                   <div key={idx} title={`${m.label} — ${fmt(m.target)}${m.done ? " ✓" : ""}`} style={{
                     position: "absolute", left: `${off}%`, top: "50%", transform: "translate(-50%, -50%)",
                     width: 5, height: 5, borderRadius: "50%",
-                    background: m.done ? "#27ae60" : "#fff",
-                    boxShadow: m.done ? "0 0 0 1px #27ae60" : "0 0 0 1px rgba(0,0,0,0.4)",
+                    background: m.done ? F.plum : F.surface,
+                    boxShadow: `0 0 0 1px ${F.plum}`,
                   }} />
                 );
               })}
@@ -398,9 +435,9 @@ function AnalyticsTimeline({ inits, groupField, selGroup, setSelGroup }) {
       </div>
 
       {selGroup && (
-        <div style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: colorFor(selGroup), marginBottom: 8, display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ width: 8, height: 8, borderRadius: "50%", background: colorFor(selGroup) }} />
+        <div style={{ marginTop: 14, paddingTop: 12, borderTop: `1px solid ${F.border}` }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: F.plum, marginBottom: 10, display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ width: 9, height: 9, borderRadius: "50%", background: colorFor(selGroup) }} />
             {selGroup} — {selectedInits.length} initiative{selectedInits.length !== 1 ? "s" : ""}
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
@@ -408,12 +445,12 @@ function AnalyticsTimeline({ inits, groupField, selGroup, setSelGroup }) {
               const done = (i.milestones || []).filter((m) => m.done).length;
               const total = (i.milestones || []).length;
               return (
-                <div key={i.id} style={{ display: "flex", gap: 10, alignItems: "center", fontSize: 12, color: "rgba(255,255,255,0.75)" }}>
+                <div key={i.id} style={{ display: "flex", gap: 10, alignItems: "center", fontSize: 12.5, color: F.plum, padding: "4px 6px", borderRadius: 6 }}>
                   <span style={{ width: 6, height: 6, borderRadius: "50%", background: sC(i.status), flexShrink: 0 }} />
-                  <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{i.name}</span>
-                  <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 11 }}>{done}/{total}</span>
-                  <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, minWidth: 56, textAlign: "right" }}>{fmt(i.deadline)}</span>
-                  <span style={{ fontSize: 10, color: "rgba(255,255,255,0.45)", minWidth: 72, textAlign: "right" }}>{STATUS_OPTIONS.find((o) => o.value === i.status)?.label || i.status}</span>
+                  <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: 500 }}>{i.name}</span>
+                  <span style={{ color: F.muted, fontSize: 11, fontWeight: 600 }}>{done}/{total}</span>
+                  <span style={{ color: F.muted, fontSize: 11, minWidth: 56, textAlign: "right", fontWeight: 600 }}>{fmt(i.deadline)}</span>
+                  <span style={{ fontSize: 10, color: F.muted2, minWidth: 78, textAlign: "right", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em" }}>{STATUS_OPTIONS.find((o) => o.value === i.status)?.label || i.status}</span>
                 </div>
               );
             })}
@@ -471,57 +508,59 @@ function TrackerPage({ title, subtitle, storageKey, defaults, ModalComponent, ex
     .sort((a, b) => new Date(a.target) - new Date(b.target))[0];
 
   const statTile = (label, value, sub) => (
-    <div style={{ flex: 1, padding: "0 22px", borderRight: "1px solid rgba(255,255,255,0.06)", display: "flex", flexDirection: "column", justifyContent: "center", minWidth: 110 }}>
-      <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(245,237,232,0.4)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: 6 }}>{label}</div>
-      <div style={{ fontSize: 22, fontWeight: 700, color: "#F5EDE8", lineHeight: 1.1 }}>{value}</div>
-      {sub && <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginTop: 3 }}>{sub}</div>}
+    <div style={{ flex: 1, padding: "0 22px", borderRight: `1px solid ${F.border}`, display: "flex", flexDirection: "column", justifyContent: "center", minWidth: 110 }}>
+      <div style={{ fontSize: 10.5, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>{label}</div>
+      <div style={{ fontSize: 22, fontWeight: 700, color: F.plum, lineHeight: 1.1 }}>{value}</div>
+      {sub && <div style={{ fontSize: 11, color: F.muted, marginTop: 3 }}>{sub}</div>}
     </div>
   );
 
   return (
     <>
-      <div style={{ marginBottom: 22 }}>
-        <h1 style={{ fontSize: 26, fontWeight: 700, margin: 0, color: "#fff", letterSpacing: "-0.2px" }}>{title}</h1>
-        <p style={{ margin: "4px 0 0", fontSize: 13, color: "rgba(255,255,255,0.5)" }}>{subtitle}</p>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 18, gap: 16, flexWrap: "wrap" }}>
+        <div>
+          <h1 style={{ fontSize: 24, fontWeight: 700, margin: 0, color: F.plum, lineHeight: 1.15 }}>{title}</h1>
+          <p style={{ margin: "4px 0 0", fontSize: 13.5, color: F.muted }}>{subtitle}</p>
+        </div>
       </div>
 
       <div style={{
-        background: "rgba(255,255,255,0.06)",
-        border: "1px solid rgba(255,255,255,0.06)",
+        background: F.surface,
+        border: `1px solid ${F.border}`,
         borderRadius: 12,
-        padding: "18px 22px",
-        marginBottom: 28,
-        backdropFilter: "blur(8px)",
+        padding: "16px 20px",
+        marginBottom: 20,
+        boxShadow: F.shadowSm,
         display: "flex",
         flexDirection: "column",
-        gap: upcoming ? 14 : 0,
+        gap: upcoming ? 12 : 0,
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 0, flexWrap: "wrap" }}>
-          <div style={{ flex: 1, padding: "0 22px 0 4px", borderRight: "1px solid rgba(255,255,255,0.06)", display: "flex", flexDirection: "column", justifyContent: "center", minWidth: 110 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(245,237,232,0.4)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: 6 }}>Initiatives</div>
-            <div style={{ fontSize: 22, fontWeight: 700, color: "#F5EDE8", lineHeight: 1.1 }}>{inits.length}</div>
+          <div style={{ flex: 1, padding: "0 22px 0 4px", borderRight: `1px solid ${F.border}`, display: "flex", flexDirection: "column", justifyContent: "center", minWidth: 110 }}>
+            <div style={{ fontSize: 10.5, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Initiatives</div>
+            <div style={{ fontSize: 22, fontWeight: 700, color: F.plum, lineHeight: 1.1 }}>{inits.length}</div>
           </div>
           {statTile("Milestones", `${allDone}/${allTotal}`, "complete")}
-          <div style={{ flex: 1, padding: "0 22px", borderRight: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", gap: 14, minWidth: 150 }}>
+          <div style={{ flex: 1, padding: "0 22px", borderRight: `1px solid ${F.border}`, display: "flex", alignItems: "center", gap: 14, minWidth: 150 }}>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(245,237,232,0.4)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: 6 }}>Progress</div>
-              <div style={{ fontSize: 22, fontWeight: 700, color: "#F5EDE8", lineHeight: 1.1 }}>{allPct}%</div>
+              <div style={{ fontSize: 10.5, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Progress</div>
+              <div style={{ fontSize: 22, fontWeight: 700, color: F.plum, lineHeight: 1.1 }}>{allPct}%</div>
             </div>
             <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <Ring pct={allPct} size={48} stroke={4.5} color="#D94F8A" />
+              <Ring pct={allPct} size={46} stroke={4.5} color={F.pink} />
             </div>
           </div>
           <div style={{ paddingLeft: 22, display: "flex", alignItems: "center" }}>
-            <button onClick={() => setModal("new")} style={{ ...bt("#D94F8A"), padding: "9px 18px", fontSize: 13 }}>{addLabel}</button>
+            <button onClick={() => setModal("new")} style={{ ...bt("primary"), padding: "9px 18px", fontSize: 13 }}>{addLabel}</button>
           </div>
         </div>
         {upcoming && (
-          <div style={{ display: "flex", alignItems: "center", gap: 10, paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.06)", flexWrap: "wrap" }}>
-            <span style={{ fontSize: 10, fontWeight: 700, color: "rgba(245,237,232,0.4)", textTransform: "uppercase", letterSpacing: "0.8px" }}>Next up</span>
-            <span style={{ fontSize: 13, color: "#F5EDE8" }}>{upcoming.label}</span>
-            <span style={{ fontSize: 11, color: "rgba(255,255,255,0.35)" }}>· {upcoming.init.name}</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, paddingTop: 12, borderTop: `1px solid ${F.border}`, flexWrap: "wrap" }}>
+            <span style={{ fontSize: 10, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em" }}>Next up</span>
+            <span style={{ fontSize: 13, color: F.plum, fontWeight: 600 }}>{upcoming.label}</span>
+            <span style={{ fontSize: 11.5, color: F.muted }}>· {upcoming.init.name}</span>
             <span style={{ flex: 1 }} />
-            <span style={{ fontSize: 11, fontWeight: 600, color: "#D94F8A" }}>{fmt(upcoming.target)}</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: F.pink, padding: "2px 8px", borderRadius: 999, background: F.lightPink + "55" }}>{fmt(upcoming.target)}</span>
           </div>
         )}
       </div>
@@ -529,8 +568,8 @@ function TrackerPage({ title, subtitle, storageKey, defaults, ModalComponent, ex
       <AnalyticsTimeline inits={inits} groupField={sortField || "owner"} selGroup={selGroup} setSelGroup={setSelGroup} />
 
       <div style={{ position: "relative" }}>
-        <div style={{ position: "relative", height: 28, marginBottom: 8, marginLeft: LABEL_W + 24 }}>
-          {months.map(m => <div key={m.label + m.pct} style={{ position: "absolute", left: `${m.pct}%`, fontSize: 11, color: "rgba(255,255,255,0.3)", fontWeight: 600, transform: "translateX(-50%)" }}>{m.label}</div>)}
+        <div style={{ position: "relative", height: 24, marginBottom: 8, marginLeft: LABEL_W + 24 }}>
+          {months.map(m => <div key={m.label + m.pct} style={{ position: "absolute", left: `${m.pct}%`, fontSize: 10.5, color: F.muted2, fontWeight: 700, transform: "translateX(-50%)", textTransform: "uppercase", letterSpacing: "0.04em" }}>{m.label}</div>)}
         </div>
 
         {(() => {
@@ -560,36 +599,38 @@ function TrackerPage({ title, subtitle, storageKey, defaults, ModalComponent, ex
                   onMouseLeave={() => setHoverGroup(null)}
                   style={{
                     cursor: "pointer", userSelect: "none",
-                    padding: "14px 18px", marginTop: 16, marginBottom: 8,
+                    padding: "12px 16px", marginTop: 14, marginBottom: 6,
                     display: "flex", alignItems: "center", gap: 12,
                     borderRadius: 10,
                     background: hoverGroup === groupName
-                      ? "rgba(255,255,255,0.12)"
-                      : expanded ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.06)",
-                    border: `1px solid ${expanded || hoverGroup === groupName ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.06)"}`,
-                    transition: "all 0.15s",
+                      ? F.surface
+                      : expanded ? F.lightYellow : F.bg,
+                    border: `1px solid ${expanded ? F.yellow : (hoverGroup === groupName ? F.borderStrong : F.border)}`,
+                    transition: "all 0.1s",
+                    boxShadow: expanded || hoverGroup === groupName ? F.shadowSm : "none",
                   }}
                 >
                   <span style={{
-                    width: 26, height: 26, borderRadius: 7,
+                    width: 24, height: 24, borderRadius: 6,
                     display: "inline-flex", alignItems: "center", justifyContent: "center",
-                    background: expanded ? "rgba(217,79,138,0.18)" : "rgba(255,255,255,0.06)",
-                    border: `1px solid ${expanded ? "rgba(217,79,138,0.35)" : "rgba(255,255,255,0.06)"}`,
-                    fontSize: 11, color: expanded ? "#f5b7d3" : "rgba(255,255,255,0.85)",
+                    background: expanded ? F.plum : F.surface,
+                    border: `1px solid ${expanded ? F.plum : F.borderStrong}`,
+                    fontSize: 10, color: expanded ? F.paper : F.plum,
                     transform: expanded ? "rotate(90deg)" : "none",
-                    transition: "all 0.15s",
+                    transition: "all 0.1s",
                     flexShrink: 0,
                   }}>▶</span>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: "#fff", textTransform: "uppercase", letterSpacing: "1px" }}>{groupName}</span>
-                  <span style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.65)", padding: "2px 9px", borderRadius: 999, background: "rgba(255,255,255,0.08)" }}>{items.length}</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: F.plum, textTransform: "uppercase", letterSpacing: "0.06em" }}>{groupName}</span>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: F.muted, padding: "2px 8px", borderRadius: 999, background: F.surface, border: `1px solid ${F.border}` }}>{items.length}</span>
                   <span style={{ flex: 1 }} />
-                  <span style={{ fontSize: 11, fontWeight: 600, color: gPct === 100 ? "#27ae60" : "rgba(255,255,255,0.6)" }}>{gDone}/{gTotal} · {gPct}%</span>
+                  <span style={{ fontSize: 11.5, fontWeight: 700, color: gPct === 100 ? F.green : F.plum }}>{gDone}/{gTotal} · {gPct}%</span>
                   <span style={{
-                    fontSize: 11, fontWeight: 600,
-                    color: expanded ? "#f5b7d3" : "rgba(255,255,255,0.55)",
+                    fontSize: 11, fontWeight: 700,
+                    color: expanded ? F.paper : F.plum,
                     padding: "4px 10px", borderRadius: 6,
-                    background: expanded ? "rgba(217,79,138,0.15)" : "rgba(255,255,255,0.06)",
-                    border: `1px solid ${expanded ? "rgba(217,79,138,0.3)" : "rgba(255,255,255,0.06)"}`,
+                    background: expanded ? F.plum : F.surface,
+                    border: `1px solid ${expanded ? F.plum : F.borderStrong}`,
+                    textTransform: "uppercase", letterSpacing: "0.04em",
                   }}>{expanded ? "Hide" : "Show"}</span>
                 </div>
 
@@ -608,23 +649,24 @@ function TrackerPage({ title, subtitle, storageKey, defaults, ModalComponent, ex
 
                   return (
                     <div key={init.id}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 5 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 6 }}>
                   <div style={{ display: "flex", flexDirection: "column", gap: 0, width: 18, flexShrink: 0 }}>
-                    <button onClick={() => reorder(idx, "up")} style={{ background: "none", border: "none", color: idx === 0 ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.3)", cursor: idx === 0 ? "default" : "pointer", fontSize: 10, padding: 0, lineHeight: 1 }}>&#9650;</button>
-                    <button onClick={() => reorder(idx, "down")} style={{ background: "none", border: "none", color: idx === inits.length-1 ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.3)", cursor: idx === inits.length-1 ? "default" : "pointer", fontSize: 10, padding: 0, lineHeight: 1 }}>&#9660;</button>
+                    <button onClick={() => reorder(idx, "up")} style={{ background: "none", border: "none", color: idx === 0 ? F.border : F.muted2, cursor: idx === 0 ? "default" : "pointer", fontSize: 10, padding: 0, lineHeight: 1 }}>&#9650;</button>
+                    <button onClick={() => reorder(idx, "down")} style={{ background: "none", border: "none", color: idx === inits.length-1 ? F.border : F.muted2, cursor: idx === inits.length-1 ? "default" : "pointer", fontSize: 10, padding: 0, lineHeight: 1 }}>&#9660;</button>
                   </div>
                   <div onClick={() => setSel(active ? null : init.id)} style={{
-                    display: "flex", alignItems: "stretch", cursor: "pointer", flex: 1, borderRadius: 12, overflow: "hidden",
-                    background: active ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.06)",
-                    border: `1px solid ${active ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.06)"}`,
-                    backdropFilter: "blur(8px)", transition: "all 0.15s", opacity: done ? 0.55 : 1, minHeight: 54,
+                    display: "flex", alignItems: "stretch", cursor: "pointer", flex: 1, borderRadius: 10, overflow: "hidden",
+                    background: F.surface,
+                    border: `1px solid ${active ? F.borderStrong : F.border}`,
+                    boxShadow: active ? F.shadowMd : F.shadowSm,
+                    transition: "all 0.1s", opacity: done ? 0.65 : 1, minHeight: 56,
                   }}>
-                    <div style={{ width: LABEL_W, minWidth: LABEL_W, padding: "10px 16px", display: "flex", alignItems: "center", gap: 10, borderRight: "1px solid rgba(255,255,255,0.06)" }}>
+                    <div style={{ width: LABEL_W, minWidth: LABEL_W, padding: "10px 14px", display: "flex", alignItems: "center", gap: 10, borderRight: `1px solid ${F.border}` }}>
                       <div style={{ width: 8, height: 8, borderRadius: "50%", background: color, flexShrink: 0 }} />
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <span style={{ fontSize: 14, fontWeight: 600, color: "#f5ede8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block", textDecoration: done ? "line-through" : "none" }} title={init.name}>{init.name}</span>
+                        <span style={{ fontSize: 13.5, fontWeight: 600, color: F.plum, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block", textDecoration: done ? "line-through" : "none" }} title={init.name}>{init.name}</span>
                         <div style={{ display: "flex", gap: 6, alignItems: "center", marginTop: 2 }}>
-                          <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>{init.owner || "No owner"}</span>
+                          <span style={{ fontSize: 11, color: F.muted, fontWeight: 500 }}>{init.owner || "No owner"}</span>
                           {extraRowInfo?.(init)}
                         </div>
                         {/* Per-initiative progress bar */}
@@ -632,31 +674,31 @@ function TrackerPage({ title, subtitle, storageKey, defaults, ModalComponent, ex
                       </div>
                       {done && <span style={{ fontSize: 16, flexShrink: 0 }}>🏆</span>}
                     </div>
-                    <div style={{ flex: 1, position: "relative", padding: "14px 16px 14px 0" }}>
-                      {barW > 0 && <div style={{ position: "absolute", left: `${startPct}%`, width: `${barW}%`, top: "50%", transform: "translateY(-50%)", height: 5, borderRadius: 3, background: color, opacity: 0.2 }} />}
-                      {barW > 0 && <div style={{ position: "absolute", left: `${startPct}%`, width: `${barW * (pctDone / 100)}%`, top: "50%", transform: "translateY(-50%)", height: 5, borderRadius: 3, background: color, opacity: 0.7, transition: "width 0.3s" }} />}
+                    <div style={{ flex: 1, position: "relative", padding: "14px 16px 14px 0", background: F.bg }}>
+                      {barW > 0 && <div style={{ position: "absolute", left: `${startPct}%`, width: `${barW}%`, top: "50%", transform: "translateY(-50%)", height: 6, borderRadius: 3, background: color, opacity: 0.18 }} />}
+                      {barW > 0 && <div style={{ position: "absolute", left: `${startPct}%`, width: `${barW * (pctDone / 100)}%`, top: "50%", transform: "translateY(-50%)", height: 6, borderRadius: 3, background: color, transition: "width 0.3s" }} />}
                       {ms.map((m, mi) => (
-                        <div key={mi} style={{ position: "absolute", left: `${dP(m.target)}%`, top: "50%", transform: "translate(-50%,-50%)", zIndex: 2, width: m.done ? 14 : 10, height: m.done ? 14 : 10, borderRadius: "50%", background: m.done ? color : "rgba(0,0,0,0.3)", border: `2.5px solid ${color}`, transition: "all 0.2s" }} title={`${m.label} - ${fmt(m.target)}`} />
+                        <div key={mi} style={{ position: "absolute", left: `${dP(m.target)}%`, top: "50%", transform: "translate(-50%,-50%) rotate(45deg)", zIndex: 2, width: m.done ? 12 : 10, height: m.done ? 12 : 10, background: m.done ? color : F.surface, border: `2px solid ${color}`, transition: "all 0.2s" }} title={`${m.label} - ${fmt(m.target)}`} />
                       ))}
-                      <div style={{ position: "absolute", left: `${dlPct}%`, top: "50%", transform: "translate(-50%,-50%)", zIndex: 2, width: 0, height: 0, borderLeft: "6px solid transparent", borderRight: "6px solid transparent", borderTop: `9px solid ${isPast ? "#c0392b" : "rgba(255,255,255,0.5)"}` }} title={`Deadline: ${fmt(init.deadline)}`} />
+                      <div style={{ position: "absolute", left: `${dlPct}%`, top: "50%", transform: "translate(-50%,-50%)", zIndex: 2, width: 0, height: 0, borderLeft: "6px solid transparent", borderRight: "6px solid transparent", borderTop: `9px solid ${isPast ? F.pink : F.plum}` }} title={`Deadline: ${fmt(init.deadline)}`} />
                     </div>
                   </div>
                 </div>
 
                 {active && (
-                  <div style={{ background: "rgba(255,255,255,0.08)", borderRadius: "0 0 12px 12px", border: "1px solid rgba(255,255,255,0.18)", borderTop: "none", padding: "20px 22px", marginTop: -5, marginBottom: 5, marginLeft: 23, backdropFilter: "blur(8px)" }}>
+                  <div style={{ background: F.surface, borderRadius: "0 0 10px 10px", border: `1px solid ${F.border}`, borderTop: "none", padding: "20px 22px", marginTop: -8, marginBottom: 8, marginLeft: 23, boxShadow: F.shadowSm }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 }}>
-                      <p style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", margin: 0, lineHeight: 1.5, flex: 1 }}>{init.description}</p>
-                      <button onClick={e => { e.stopPropagation(); setModal(init.id); }} style={{ ...bt("rgba(255,255,255,0.1)"), marginLeft: 14, flexShrink: 0 }}>Edit</button>
+                      <p style={{ fontSize: 13, color: F.muted, margin: 0, lineHeight: 1.5, flex: 1 }}>{init.description}</p>
+                      <button onClick={e => { e.stopPropagation(); setModal(init.id); }} style={{ ...bt(), marginLeft: 14, flexShrink: 0 }}>Edit</button>
                     </div>
                     <div style={{ display: "grid", gridTemplateColumns: "1.3fr 0.7fr", gap: 22 }}>
                       <div>
-                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 5 }}>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
                           <div style={lb}>Milestones</div>
-                          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", fontWeight: 600 }}>{doneCt} of {ms.length} · {pctDone}%</div>
+                          <div style={{ fontSize: 11, color: F.muted, fontWeight: 700 }}>{doneCt} of {ms.length} · {pctDone}%</div>
                         </div>
-                        <div style={{ height: 3, background: "rgba(255,255,255,0.06)", borderRadius: 2, overflow: "hidden", marginBottom: 10 }}>
-                          <div style={{ width: `${pctDone}%`, height: "100%", background: color, opacity: 0.85, transition: "width 0.3s" }} />
+                        <div style={{ height: 4, background: F.bg, border: `1px solid ${F.border}`, borderRadius: 2, overflow: "hidden", marginBottom: 10 }}>
+                          <div style={{ width: `${pctDone}%`, height: "100%", background: color, transition: "width 0.3s" }} />
                         </div>
                         <MsEd milestones={ms} onChange={newMs => updateMs(init.id, newMs)} color={color} />
                       </div>
@@ -670,7 +712,7 @@ function TrackerPage({ title, subtitle, storageKey, defaults, ModalComponent, ex
                         </select>
                         <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 14 }}>
                           <Ring pct={pctDone} size={42} stroke={4.5} color={color} />
-                          <div><div style={{ fontSize: 20, fontWeight: 700, color: "#fff" }}>{pctDone}%</div><div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)" }}>{doneCt}/{ms.length} milestones</div></div>
+                          <div><div style={{ fontSize: 20, fontWeight: 700, color: F.plum }}>{pctDone}%</div><div style={{ fontSize: 11, color: F.muted }}>{doneCt}/{ms.length} milestones</div></div>
                         </div>
                         <div style={{ ...lb, marginTop: 16 }}>Deadline</div>
                         <input type="date" value={init.deadline} onChange={e => { e.stopPropagation(); setDl(init.id, e.target.value); }} onClick={e => e.stopPropagation()} style={{ ...inp, width: "100%" }} />
@@ -687,14 +729,14 @@ function TrackerPage({ title, subtitle, storageKey, defaults, ModalComponent, ex
         })()}
       </div>
 
-      <div style={{ display: "flex", gap: 24, marginTop: 26, flexWrap: "wrap", alignItems: "center" }}>
+      <div style={{ display: "flex", gap: 24, marginTop: 26, flexWrap: "wrap", alignItems: "center", padding: "14px 18px", background: F.surface, border: `1px solid ${F.border}`, borderRadius: 10, boxShadow: F.shadowSm }}>
         {[
-          { el: <div style={{ width: 8, height: 8, borderRadius: "50%", border: "2px solid #D94F8A" }} />, t: "Open" },
-          { el: <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#D94F8A" }} />, t: "Done" },
-          { el: <div style={{ width: 0, height: 0, borderLeft: "5px solid transparent", borderRight: "5px solid transparent", borderTop: "7px solid rgba(255,255,255,0.5)" }} />, t: "Deadline" },
-          { el: <div style={{ width: 0, height: 0, borderLeft: "5px solid transparent", borderRight: "5px solid transparent", borderTop: "7px solid #C0392B" }} />, t: "Late" },
+          { el: <div style={{ width: 9, height: 9, transform: "rotate(45deg)", background: F.surface, border: `2px solid ${F.plum}` }} />, t: "Open" },
+          { el: <div style={{ width: 9, height: 9, transform: "rotate(45deg)", background: F.plum, border: `2px solid ${F.plum}` }} />, t: "Done" },
+          { el: <div style={{ width: 0, height: 0, borderLeft: "5px solid transparent", borderRight: "5px solid transparent", borderTop: `7px solid ${F.muted}` }} />, t: "Deadline" },
+          { el: <div style={{ width: 0, height: 0, borderLeft: "5px solid transparent", borderRight: "5px solid transparent", borderTop: `7px solid ${F.pink}` }} />, t: "Late" },
         ].map((item, i) => (
-          <div key={i} style={{ display: "flex", alignItems: "center", gap: 6 }}>{item.el}<span style={{ fontSize: 11, color: "rgba(245,237,232,0.4)" }}>{item.t}</span></div>
+          <div key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>{item.el}<span style={{ fontSize: 11, fontWeight: 600, color: F.muted, textTransform: "uppercase", letterSpacing: "0.05em" }}>{item.t}</span></div>
         ))}
       </div>
       {modal && <ModalComponent init={modal === "new" ? null : editInit} onSave={saveInit} onClose={() => setModal(null)} onDelete={delInit} />}
@@ -712,43 +754,55 @@ export default function App() {
     const hov = hovNav === id;
     return (
       <button onClick={() => setPage(id)} onMouseEnter={() => setHovNav(id)} onMouseLeave={() => setHovNav(null)} style={{
-        padding: "8px 16px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer",
-        background: active ? "#D94F8A" : (hov ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.06)"),
-        border: `1px solid ${active ? "#D94F8A" : (hov ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.06)")}`,
-        color: active ? "#fff" : "rgba(255,255,255,0.7)", transition: "all 0.15s",
+        padding: "7px 16px", borderRadius: 999, fontSize: 13, fontWeight: 700, cursor: "pointer",
+        background: active ? F.paper : (hov ? "rgba(255,255,255,0.10)" : "transparent"),
+        border: `1px solid ${active ? F.paper : "rgba(255,255,255,0.14)"}`,
+        color: active ? F.plum : (hov ? "#fff" : "rgba(255,255,255,0.78)"),
+        transition: "all 0.15s",
         fontFamily: "inherit",
+        letterSpacing: "0.01em",
       }}>{label}</button>
     );
   };
+  const chip = (text) => (
+    <span style={{ fontSize: 10.5, padding: "2px 7px", borderRadius: 4, background: F.bg, color: F.muted, fontWeight: 700, border: `1px solid ${F.border}`, textTransform: "uppercase", letterSpacing: "0.04em" }}>{text}</span>
+  );
   return (
     <div style={{
-      fontFamily: "'DM Sans','Segoe UI',sans-serif",
-      background:
-        "linear-gradient(rgba(20,5,30,0.35), rgba(25,8,35,0.55)), " +
-        "linear-gradient(135deg, #3D1A4A 0%, #5C2250 25%, #A13670 50%, #C4619A 75%, #D4A0C0 100%) fixed",
-      minHeight: "100vh", color: "#f5ede8", padding: "0 0 40px",
+      fontFamily: F.font,
+      background: F.bg,
+      minHeight: "100vh",
+      color: F.plum,
+      padding: "0 0 48px",
     }}>
-      <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+      <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700;6..12,800&display=swap" rel="stylesheet" />
       {celName && <Celebration name={celName} onDone={() => setCelName(null)} />}
       <div style={{
+        position: "sticky", top: 0, zIndex: 50,
         display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16,
-        padding: "14px 28px", marginBottom: 28,
-        borderBottom: "1px solid rgba(255,255,255,0.06)",
-        background: "rgba(20,8,30,0.35)",
-        backdropFilter: "blur(8px)",
+        padding: "0 28px",
+        height: 56,
+        marginBottom: 28,
+        background: F.plum,
+        backgroundImage: `linear-gradient(${F.plum}, ${F.plum}), ${F.gradient}`,
+        backgroundClip: "padding-box, border-box",
+        backgroundOrigin: "padding-box, border-box",
+        borderBottom: "2px solid transparent",
+        boxShadow: "0 2px 12px rgba(55, 2, 60, 0.18)",
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
           <div style={{
-            width: 26, height: 26, borderRadius: 7,
-            background: "linear-gradient(135deg, #3D1A4A 0%, #A13670 50%, #D94F8A 100%)",
+            width: 28, height: 28, borderRadius: 7,
+            background: F.gradientIcon,
             display: "inline-flex", alignItems: "center", justifyContent: "center",
-            fontSize: 14, fontWeight: 700, color: "#fff",
-            boxShadow: "0 2px 8px rgba(217,79,138,0.35)",
+            fontSize: 16, fontWeight: 800, fontStyle: "italic", color: F.plum,
+            boxShadow: "0 1px 3px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.35)",
+            fontFamily: F.font,
           }}>F</div>
           <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
-            <span style={{ fontSize: 16, fontWeight: 700, color: "#F5EDE8", letterSpacing: "0.2px" }}>Faria</span>
-            <span style={{ fontSize: 11, color: "rgba(255,255,255,0.25)" }}>·</span>
-            <span style={{ fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.55)" }}>Product Trackers</span>
+            <span style={{ fontSize: 16, fontWeight: 800, color: F.paper, letterSpacing: "0.01em" }}>Faria</span>
+            <span style={{ fontSize: 11, color: "rgba(240,235,235,0.4)" }}>·</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: F.yellow, letterSpacing: "0.08em", textTransform: "uppercase" }}>Product Trackers</span>
           </div>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
@@ -756,11 +810,11 @@ export default function App() {
           {navBtn("ai", "AI Initiatives")}
         </div>
       </div>
-      <div style={{ maxWidth: 1020, margin: "0 auto", padding: "0 24px" }}>
+      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 28px" }}>
         {page === "product" && <TrackerPage title="Product Transformation Tracker" subtitle="Cross-product strategic initiatives" storageKey="faria-product-v10" defaults={DEFAULT_PRODUCT} ModalComponent={ProdModal} onCelebrate={setCelName} />}
         {page === "ai" && <TrackerPage title="AI Initiatives" subtitle="Features, projects, and integrations across Faria products" storageKey="faria-ai-v12" sortField="product" defaults={DEFAULT_AI} ModalComponent={AIModal} onCelebrate={setCelName} addLabel="+ AI Initiative"
-          extraRowInfo={(init) => (<>{init.product && <span style={{ fontSize: 10, padding: "1px 6px", borderRadius: 3, background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.4)" }}>{init.product}</span>}{init.priority && <span style={{ fontSize: 10, padding: "1px 6px", borderRadius: 3, background: pC(init.priority), color: "#fff", fontWeight: 700 }}>{init.priority.charAt(0).toUpperCase() + init.priority.slice(1)}</span>}</>)}
-          extraDetailFields={(init, setField) => (<><div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>{init.product && <span style={{ fontSize: 11, padding: "3px 8px", borderRadius: 4, background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.5)" }}>{init.product}</span>}{init.type && <span style={{ fontSize: 11, padding: "3px 8px", borderRadius: 4, background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.5)" }}>{init.type}</span>}{init.priority && <span style={{ fontSize: 11, padding: "3px 8px", borderRadius: 4, background: pC(init.priority), color: "#fff", fontWeight: 600 }}>{init.priority}</span>}</div><div style={{ display: "flex", gap: 8, marginBottom: 12 }}><div style={{ flex: 1 }}><div style={lb}>Effort</div><div style={{ fontSize: 13, color: "#f5ede8", fontWeight: 600 }}>{(init.effort||"medium").charAt(0).toUpperCase()+(init.effort||"medium").slice(1)}</div></div><div style={{ flex: 1 }}><div style={lb}>Impact</div><div style={{ fontSize: 13, color: "#f5ede8", fontWeight: 600 }}>{(init.impact||"medium").charAt(0).toUpperCase()+(init.impact||"medium").slice(1)}</div></div></div></>)}
+          extraRowInfo={(init) => (<>{init.product && chip(init.product)}{init.priority && <span style={{ fontSize: 10, padding: "2px 7px", borderRadius: 4, background: pC(init.priority), color: "#fff", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em" }}>{init.priority}</span>}</>)}
+          extraDetailFields={(init, setField) => (<><div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>{init.product && chip(init.product)}{init.type && chip(init.type)}{init.priority && <span style={{ fontSize: 11, padding: "3px 8px", borderRadius: 4, background: pC(init.priority), color: "#fff", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em" }}>{init.priority}</span>}</div><div style={{ display: "flex", gap: 12, marginBottom: 12 }}><div style={{ flex: 1 }}><div style={lb}>Effort</div><div style={{ fontSize: 13, color: F.plum, fontWeight: 700 }}>{(init.effort||"medium").charAt(0).toUpperCase()+(init.effort||"medium").slice(1)}</div></div><div style={{ flex: 1 }}><div style={lb}>Impact</div><div style={{ fontSize: 13, color: F.plum, fontWeight: 700 }}>{(init.impact||"medium").charAt(0).toUpperCase()+(init.impact||"medium").slice(1)}</div></div></div></>)}
         />}
       </div>
     </div>

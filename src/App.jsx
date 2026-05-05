@@ -300,8 +300,7 @@ function ProdModal({ init, onSave, onClose, onDelete }) {
 /* ── Analytics Timeline (interactive overview) ── */
 const ANALYTICS_PALETTE = ["#d94f8a", "#f39c12", "#27ae60", "#3498db", "#9b59b6", "#1abc9c", "#e67e22", "#e74c3c", "#16a085", "#8e44ad"];
 
-function AnalyticsTimeline({ inits, groupField }) {
-  const [selGroup, setSelGroup] = useState(null);
+function AnalyticsTimeline({ inits, groupField, selGroup, setSelGroup }) {
   const months = monthMarkers();
 
   const groupOf = (i) => (i[groupField] || "Unassigned");
@@ -424,8 +423,12 @@ function TrackerPage({ title, subtitle, storageKey, defaults, ModalComponent, ex
   const [ready, setReady] = useState(false);
   const [modal, setModal] = useState(null);
   const [expandedGroups, setExpandedGroups] = useState(new Set()); // collapsed by default
+  const [selGroup, setSelGroup] = useState(null); // analytics chart filter; lifted so it can drive group expansion below
+  const [hoverGroup, setHoverGroup] = useState(null);
   const saveTimeout = useRef(null);
   const toggleGroup = (g) => setExpandedGroups(prev => { const n = new Set(prev); if (n.has(g)) n.delete(g); else n.add(g); return n; });
+  // Selecting a group in the analytics chip auto-expands that group's row in the list below
+  useEffect(() => { if (selGroup) setExpandedGroups(prev => prev.has(selGroup) ? prev : new Set(prev).add(selGroup)); }, [selGroup]);
 
   // Load saved state and merge in any new default initiatives (preserves user edits — never overwrites saved milestones/status/etc.)
   useEffect(() => { (async () => { const s = await loadState(storageKey); if (s?.inits) { const savedIds = new Set(s.inits.map(i => i.id)); const newOnes = defaults.filter(d => !savedIds.has(d.id)); setInits(newOnes.length ? [...s.inits, ...newOnes] : s.inits); } setReady(true); })(); }, []);
@@ -470,7 +473,7 @@ function TrackerPage({ title, subtitle, storageKey, defaults, ModalComponent, ex
         </div>
       </div>
 
-      <AnalyticsTimeline inits={inits} groupField={sortField || "owner"} />
+      <AnalyticsTimeline inits={inits} groupField={sortField || "owner"} selGroup={selGroup} setSelGroup={setSelGroup} />
 
       <div style={{ position: "relative" }}>
         <div style={{ position: "relative", height: 28, marginBottom: 8, marginLeft: LABEL_W + 24 }}>
@@ -495,17 +498,46 @@ function TrackerPage({ title, subtitle, storageKey, defaults, ModalComponent, ex
 
             return (
               <div key={groupName}>
-                <div onClick={() => toggleGroup(groupName)} style={{
-                  cursor: "pointer", padding: "10px 14px 10px 24px", marginTop: 12, marginBottom: 4,
-                  display: "flex", alignItems: "center", gap: 10,
-                  borderRadius: 8, background: expanded ? "rgba(255,255,255,0.04)" : "transparent",
-                  transition: "background 0.15s",
-                }}>
-                  <span style={{ fontSize: 10, color: "rgba(255,255,255,0.55)", width: 10, transform: expanded ? "rotate(90deg)" : "none", transition: "transform 0.15s", display: "inline-block" }}>▶</span>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.8)", textTransform: "uppercase", letterSpacing: "1px" }}>{groupName}</span>
-                  <span style={{ fontSize: 11, color: "rgba(255,255,255,0.35)" }}>{items.length} initiative{items.length !== 1 ? "s" : ""}</span>
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => toggleGroup(groupName)}
+                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleGroup(groupName); } }}
+                  onMouseEnter={() => setHoverGroup(groupName)}
+                  onMouseLeave={() => setHoverGroup(null)}
+                  style={{
+                    cursor: "pointer", userSelect: "none",
+                    padding: "14px 18px", marginTop: 16, marginBottom: 8,
+                    display: "flex", alignItems: "center", gap: 12,
+                    borderRadius: 10,
+                    background: hoverGroup === groupName
+                      ? "rgba(255,255,255,0.10)"
+                      : expanded ? "rgba(255,255,255,0.07)" : "rgba(255,255,255,0.04)",
+                    border: `1px solid ${hoverGroup === groupName ? "rgba(255,255,255,0.22)" : "rgba(255,255,255,0.10)"}`,
+                    transition: "all 0.15s",
+                  }}
+                >
+                  <span style={{
+                    width: 26, height: 26, borderRadius: 7,
+                    display: "inline-flex", alignItems: "center", justifyContent: "center",
+                    background: expanded ? "rgba(217,79,138,0.25)" : "rgba(255,255,255,0.08)",
+                    border: `1px solid ${expanded ? "rgba(217,79,138,0.5)" : "rgba(255,255,255,0.12)"}`,
+                    fontSize: 11, color: expanded ? "#f5b7d3" : "rgba(255,255,255,0.85)",
+                    transform: expanded ? "rotate(90deg)" : "none",
+                    transition: "all 0.15s",
+                    flexShrink: 0,
+                  }}>▶</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: "#fff", textTransform: "uppercase", letterSpacing: "1px" }}>{groupName}</span>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.65)", padding: "2px 9px", borderRadius: 999, background: "rgba(255,255,255,0.08)" }}>{items.length}</span>
                   <span style={{ flex: 1 }} />
-                  <span style={{ fontSize: 11, fontWeight: 600, color: gPct === 100 ? "#27ae60" : "rgba(255,255,255,0.5)" }}>{gDone}/{gTotal} · {gPct}%</span>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: gPct === 100 ? "#27ae60" : "rgba(255,255,255,0.6)" }}>{gDone}/{gTotal} · {gPct}%</span>
+                  <span style={{
+                    fontSize: 11, fontWeight: 600,
+                    color: expanded ? "#f5b7d3" : "rgba(255,255,255,0.55)",
+                    padding: "4px 10px", borderRadius: 6,
+                    background: expanded ? "rgba(217,79,138,0.15)" : "rgba(255,255,255,0.06)",
+                    border: `1px solid ${expanded ? "rgba(217,79,138,0.35)" : "rgba(255,255,255,0.1)"}`,
+                  }}>{expanded ? "Hide" : "Show"}</span>
                 </div>
 
                 {expanded && items.map((init) => {

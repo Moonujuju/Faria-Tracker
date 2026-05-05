@@ -102,8 +102,8 @@ function MsEd({ milestones, onChange, color }) {
               </div>
               <span style={{ fontSize: 13, color: m.done ? "rgba(255,255,255,0.3)" : "#f5ede8", textDecoration: m.done ? "line-through" : "none", flex: 1 }}>{m.label}</span>
               <span style={{ fontSize: 11, color: "rgba(255,255,255,0.2)", flexShrink: 0 }}>{fmt(m.target)}</span>
-              <button onClick={e => { e.stopPropagation(); setEI(i); setEL(m.label); setED(m.target); }} style={{ ...bt(), padding: "3px 7px", fontSize: 10 }}>Edit</button>
-              <button onClick={e => { e.stopPropagation(); onChange(milestones.filter((_,j) => j !== i)); }} style={{ ...bt("rgba(192,57,43,0.4)"), padding: "3px 7px", fontSize: 10 }}>Del</button>
+              <button title="Edit" onClick={e => { e.stopPropagation(); setEI(i); setEL(m.label); setED(m.target); }} style={{ background: "transparent", border: "none", color: "rgba(255,255,255,0.4)", cursor: "pointer", fontSize: 12, padding: "2px 6px", lineHeight: 1 }}>&#9998;</button>
+              <button title="Delete" onClick={e => { e.stopPropagation(); onChange(milestones.filter((_,j) => j !== i)); }} style={{ background: "transparent", border: "none", color: "rgba(255,255,255,0.35)", cursor: "pointer", fontSize: 14, padding: "2px 6px", lineHeight: 1 }}>&times;</button>
             </>
           )}
         </div>
@@ -116,7 +116,14 @@ function MsEd({ milestones, onChange, color }) {
           <button onClick={() => setAdding(false)} style={bt()}>X</button>
         </div>
       ) : (
-        <button onClick={e => { e.stopPropagation(); setAdding(true); }} style={{ ...bt("rgba(255,255,255,0.06)"), marginTop: 6, width: "100%", fontSize: 12 }}>+ Add Milestone</button>
+        <button onClick={e => { e.stopPropagation(); setAdding(true); }} style={{
+          marginTop: 8, width: "100%", padding: "8px 12px",
+          background: "rgba(255,255,255,0.04)",
+          border: "1px dashed rgba(255,255,255,0.18)",
+          borderRadius: 6, color: "rgba(255,255,255,0.55)",
+          fontSize: 12, fontWeight: 600, cursor: "pointer",
+          fontFamily: "inherit", transition: "all 0.15s",
+        }} onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "#F5EDE8"; }} onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.color = "rgba(255,255,255,0.55)"; }}>+ Add Milestone</button>
       )}
     </div>
   );
@@ -298,7 +305,8 @@ function ProdModal({ init, onSave, onClose, onDelete }) {
 }
 
 /* ── Analytics Timeline (interactive overview) ── */
-const ANALYTICS_PALETTE = ["#d94f8a", "#f39c12", "#27ae60", "#3498db", "#9b59b6", "#1abc9c", "#e67e22", "#e74c3c", "#16a085", "#8e44ad"];
+// Brand-tight palette (Faria style guide). First two are pink + magenta; rest are brand-adjacent gradient/plum tones.
+const ANALYTICS_PALETTE = ["#D94F8A", "#A13670", "#E8A657", "#6B2D6B", "#C4619A", "#7B2D6B", "#D4A0C0", "#5C2250"];
 
 function AnalyticsTimeline({ inits, groupField, selGroup, setSelGroup }) {
   const months = monthMarkers();
@@ -338,7 +346,7 @@ function AnalyticsTimeline({ inits, groupField, selGroup, setSelGroup }) {
   const chip = (label, count, color, active, onClick) => (
     <button onClick={onClick} style={{
       fontSize: 11, padding: "4px 10px", borderRadius: 999, fontWeight: 600,
-      border: `1px solid ${active ? (color || "rgba(255,255,255,0.4)") : "rgba(255,255,255,0.12)"}`,
+      border: `1px solid ${active ? (color || "rgba(255,255,255,0.18)") : "rgba(255,255,255,0.06)"}`,
       background: active ? (color || "rgba(255,255,255,0.1)") : "transparent",
       color: active ? "#fff" : (color || "rgba(255,255,255,0.7)"),
       cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6,
@@ -350,7 +358,7 @@ function AnalyticsTimeline({ inits, groupField, selGroup, setSelGroup }) {
   );
 
   return (
-    <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, padding: 16, marginBottom: 28 }}>
+    <div style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 12, padding: 16, marginBottom: 28, backdropFilter: "blur(8px)" }}>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 14 }}>
         {chip("All", inits.length, null, selGroup === null, () => setSelGroup(null))}
         {groups.map((g) => chip(g, groupCount(g), colorFor(g), selGroup === g, () => setSelGroup(selGroup === g ? null : g)))}
@@ -456,21 +464,66 @@ function TrackerPage({ title, subtitle, storageKey, defaults, ModalComponent, ex
   const editInit = modal && modal !== "new" ? inits.find(i => i.id === modal) : null;
   const LABEL_W = 310;
 
+  // Next upcoming open milestone across all initiatives (used in stat card footer)
+  const upcoming = inits
+    .flatMap(i => (i.milestones || []).filter(m => !m.done).map(m => ({ ...m, init: i })))
+    .filter(m => new Date(m.target + "T23:59:59") >= now)
+    .sort((a, b) => new Date(a.target) - new Date(b.target))[0];
+
+  const statTile = (label, value, sub) => (
+    <div style={{ flex: 1, padding: "0 22px", borderRight: "1px solid rgba(255,255,255,0.06)", display: "flex", flexDirection: "column", justifyContent: "center", minWidth: 110 }}>
+      <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(245,237,232,0.4)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: 6 }}>{label}</div>
+      <div style={{ fontSize: 22, fontWeight: 700, color: "#F5EDE8", lineHeight: 1.1 }}>{value}</div>
+      {sub && <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginTop: 3 }}>{sub}</div>}
+    </div>
+  );
+
   return (
     <>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 18, marginBottom: 32 }}>
-        <div>
-          <h1 style={{ fontSize: 24, fontWeight: 700, margin: 0, color: "#fff" }}>{title}</h1>
-          <p style={{ margin: "4px 0 0", fontSize: 13, color: "rgba(255,255,255,0.5)" }}>{subtitle}</p>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <Ring pct={allPct} size={54} stroke={5} color="#d94f8a" />
-            <span style={{ position: "absolute", fontSize: 13, fontWeight: 700, color: "#d94f8a" }}>{allPct}%</span>
+      <div style={{ marginBottom: 22 }}>
+        <h1 style={{ fontSize: 26, fontWeight: 700, margin: 0, color: "#fff", letterSpacing: "-0.2px" }}>{title}</h1>
+        <p style={{ margin: "4px 0 0", fontSize: 13, color: "rgba(255,255,255,0.5)" }}>{subtitle}</p>
+      </div>
+
+      <div style={{
+        background: "rgba(255,255,255,0.06)",
+        border: "1px solid rgba(255,255,255,0.06)",
+        borderRadius: 12,
+        padding: "18px 22px",
+        marginBottom: 28,
+        backdropFilter: "blur(8px)",
+        display: "flex",
+        flexDirection: "column",
+        gap: upcoming ? 14 : 0,
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 0, flexWrap: "wrap" }}>
+          <div style={{ flex: 1, padding: "0 22px 0 4px", borderRight: "1px solid rgba(255,255,255,0.06)", display: "flex", flexDirection: "column", justifyContent: "center", minWidth: 110 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(245,237,232,0.4)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: 6 }}>Initiatives</div>
+            <div style={{ fontSize: 22, fontWeight: 700, color: "#F5EDE8", lineHeight: 1.1 }}>{inits.length}</div>
           </div>
-          <div style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", lineHeight: 1.4 }}><div>{allDone} of {allTotal}</div><div>milestones done</div></div>
-          <button onClick={() => setModal("new")} style={{ ...bt("#d94f8a"), padding: "8px 16px", fontSize: 13 }}>{addLabel}</button>
+          {statTile("Milestones", `${allDone}/${allTotal}`, "complete")}
+          <div style={{ flex: 1, padding: "0 22px", borderRight: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", gap: 14, minWidth: 150 }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(245,237,232,0.4)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: 6 }}>Progress</div>
+              <div style={{ fontSize: 22, fontWeight: 700, color: "#F5EDE8", lineHeight: 1.1 }}>{allPct}%</div>
+            </div>
+            <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Ring pct={allPct} size={48} stroke={4.5} color="#D94F8A" />
+            </div>
+          </div>
+          <div style={{ paddingLeft: 22, display: "flex", alignItems: "center" }}>
+            <button onClick={() => setModal("new")} style={{ ...bt("#D94F8A"), padding: "9px 18px", fontSize: 13 }}>{addLabel}</button>
+          </div>
         </div>
+        {upcoming && (
+          <div style={{ display: "flex", alignItems: "center", gap: 10, paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.06)", flexWrap: "wrap" }}>
+            <span style={{ fontSize: 10, fontWeight: 700, color: "rgba(245,237,232,0.4)", textTransform: "uppercase", letterSpacing: "0.8px" }}>Next up</span>
+            <span style={{ fontSize: 13, color: "#F5EDE8" }}>{upcoming.label}</span>
+            <span style={{ fontSize: 11, color: "rgba(255,255,255,0.35)" }}>· {upcoming.init.name}</span>
+            <span style={{ flex: 1 }} />
+            <span style={{ fontSize: 11, fontWeight: 600, color: "#D94F8A" }}>{fmt(upcoming.target)}</span>
+          </div>
+        )}
       </div>
 
       <AnalyticsTimeline inits={inits} groupField={sortField || "owner"} selGroup={selGroup} setSelGroup={setSelGroup} />
@@ -511,17 +564,17 @@ function TrackerPage({ title, subtitle, storageKey, defaults, ModalComponent, ex
                     display: "flex", alignItems: "center", gap: 12,
                     borderRadius: 10,
                     background: hoverGroup === groupName
-                      ? "rgba(255,255,255,0.10)"
-                      : expanded ? "rgba(255,255,255,0.07)" : "rgba(255,255,255,0.04)",
-                    border: `1px solid ${hoverGroup === groupName ? "rgba(255,255,255,0.22)" : "rgba(255,255,255,0.10)"}`,
+                      ? "rgba(255,255,255,0.12)"
+                      : expanded ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.06)",
+                    border: `1px solid ${expanded || hoverGroup === groupName ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.06)"}`,
                     transition: "all 0.15s",
                   }}
                 >
                   <span style={{
                     width: 26, height: 26, borderRadius: 7,
                     display: "inline-flex", alignItems: "center", justifyContent: "center",
-                    background: expanded ? "rgba(217,79,138,0.25)" : "rgba(255,255,255,0.08)",
-                    border: `1px solid ${expanded ? "rgba(217,79,138,0.5)" : "rgba(255,255,255,0.12)"}`,
+                    background: expanded ? "rgba(217,79,138,0.18)" : "rgba(255,255,255,0.06)",
+                    border: `1px solid ${expanded ? "rgba(217,79,138,0.35)" : "rgba(255,255,255,0.06)"}`,
                     fontSize: 11, color: expanded ? "#f5b7d3" : "rgba(255,255,255,0.85)",
                     transform: expanded ? "rotate(90deg)" : "none",
                     transition: "all 0.15s",
@@ -536,7 +589,7 @@ function TrackerPage({ title, subtitle, storageKey, defaults, ModalComponent, ex
                     color: expanded ? "#f5b7d3" : "rgba(255,255,255,0.55)",
                     padding: "4px 10px", borderRadius: 6,
                     background: expanded ? "rgba(217,79,138,0.15)" : "rgba(255,255,255,0.06)",
-                    border: `1px solid ${expanded ? "rgba(217,79,138,0.35)" : "rgba(255,255,255,0.1)"}`,
+                    border: `1px solid ${expanded ? "rgba(217,79,138,0.3)" : "rgba(255,255,255,0.06)"}`,
                   }}>{expanded ? "Hide" : "Show"}</span>
                 </div>
 
@@ -591,14 +644,20 @@ function TrackerPage({ title, subtitle, storageKey, defaults, ModalComponent, ex
                 </div>
 
                 {active && (
-                  <div style={{ background: "rgba(255,255,255,0.08)", borderRadius: "0 0 12px 12px", border: "1px solid rgba(255,255,255,0.12)", borderTop: "none", padding: "20px 22px", marginTop: -5, marginBottom: 5, marginLeft: 23, backdropFilter: "blur(8px)" }}>
+                  <div style={{ background: "rgba(255,255,255,0.08)", borderRadius: "0 0 12px 12px", border: "1px solid rgba(255,255,255,0.18)", borderTop: "none", padding: "20px 22px", marginTop: -5, marginBottom: 5, marginLeft: 23, backdropFilter: "blur(8px)" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 }}>
                       <p style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", margin: 0, lineHeight: 1.5, flex: 1 }}>{init.description}</p>
                       <button onClick={e => { e.stopPropagation(); setModal(init.id); }} style={{ ...bt("rgba(255,255,255,0.1)"), marginLeft: 14, flexShrink: 0 }}>Edit</button>
                     </div>
                     <div style={{ display: "grid", gridTemplateColumns: "1.3fr 0.7fr", gap: 22 }}>
                       <div>
-                        <div style={lb}>Milestones</div>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 5 }}>
+                          <div style={lb}>Milestones</div>
+                          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", fontWeight: 600 }}>{doneCt} of {ms.length} · {pctDone}%</div>
+                        </div>
+                        <div style={{ height: 3, background: "rgba(255,255,255,0.06)", borderRadius: 2, overflow: "hidden", marginBottom: 10 }}>
+                          <div style={{ width: `${pctDone}%`, height: "100%", background: color, opacity: 0.85, transition: "width 0.3s" }} />
+                        </div>
                         <MsEd milestones={ms} onChange={newMs => updateMs(init.id, newMs)} color={color} />
                       </div>
                       <div>
@@ -628,9 +687,14 @@ function TrackerPage({ title, subtitle, storageKey, defaults, ModalComponent, ex
         })()}
       </div>
 
-      <div style={{ display: "flex", gap: 20, marginTop: 26, flexWrap: "wrap", alignItems: "center" }}>
-        {[{ el: <div style={{ width: 8, height: 8, borderRadius: "50%", border: "2px solid #d94f8a" }} />, t: "Open" },{ el: <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#d94f8a" }} />, t: "Done" },{ el: <div style={{ width: 0, height: 0, borderLeft: "5px solid transparent", borderRight: "5px solid transparent", borderTop: "7px solid rgba(255,255,255,0.5)" }} />, t: "Deadline" }].map((item, i) => (
-          <div key={i} style={{ display: "flex", alignItems: "center", gap: 6 }}>{item.el}<span style={{ fontSize: 11, color: "rgba(255,255,255,0.35)" }}>{item.t}</span></div>
+      <div style={{ display: "flex", gap: 24, marginTop: 26, flexWrap: "wrap", alignItems: "center" }}>
+        {[
+          { el: <div style={{ width: 8, height: 8, borderRadius: "50%", border: "2px solid #D94F8A" }} />, t: "Open" },
+          { el: <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#D94F8A" }} />, t: "Done" },
+          { el: <div style={{ width: 0, height: 0, borderLeft: "5px solid transparent", borderRight: "5px solid transparent", borderTop: "7px solid rgba(255,255,255,0.5)" }} />, t: "Deadline" },
+          { el: <div style={{ width: 0, height: 0, borderLeft: "5px solid transparent", borderRight: "5px solid transparent", borderTop: "7px solid #C0392B" }} />, t: "Late" },
+        ].map((item, i) => (
+          <div key={i} style={{ display: "flex", alignItems: "center", gap: 6 }}>{item.el}<span style={{ fontSize: 11, color: "rgba(245,237,232,0.4)" }}>{item.t}</span></div>
         ))}
       </div>
       {modal && <ModalComponent init={modal === "new" ? null : editInit} onSave={saveInit} onClose={() => setModal(null)} onDelete={delInit} />}
@@ -642,28 +706,58 @@ function TrackerPage({ title, subtitle, storageKey, defaults, ModalComponent, ex
 export default function App() {
   const [page, setPage] = useState("product");
   const [celName, setCelName] = useState(null);
-  const navBtn = (id, label) => (
-    <button onClick={() => setPage(id)} style={{
-      padding: "8px 18px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer",
-      background: page === id ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.05)",
-      border: `1px solid ${page === id ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.06)"}`,
-      color: page === id ? "#fff" : "rgba(255,255,255,0.5)", transition: "all 0.15s",
-    }}>{label}</button>
-  );
+  const [hovNav, setHovNav] = useState(null);
+  const navBtn = (id, label) => {
+    const active = page === id;
+    const hov = hovNav === id;
+    return (
+      <button onClick={() => setPage(id)} onMouseEnter={() => setHovNav(id)} onMouseLeave={() => setHovNav(null)} style={{
+        padding: "8px 16px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer",
+        background: active ? "#D94F8A" : (hov ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.06)"),
+        border: `1px solid ${active ? "#D94F8A" : (hov ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.06)")}`,
+        color: active ? "#fff" : "rgba(255,255,255,0.7)", transition: "all 0.15s",
+        fontFamily: "inherit",
+      }}>{label}</button>
+    );
+  };
   return (
     <div style={{
       fontFamily: "'DM Sans','Segoe UI',sans-serif",
-      background: "linear-gradient(135deg, #2d1038 0%, #4a1d50 20%, #7b2d6b 40%, #a13670 55%, #c4619a 70%, #c487b0 85%, #a06b95 100%)",
-      minHeight: "100vh", color: "#f5ede8", padding: "28px 24px",
+      background:
+        "linear-gradient(rgba(20,5,30,0.35), rgba(25,8,35,0.55)), " +
+        "linear-gradient(135deg, #3D1A4A 0%, #5C2250 25%, #A13670 50%, #C4619A 75%, #D4A0C0 100%) fixed",
+      minHeight: "100vh", color: "#f5ede8", padding: "0 0 40px",
     }}>
       <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
       {celName && <Celebration name={celName} onDone={() => setCelName(null)} />}
-      <div style={{ maxWidth: 1020, margin: "0 auto" }}>
-        <div style={{ display: "flex", gap: 8, marginBottom: 28 }}>
+      <div style={{
+        display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16,
+        padding: "14px 28px", marginBottom: 28,
+        borderBottom: "1px solid rgba(255,255,255,0.06)",
+        background: "rgba(20,8,30,0.35)",
+        backdropFilter: "blur(8px)",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <div style={{
+            width: 26, height: 26, borderRadius: 7,
+            background: "linear-gradient(135deg, #3D1A4A 0%, #A13670 50%, #D94F8A 100%)",
+            display: "inline-flex", alignItems: "center", justifyContent: "center",
+            fontSize: 14, fontWeight: 700, color: "#fff",
+            boxShadow: "0 2px 8px rgba(217,79,138,0.35)",
+          }}>F</div>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
+            <span style={{ fontSize: 16, fontWeight: 700, color: "#F5EDE8", letterSpacing: "0.2px" }}>Faria</span>
+            <span style={{ fontSize: 11, color: "rgba(255,255,255,0.25)" }}>·</span>
+            <span style={{ fontSize: 12, fontWeight: 500, color: "rgba(255,255,255,0.55)" }}>Product Trackers</span>
+          </div>
+        </div>
+        <div style={{ display: "flex", gap: 8 }}>
           {navBtn("product", "Product Transformation")}
           {navBtn("ai", "AI Initiatives")}
         </div>
-        {page === "product" && <TrackerPage title="Product Transformation Tracker" subtitle="Faria Education Group" storageKey="faria-product-v10" defaults={DEFAULT_PRODUCT} ModalComponent={ProdModal} onCelebrate={setCelName} />}
+      </div>
+      <div style={{ maxWidth: 1020, margin: "0 auto", padding: "0 24px" }}>
+        {page === "product" && <TrackerPage title="Product Transformation Tracker" subtitle="Cross-product strategic initiatives" storageKey="faria-product-v10" defaults={DEFAULT_PRODUCT} ModalComponent={ProdModal} onCelebrate={setCelName} />}
         {page === "ai" && <TrackerPage title="AI Initiatives" subtitle="Features, projects, and integrations across Faria products" storageKey="faria-ai-v12" sortField="product" defaults={DEFAULT_AI} ModalComponent={AIModal} onCelebrate={setCelName} addLabel="+ AI Initiative"
           extraRowInfo={(init) => (<>{init.product && <span style={{ fontSize: 10, padding: "1px 6px", borderRadius: 3, background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.4)" }}>{init.product}</span>}{init.priority && <span style={{ fontSize: 10, padding: "1px 6px", borderRadius: 3, background: pC(init.priority), color: "#fff", fontWeight: 700 }}>{init.priority.charAt(0).toUpperCase() + init.priority.slice(1)}</span>}</>)}
           extraDetailFields={(init, setField) => (<><div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>{init.product && <span style={{ fontSize: 11, padding: "3px 8px", borderRadius: 4, background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.5)" }}>{init.product}</span>}{init.type && <span style={{ fontSize: 11, padding: "3px 8px", borderRadius: 4, background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.5)" }}>{init.type}</span>}{init.priority && <span style={{ fontSize: 11, padding: "3px 8px", borderRadius: 4, background: pC(init.priority), color: "#fff", fontWeight: 600 }}>{init.priority}</span>}</div><div style={{ display: "flex", gap: 8, marginBottom: 12 }}><div style={{ flex: 1 }}><div style={lb}>Effort</div><div style={{ fontSize: 13, color: "#f5ede8", fontWeight: 600 }}>{(init.effort||"medium").charAt(0).toUpperCase()+(init.effort||"medium").slice(1)}</div></div><div style={{ flex: 1 }}><div style={lb}>Impact</div><div style={{ fontSize: 13, color: "#f5ede8", fontWeight: 600 }}>{(init.impact||"medium").charAt(0).toUpperCase()+(init.impact||"medium").slice(1)}</div></div></div></>)}

@@ -297,6 +297,126 @@ function ProdModal({ init, onSave, onClose, onDelete }) {
   );
 }
 
+/* ── Analytics Timeline (interactive overview) ── */
+const ANALYTICS_PALETTE = ["#d94f8a", "#f39c12", "#27ae60", "#3498db", "#9b59b6", "#1abc9c", "#e67e22", "#e74c3c", "#16a085", "#8e44ad"];
+
+function AnalyticsTimeline({ inits, groupField }) {
+  const [selGroup, setSelGroup] = useState(null);
+  const months = monthMarkers();
+
+  const groupOf = (i) => (i[groupField] || "Unassigned");
+  const groups = [...new Set(inits.map(groupOf))].sort((a, b) => a.localeCompare(b));
+  const colorFor = (g) => ANALYTICS_PALETTE[groups.indexOf(g) % ANALYTICS_PALETTE.length];
+
+  // Build bars with positions
+  const rawBars = inits.map((init) => {
+    const ms = init.milestones || [];
+    const dlPct = dP(init.deadline);
+    const startPct = ms[0] ? Math.min(dlPct, dP(ms[0].target)) : Math.max(0, dlPct - 5);
+    const w = Math.max(1.2, dlPct - startPct);
+    const g = groupOf(init);
+    return { init, startPct, w, group: g, color: colorFor(g), milestones: ms };
+  });
+
+  // Greedy row packing so bars don't overlap (1.5% gap)
+  const packed = [...rawBars].sort((a, b) => a.startPct - b.startPct);
+  const rowEnds = [];
+  packed.forEach((b) => {
+    let row = rowEnds.findIndex((e) => b.startPct >= e + 1.5);
+    if (row === -1) { row = rowEnds.length; rowEnds.push(b.startPct + b.w); }
+    else { rowEnds[row] = b.startPct + b.w; }
+    b.row = row;
+  });
+  const rowCount = Math.max(1, rowEnds.length);
+
+  const ROW_H = 14, PAD = 10;
+  const chartH = rowCount * ROW_H + PAD * 2;
+
+  const dim = (g) => selGroup && g !== selGroup;
+  const groupCount = (g) => inits.filter((i) => groupOf(i) === g).length;
+  const selectedInits = selGroup ? inits.filter((i) => groupOf(i) === selGroup) : [];
+
+  const chip = (label, count, color, active, onClick) => (
+    <button onClick={onClick} style={{
+      fontSize: 11, padding: "4px 10px", borderRadius: 999, fontWeight: 600,
+      border: `1px solid ${active ? (color || "rgba(255,255,255,0.4)") : "rgba(255,255,255,0.12)"}`,
+      background: active ? (color || "rgba(255,255,255,0.1)") : "transparent",
+      color: active ? "#fff" : (color || "rgba(255,255,255,0.7)"),
+      cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6,
+      transition: "all 0.15s",
+    }}>
+      {color && <span style={{ width: 8, height: 8, borderRadius: "50%", background: color, display: "inline-block" }} />}
+      {label} <span style={{ opacity: 0.7 }}>({count})</span>
+    </button>
+  );
+
+  return (
+    <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10, padding: 16, marginBottom: 28 }}>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 14 }}>
+        {chip("All", inits.length, null, selGroup === null, () => setSelGroup(null))}
+        {groups.map((g) => chip(g, groupCount(g), colorFor(g), selGroup === g, () => setSelGroup(selGroup === g ? null : g)))}
+      </div>
+
+      <div style={{ position: "relative", height: 16, marginBottom: 4 }}>
+        {months.map((m) => <div key={m.label + m.pct} style={{ position: "absolute", left: `${m.pct}%`, fontSize: 10, color: "rgba(255,255,255,0.3)", fontWeight: 600, transform: "translateX(-50%)" }}>{m.label}</div>)}
+      </div>
+
+      <div style={{ position: "relative", height: chartH, background: "rgba(0,0,0,0.18)", borderRadius: 6, overflow: "hidden" }}>
+        {months.map((m) => <div key={"g" + m.label + m.pct} style={{ position: "absolute", left: `${m.pct}%`, top: 0, bottom: 0, width: 1, background: "rgba(255,255,255,0.04)" }} />)}
+        {packed.map((b) => {
+          const isDim = dim(b.group);
+          return (
+            <div key={b.init.id} title={`${b.init.name} — ${b.group} — ${fmt(b.init.deadline)}`} onClick={() => setSelGroup(b.group)}
+              style={{
+                position: "absolute", top: PAD + b.row * ROW_H, left: `${b.startPct}%`, width: `${b.w}%`, height: ROW_H - 4,
+                background: b.color, borderRadius: 4, cursor: "pointer",
+                opacity: isDim ? 0.15 : 0.9, transition: "opacity 0.2s",
+              }}>
+              {b.milestones.map((m, idx) => {
+                const mPct = dP(m.target);
+                if (mPct < b.startPct - 0.05 || mPct > b.startPct + b.w + 0.05) return null;
+                const off = b.w > 0 ? ((mPct - b.startPct) / b.w) * 100 : 50;
+                return (
+                  <div key={idx} title={`${m.label} — ${fmt(m.target)}${m.done ? " ✓" : ""}`} style={{
+                    position: "absolute", left: `${off}%`, top: "50%", transform: "translate(-50%, -50%)",
+                    width: 5, height: 5, borderRadius: "50%",
+                    background: m.done ? "#27ae60" : "#fff",
+                    boxShadow: m.done ? "0 0 0 1px #27ae60" : "0 0 0 1px rgba(0,0,0,0.4)",
+                  }} />
+                );
+              })}
+            </div>
+          );
+        })}
+      </div>
+
+      {selGroup && (
+        <div style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: colorFor(selGroup), marginBottom: 8, display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ width: 8, height: 8, borderRadius: "50%", background: colorFor(selGroup) }} />
+            {selGroup} — {selectedInits.length} initiative{selectedInits.length !== 1 ? "s" : ""}
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            {[...selectedInits].sort((a, b) => new Date(a.deadline) - new Date(b.deadline)).map((i) => {
+              const done = (i.milestones || []).filter((m) => m.done).length;
+              const total = (i.milestones || []).length;
+              return (
+                <div key={i.id} style={{ display: "flex", gap: 10, alignItems: "center", fontSize: 12, color: "rgba(255,255,255,0.75)" }}>
+                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: sC(i.status), flexShrink: 0 }} />
+                  <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{i.name}</span>
+                  <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 11 }}>{done}/{total}</span>
+                  <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, minWidth: 56, textAlign: "right" }}>{fmt(i.deadline)}</span>
+                  <span style={{ fontSize: 10, color: "rgba(255,255,255,0.45)", minWidth: 72, textAlign: "right" }}>{STATUS_OPTIONS.find((o) => o.value === i.status)?.label || i.status}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ── Generic Tracker Page ── */
 function TrackerPage({ title, subtitle, storageKey, defaults, ModalComponent, extraRowInfo, extraDetailFields, onCelebrate, sortField, addLabel = "+ Initiative" }) {
   const [inits, setInits] = useState(defaults);
@@ -346,6 +466,8 @@ function TrackerPage({ title, subtitle, storageKey, defaults, ModalComponent, ex
           <button onClick={() => setModal("new")} style={{ ...bt("#d94f8a"), padding: "8px 16px", fontSize: 13 }}>{addLabel}</button>
         </div>
       </div>
+
+      <AnalyticsTimeline inits={inits} groupField={sortField || "owner"} />
 
       <div style={{ position: "relative" }}>
         <div style={{ position: "relative", height: 28, marginBottom: 8, marginLeft: LABEL_W + 24 }}>

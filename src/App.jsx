@@ -423,9 +423,12 @@ function TrackerPage({ title, subtitle, storageKey, defaults, ModalComponent, ex
   const [sel, setSel] = useState(null);
   const [ready, setReady] = useState(false);
   const [modal, setModal] = useState(null);
+  const [expandedGroups, setExpandedGroups] = useState(new Set()); // collapsed by default
   const saveTimeout = useRef(null);
+  const toggleGroup = (g) => setExpandedGroups(prev => { const n = new Set(prev); if (n.has(g)) n.delete(g); else n.add(g); return n; });
 
-  useEffect(() => { (async () => { const s = await loadState(storageKey); if (s?.inits) setInits(s.inits); setReady(true); })(); }, []);
+  // Load saved state and merge in any new default initiatives (preserves user edits — never overwrites saved milestones/status/etc.)
+  useEffect(() => { (async () => { const s = await loadState(storageKey); if (s?.inits) { const savedIds = new Set(s.inits.map(i => i.id)); const newOnes = defaults.filter(d => !savedIds.has(d.id)); setInits(newOnes.length ? [...s.inits, ...newOnes] : s.inits); } setReady(true); })(); }, []);
   useEffect(() => { if (!ready) return; clearTimeout(saveTimeout.current); saveTimeout.current = setTimeout(() => saveState(storageKey, { inits }), 1000); return () => clearTimeout(saveTimeout.current); }, [inits, ready]);
 
   const prev = useRef({});
@@ -475,26 +478,52 @@ function TrackerPage({ title, subtitle, storageKey, defaults, ModalComponent, ex
         </div>
 
         {(() => {
-          let lastOwner = null;
-          return sorted.map((init) => {
-            const idx = inits.findIndex(i => i.id === init.id);
-            const active = sel === init.id;
-            const ms = init.milestones || [];
-            const dlPct = dP(init.deadline);
-            const isPast = new Date(init.deadline + "T23:59:59") < now && init.status !== "complete";
-            const firstMs = ms[0]; const startPct = firstMs ? dP(firstMs.target) : dlPct;
-            const barW = Math.max(0, dlPct - startPct);
-            const doneCt = ms.filter(m => m.done).length;
-            const pctDone = ms.length ? Math.round((doneCt / ms.length) * 100) : 0;
-            const color = sC(init.status);
-            const done = init.status === "complete";
-            const showHeader = (init[sortField || "owner"]) !== lastOwner;
-            lastOwner = init[sortField || "owner"];
+          const gkey = sortField || "owner";
+          const grouped = [];
+          const seenIdx = new Map();
+          sorted.forEach((init) => {
+            const g = init[gkey] || "Unassigned";
+            if (!seenIdx.has(g)) { seenIdx.set(g, grouped.length); grouped.push([g, []]); }
+            grouped[seenIdx.get(g)][1].push(init);
+          });
+
+          return grouped.map(([groupName, items]) => {
+            const expanded = expandedGroups.has(groupName);
+            const gDone = items.reduce((a, i) => a + (i.milestones || []).filter(m => m.done).length, 0);
+            const gTotal = items.reduce((a, i) => a + (i.milestones || []).length, 0);
+            const gPct = gTotal ? Math.round((gDone / gTotal) * 100) : 0;
 
             return (
-              <div key={init.id}>
-                {showHeader && <div style={{ padding: "12px 0 6px 24px", fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "1px" }}>{init[sortField || "owner"] || "Unassigned"}</div>}
-                <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 5 }}>
+              <div key={groupName}>
+                <div onClick={() => toggleGroup(groupName)} style={{
+                  cursor: "pointer", padding: "10px 14px 10px 24px", marginTop: 12, marginBottom: 4,
+                  display: "flex", alignItems: "center", gap: 10,
+                  borderRadius: 8, background: expanded ? "rgba(255,255,255,0.04)" : "transparent",
+                  transition: "background 0.15s",
+                }}>
+                  <span style={{ fontSize: 10, color: "rgba(255,255,255,0.55)", width: 10, transform: expanded ? "rotate(90deg)" : "none", transition: "transform 0.15s", display: "inline-block" }}>▶</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.8)", textTransform: "uppercase", letterSpacing: "1px" }}>{groupName}</span>
+                  <span style={{ fontSize: 11, color: "rgba(255,255,255,0.35)" }}>{items.length} initiative{items.length !== 1 ? "s" : ""}</span>
+                  <span style={{ flex: 1 }} />
+                  <span style={{ fontSize: 11, fontWeight: 600, color: gPct === 100 ? "#27ae60" : "rgba(255,255,255,0.5)" }}>{gDone}/{gTotal} · {gPct}%</span>
+                </div>
+
+                {expanded && items.map((init) => {
+                  const idx = inits.findIndex(i => i.id === init.id);
+                  const active = sel === init.id;
+                  const ms = init.milestones || [];
+                  const dlPct = dP(init.deadline);
+                  const isPast = new Date(init.deadline + "T23:59:59") < now && init.status !== "complete";
+                  const firstMs = ms[0]; const startPct = firstMs ? dP(firstMs.target) : dlPct;
+                  const barW = Math.max(0, dlPct - startPct);
+                  const doneCt = ms.filter(m => m.done).length;
+                  const pctDone = ms.length ? Math.round((doneCt / ms.length) * 100) : 0;
+                  const color = sC(init.status);
+                  const done = init.status === "complete";
+
+                  return (
+                    <div key={init.id}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 5 }}>
                   <div style={{ display: "flex", flexDirection: "column", gap: 0, width: 18, flexShrink: 0 }}>
                     <button onClick={() => reorder(idx, "up")} style={{ background: "none", border: "none", color: idx === 0 ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.3)", cursor: idx === 0 ? "default" : "pointer", fontSize: 10, padding: 0, lineHeight: 1 }}>&#9650;</button>
                     <button onClick={() => reorder(idx, "down")} style={{ background: "none", border: "none", color: idx === inits.length-1 ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.3)", cursor: idx === inits.length-1 ? "default" : "pointer", fontSize: 10, padding: 0, lineHeight: 1 }}>&#9660;</button>
@@ -557,7 +586,10 @@ function TrackerPage({ title, subtitle, storageKey, defaults, ModalComponent, ex
                       </div>
                     </div>
                   </div>
-                )}
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             );
           });

@@ -967,8 +967,8 @@ function AiMonetizationPage() {
               <div key={p} style={{ background: F.bg, border: `1px solid ${F.border}`, borderRadius: 10, padding: "14px 16px" }}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em" }}>{p}</div>
                 <input value={pd.sku} onChange={e => setProductField(p, { sku: e.target.value })} style={{ ...inp, width: "100%", marginTop: 6, fontWeight: 700 }} />
-                <div style={{ display: "flex", gap: 6, marginTop: 10, alignItems: "center" }}>
-                  <span style={{ fontSize: 18, fontWeight: 700, color: F.plum }}>$</span>
+                <div style={{ display: "flex", gap: 4, marginTop: 10, alignItems: "center", minWidth: 0 }}>
+                  <span style={{ fontSize: 15, fontWeight: 700, color: F.plum }}>$</span>
                   <input
                     type="number"
                     min="0"
@@ -979,7 +979,7 @@ function AiMonetizationPage() {
                       const v = e.target.value;
                       setProductField(p, { price: v === "" ? null : (parseFloat(v) || 0) });
                     }}
-                    style={{ ...inp, flex: 1, fontWeight: 700, fontSize: 18 }}
+                    style={{ ...inp, flex: 1, minWidth: 0, width: "100%", fontWeight: 700, fontSize: 15, padding: "7px 9px" }}
                   />
                 </div>
               </div>

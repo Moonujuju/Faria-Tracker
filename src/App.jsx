@@ -304,6 +304,54 @@ const DEFAULT_AI = [
   ], status: "not-started" },
 ];
 
+/* ── AI Monetization defaults ─────────────────────────────
+   Per-product SKU / pricing / wow-outcomes config + bundle
+   discounts + framework copy. Stored in faria-ai-monetization-v1
+   (separate from faria-ai-v12). Feature-level tier + rationale +
+   action limits live ON the AI feature objects in faria-ai-v12
+   (added additively — not in DEFAULT_AI literals). */
+const MONZ_PRODUCTS = ["OpenApply", "ManageBac+", "Atlas"];
+const DEFAULT_MONETIZATION = {
+  products: {
+    "OpenApply":  { sku: "OpenApply AI Pro",  unit: "per student / year", price: 0, wowOutcomes: ["", "", ""] },
+    "ManageBac+": { sku: "ManageBac+ AI Pro", unit: "per student / year", price: 0, wowOutcomes: ["", "", ""] },
+    "Atlas":      { sku: "Atlas AI Pro",      unit: "per student / year", price: 0, wowOutcomes: ["", "", ""] },
+  },
+  bundleDiscounts: [
+    { products: 2, pct: 10 },
+    { products: 3, pct: 20 },
+    { products: 4, pct: 25 },
+  ],
+  framework: {
+    proFilter: [
+      "Saves a school 5+ hours/week of manual work",
+      "Unlocks something they literally cannot do today",
+      "Produces a measurable outcome (conversion lift, time-to-decision, retention)",
+    ],
+  },
+};
+
+// Returns user-assigned tier if set, otherwise infers a candidate tier
+// from impact. User overrides always win. "" = explicitly Unassigned.
+function effectiveTier(f) {
+  if (f.tier === "essential" || f.tier === "pro" || f.tier === "unassigned") return f.tier;
+  // Inferred default: high impact → Pro candidate, else Essential candidate
+  return f.impact === "high" ? "pro" : "essential";
+}
+
+// Merge a fresh monetization config with saved one (deep-merge products
+// so adding a new product later doesn't wipe existing pricing).
+function mergeMonz(saved) {
+  if (!saved) return DEFAULT_MONETIZATION;
+  return {
+    ...DEFAULT_MONETIZATION,
+    ...saved,
+    products: { ...DEFAULT_MONETIZATION.products, ...(saved.products || {}) },
+    bundleDiscounts: saved.bundleDiscounts || DEFAULT_MONETIZATION.bundleDiscounts,
+    framework: { ...DEFAULT_MONETIZATION.framework, ...(saved.framework || {}) },
+  };
+}
+
 /* ── Modals ── */
 function AIModal({ init, onSave, onClose, onDelete }) {
   const [name, setName] = useState(init?.name || ""); const [desc, setDesc] = useState(init?.description || "");
@@ -756,6 +804,388 @@ function TrackerPage({ title, subtitle, storageKey, defaults, ModalComponent, ex
   );
 }
 
+/* ── AI Monetization Page ─────────────────────────────────
+   Editable "open discussion" working doc. Reads AI features
+   from faria-ai-v12 (same store as the AI Powered Features page)
+   and writes them back; reads/writes monetization config to
+   faria-ai-monetization-v1. */
+function AiMonetizationPage() {
+  const [ai, setAi] = useState({ inits: [] });
+  const [mz, setMz] = useState(DEFAULT_MONETIZATION);
+  const [readyAi, setReadyAi] = useState(false);
+  const [readyMz, setReadyMz] = useState(false);
+  const [expanded, setExpanded] = useState(new Set(MONZ_PRODUCTS)); // all expanded by default
+  const [editFeat, setEditFeat] = useState(null); // feature id whose rationale is being edited
+  const [editLimits, setEditLimits] = useState(null); // feature id whose limits are being edited
+  const [bundlePick, setBundlePick] = useState(new Set(MONZ_PRODUCTS));
+  const aiSaveTimer = useRef(null);
+  const mzSaveTimer = useRef(null);
+
+  // Load both stores
+  useEffect(() => { (async () => {
+    const s = await loadState("faria-ai-v12");
+    if (s?.inits) setAi({ inits: s.inits });
+    setReadyAi(true);
+  })(); }, []);
+  useEffect(() => { (async () => {
+    const s = await loadState("faria-ai-monetization-v1");
+    setMz(mergeMonz(s));
+    setReadyMz(true);
+  })(); }, []);
+
+  // Debounced saves
+  useEffect(() => { if (!readyAi) return; clearTimeout(aiSaveTimer.current); aiSaveTimer.current = setTimeout(() => saveState("faria-ai-v12", ai), 1000); return () => clearTimeout(aiSaveTimer.current); }, [ai, readyAi]);
+  useEffect(() => { if (!readyMz) return; clearTimeout(mzSaveTimer.current); mzSaveTimer.current = setTimeout(() => saveState("faria-ai-monetization-v1", mz), 1000); return () => clearTimeout(mzSaveTimer.current); }, [mz, readyMz]);
+
+  // Mutators
+  const setFeatField = (id, patch) => setAi(prev => ({ ...prev, inits: prev.inits.map(f => f.id === id ? { ...f, ...patch } : f) }));
+  const setProductField = (prod, patch) => setMz(prev => ({ ...prev, products: { ...prev.products, [prod]: { ...prev.products[prod], ...patch } } }));
+  const setWow = (prod, idx, val) => setMz(prev => {
+    const list = [...(prev.products[prod]?.wowOutcomes || ["", "", ""])];
+    list[idx] = val;
+    return { ...prev, products: { ...prev.products, [prod]: { ...prev.products[prod], wowOutcomes: list } } };
+  });
+  const setDiscount = (idx, patch) => setMz(prev => ({ ...prev, bundleDiscounts: prev.bundleDiscounts.map((d, i) => i === idx ? { ...d, ...patch } : d) }));
+  const setFilterBullet = (idx, val) => setMz(prev => ({ ...prev, framework: { ...prev.framework, proFilter: prev.framework.proFilter.map((b, i) => i === idx ? val : b) } }));
+  const toggleExpand = (p) => setExpanded(prev => { const n = new Set(prev); if (n.has(p)) n.delete(p); else n.add(p); return n; });
+  const toggleBundle = (p) => setBundlePick(prev => { const n = new Set(prev); if (n.has(p)) n.delete(p); else n.add(p); return n; });
+
+  // Computed
+  const featuresByProduct = (prod) => ai.inits.filter(f => f.product === prod);
+  const proReadyDate = (prod) => {
+    const pros = featuresByProduct(prod).filter(f => effectiveTier(f) === "pro");
+    if (pros.length === 0) return { label: "No Pro candidates yet", muted: true };
+    const openPros = pros.filter(f => f.status !== "complete");
+    if (openPros.length === 0) {
+      const last = pros.map(f => f.deadline).sort().slice(-1)[0];
+      return { label: `Live since ${fmt(last)}`, muted: false, complete: true };
+    }
+    const earliest = openPros.map(f => f.deadline).sort()[0];
+    return { label: `Ready ${fmt(earliest)} (${pros.length - openPros.length}/${pros.length} shipped)`, muted: false };
+  };
+  const proShipped = (prod) => {
+    const pros = featuresByProduct(prod).filter(f => effectiveTier(f) === "pro");
+    return { done: pros.filter(f => f.status === "complete").length, total: pros.length };
+  };
+
+  // Bundle calc
+  const bundleArr = [...bundlePick];
+  const bundleSubtotal = bundleArr.reduce((s, p) => s + (Number(mz.products[p]?.price) || 0), 0);
+  const bundleRule = mz.bundleDiscounts.find(d => d.products === bundleArr.length);
+  const bundleDisc = bundleSubtotal * ((bundleRule?.pct || 0) / 100);
+  const bundleTotal = bundleSubtotal - bundleDisc;
+
+  // Tier badge
+  const tierBadge = (tier) => {
+    const map = {
+      pro:        { bg: F.plum,        fg: F.paper, label: "AI Pro" },
+      essential:  { bg: F.lightYellow, fg: F.plum,  label: "AI Essential" },
+      unassigned: { bg: F.bg,          fg: F.muted2, label: "Unassigned" },
+    };
+    const m = map[tier] || map.unassigned;
+    return <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: m.bg, color: m.fg, textTransform: "uppercase", letterSpacing: "0.05em", border: tier === "unassigned" ? `1px solid ${F.border}` : "none" }}>{m.label}</span>;
+  };
+
+  const card = { background: F.surface, border: `1px solid ${F.border}`, borderRadius: 12, padding: "18px 22px", marginBottom: 18, boxShadow: F.shadowSm };
+  const sectionTitle = { fontSize: 11, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 };
+
+  const editFeatObj = editFeat != null ? ai.inits.find(f => f.id === editFeat) : null;
+  const editLimitsObj = editLimits != null ? ai.inits.find(f => f.id === editLimits) : null;
+
+  return (
+    <>
+      <div style={{ marginBottom: 18 }}>
+        <h1 style={{ fontSize: 24, fontWeight: 700, margin: 0, color: F.plum, lineHeight: 1.15 }}>Current Monetization Plan (open discussion)</h1>
+        <p style={{ margin: "4px 0 0", fontSize: 13.5, color: F.muted }}>Working framework for AI Essential vs AI Pro across Faria products. Edit anything inline — this is a living document.</p>
+      </div>
+
+      {/* Framework card */}
+      <div style={card}>
+        <div style={sectionTitle}>Framework</div>
+        <p style={{ margin: "0 0 10px", fontSize: 13.5, color: F.plum, lineHeight: 1.55 }}>
+          Two tiers: <strong>AI Essential</strong> (free) and <strong>AI Pro</strong> (separate paid SKU per product).
+          If a school subscribes to AI Pro for more than one product, a bundle discount stacks across products.
+          Each product needs <strong>2–3 candidate "wow" outcomes</strong> identified, scoped, and validated before its paid AI SKU goes live.
+        </p>
+        <p style={{ margin: "10px 0 8px", fontSize: 13, color: F.plum, fontWeight: 700 }}>A feature qualifies for AI Pro when it:</p>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          {mz.framework.proFilter.map((b, i) => (
+            <div key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ width: 6, height: 6, borderRadius: "50%", background: F.pink, flexShrink: 0 }} />
+              <input value={b} onChange={e => setFilterBullet(i, e.target.value)} style={{ ...inp, flex: 1, fontSize: 13 }} />
+            </div>
+          ))}
+        </div>
+        <p style={{ margin: "12px 0 0", fontSize: 12.5, color: F.muted, fontStyle: "italic" }}>If a candidate doesn't pass one of those, it stays in AI Essential.</p>
+      </div>
+
+      {/* SKUs & pricing */}
+      <div style={card}>
+        <div style={sectionTitle}>SKUs &amp; pricing</div>
+        <div style={{ display: "grid", gridTemplateColumns: `repeat(${MONZ_PRODUCTS.length}, minmax(0,1fr))`, gap: 14 }}>
+          {MONZ_PRODUCTS.map(p => {
+            const pd = mz.products[p] || { sku: "", unit: "", price: 0 };
+            return (
+              <div key={p} style={{ background: F.bg, border: `1px solid ${F.border}`, borderRadius: 10, padding: "14px 16px" }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em" }}>{p}</div>
+                <input value={pd.sku} onChange={e => setProductField(p, { sku: e.target.value })} style={{ ...inp, width: "100%", marginTop: 6, fontWeight: 700 }} />
+                <div style={{ display: "flex", gap: 6, marginTop: 10, alignItems: "center" }}>
+                  <span style={{ fontSize: 16, fontWeight: 700, color: F.plum }}>$</span>
+                  <input type="number" min="0" step="0.01" value={pd.price} onChange={e => setProductField(p, { price: parseFloat(e.target.value) || 0 })} style={{ ...inp, width: 90, fontWeight: 700, fontSize: 16 }} />
+                  <input value={pd.unit} onChange={e => setProductField(p, { unit: e.target.value })} style={{ ...inp, flex: 1, fontSize: 12 }} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div style={{ marginTop: 18 }}>
+          <div style={{ ...sectionTitle, marginBottom: 8 }}>Bundle discounts (stacked)</div>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 14 }}>
+            {mz.bundleDiscounts.map((d, i) => (
+              <div key={i} style={{ background: F.bg, border: `1px solid ${F.border}`, borderRadius: 8, padding: "8px 12px", display: "flex", alignItems: "center", gap: 8 }}>
+                <input type="number" min="2" max="10" value={d.products} onChange={e => setDiscount(i, { products: parseInt(e.target.value) || 2 })} style={{ ...inp, width: 52, padding: "4px 8px", textAlign: "center" }} />
+                <span style={{ fontSize: 12, color: F.muted, fontWeight: 600 }}>products →</span>
+                <input type="number" min="0" max="100" value={d.pct} onChange={e => setDiscount(i, { pct: parseFloat(e.target.value) || 0 })} style={{ ...inp, width: 60, padding: "4px 8px", textAlign: "center" }} />
+                <span style={{ fontSize: 12, color: F.muted, fontWeight: 600 }}>% off</span>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ background: F.bg, border: `1px solid ${F.border}`, borderRadius: 8, padding: "12px 14px" }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>Worked example</div>
+            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 10 }}>
+              {MONZ_PRODUCTS.map(p => (
+                <label key={p} style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", fontSize: 13, color: F.plum }}>
+                  <input type="checkbox" checked={bundlePick.has(p)} onChange={() => toggleBundle(p)} style={{ cursor: "pointer" }} />
+                  {p}
+                </label>
+              ))}
+            </div>
+            <div style={{ display: "flex", gap: 18, flexWrap: "wrap", fontSize: 13, alignItems: "baseline" }}>
+              <div><span style={{ color: F.muted, fontWeight: 600 }}>Subtotal</span> <strong style={{ color: F.plum }}>${bundleSubtotal.toFixed(2)}</strong></div>
+              <div><span style={{ color: F.muted, fontWeight: 600 }}>Bundle disc.</span> <strong style={{ color: F.pink }}>-${bundleDisc.toFixed(2)}</strong>{bundleRule && <span style={{ fontSize: 11, color: F.muted, marginLeft: 4 }}>({bundleRule.pct}% off, {bundleRule.products} products)</span>}</div>
+              <div style={{ marginLeft: "auto", fontSize: 16 }}><span style={{ color: F.muted, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", fontSize: 11 }}>Total</span> <strong style={{ color: F.plum, fontSize: 18 }}>${bundleTotal.toFixed(2)}</strong></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Per-product breakdown */}
+      {MONZ_PRODUCTS.map(prod => {
+        const pd = mz.products[prod] || { wowOutcomes: ["", "", ""] };
+        const isOpen = expanded.has(prod);
+        const feats = featuresByProduct(prod);
+        const pro = feats.filter(f => effectiveTier(f) === "pro");
+        const ess = feats.filter(f => effectiveTier(f) === "essential");
+        const un  = feats.filter(f => effectiveTier(f) === "unassigned");
+        const ship = proShipped(prod);
+        const ready = proReadyDate(prod);
+        const limited = feats.filter(f => f.actionLimits);
+
+        return (
+          <div key={prod} style={card}>
+            <div onClick={() => toggleExpand(prod)} style={{ display: "flex", alignItems: "center", gap: 12, cursor: "pointer", userSelect: "none" }}>
+              <span style={{ color: F.plum, fontSize: 12, transition: "transform 0.15s", transform: isOpen ? "rotate(90deg)" : "rotate(0deg)" }}>▶</span>
+              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: F.plum, flex: 1 }}>{prod}</h2>
+              <span style={{ fontSize: 11, fontWeight: 700, color: ready.complete ? F.green : (ready.muted ? F.muted2 : F.plum), background: ready.complete ? F.greenSoft : F.bg, padding: "3px 10px", borderRadius: 999, border: `1px solid ${ready.complete ? F.green : F.border}` }}>{ready.label}</span>
+              <span style={{ fontSize: 11, color: F.muted, fontWeight: 600 }}>{ship.done}/{ship.total} Pro shipped</span>
+            </div>
+
+            {isOpen && (
+              <div style={{ marginTop: 16 }}>
+                {/* Wow outcomes */}
+                <div style={{ marginBottom: 18 }}>
+                  <div style={sectionTitle}>"Wow" outcomes — validate 2–3 before paid go-live</div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    {[0, 1, 2].map(i => (
+                      <div key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: F.muted2, minWidth: 16 }}>{i + 1}.</span>
+                        <input value={pd.wowOutcomes?.[i] || ""} onChange={e => setWow(prod, i, e.target.value)} placeholder={`What's the "wow" outcome #${i + 1} for ${prod}?`} style={{ ...inp, flex: 1 }} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Feature buckets */}
+                <div style={sectionTitle}>Features by tier</div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
+                  {[
+                    { key: "pro", title: "AI Pro", list: pro, bg: F.plum, fg: F.paper, bd: F.plum },
+                    { key: "essential", title: "AI Essential", list: ess, bg: F.lightYellow, fg: F.plum, bd: F.yellow },
+                  ].map(b => (
+                    <div key={b.key} style={{ background: F.bg, border: `1px solid ${F.border}`, borderRadius: 10, overflow: "hidden" }}>
+                      <div style={{ background: b.bg, color: b.fg, padding: "8px 12px", fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <span>{b.title}</span>
+                        <span style={{ fontSize: 11, opacity: 0.85 }}>{b.list.length}</span>
+                      </div>
+                      <div style={{ padding: 10, display: "flex", flexDirection: "column", gap: 8, minHeight: 60 }}>
+                        {b.list.length === 0 && <div style={{ fontSize: 12, color: F.muted2, fontStyle: "italic", textAlign: "center", padding: 12 }}>No features yet</div>}
+                        {b.list.map(f => (
+                          <div key={f.id} style={{ background: F.surface, border: `1px solid ${F.border}`, borderRadius: 8, padding: "8px 10px" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                              <span style={{ width: 6, height: 6, borderRadius: "50%", background: sC(f.status), flexShrink: 0 }} />
+                              <span style={{ flex: 1, fontSize: 12.5, fontWeight: 600, color: F.plum }}>{f.name}</span>
+                              <span style={{ fontSize: 10, color: F.muted2, fontWeight: 600 }}>{fmt(f.deadline)}</span>
+                            </div>
+                            {f.valueRationale && <div style={{ fontSize: 11.5, color: F.muted, marginLeft: 12, marginBottom: 6, lineHeight: 1.4 }}><span style={{ fontWeight: 700, color: F.muted2 }}>Why {b.title}:</span> {f.valueRationale}</div>}
+                            <div style={{ display: "flex", gap: 4, marginLeft: 12, flexWrap: "wrap" }}>
+                              <button onClick={() => setEditFeat(f.id)} style={{ ...bt("ghost"), padding: "3px 8px", fontSize: 10.5 }}>edit rationale</button>
+                              {b.key !== "pro" && <button onClick={() => setFeatField(f.id, { tier: "pro" })} style={{ ...bt(), padding: "3px 8px", fontSize: 10.5 }}>→ Pro</button>}
+                              {b.key !== "essential" && <button onClick={() => setFeatField(f.id, { tier: "essential" })} style={{ ...bt(), padding: "3px 8px", fontSize: 10.5 }}>→ Essential</button>}
+                              <button onClick={() => setFeatField(f.id, { tier: "unassigned" })} style={{ ...bt("ghost"), padding: "3px 8px", fontSize: 10.5, color: F.muted }}>→ Unassigned</button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {un.length > 0 && (
+                  <div style={{ background: F.bg, border: `1px solid ${F.border}`, borderRadius: 10, marginBottom: 16, overflow: "hidden" }}>
+                    <div style={{ background: F.surface, color: F.muted, padding: "8px 12px", fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", borderBottom: `1px solid ${F.border}` }}>Unassigned · {un.length}</div>
+                    <div style={{ padding: 10, display: "flex", flexDirection: "column", gap: 8 }}>
+                      {un.map(f => (
+                        <div key={f.id} style={{ background: F.surface, border: `1px solid ${F.border}`, borderRadius: 8, padding: "8px 10px", display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                          <span style={{ width: 6, height: 6, borderRadius: "50%", background: sC(f.status), flexShrink: 0 }} />
+                          <span style={{ flex: 1, fontSize: 12.5, fontWeight: 600, color: F.plum, minWidth: 200 }}>{f.name}</span>
+                          <span style={{ fontSize: 10, color: F.muted2, fontWeight: 600 }}>{fmt(f.deadline)}</span>
+                          <button onClick={() => setFeatField(f.id, { tier: "pro" })} style={{ ...bt(), padding: "3px 8px", fontSize: 10.5 }}>→ Pro</button>
+                          <button onClick={() => setFeatField(f.id, { tier: "essential" })} style={{ ...bt(), padding: "3px 8px", fontSize: 10.5 }}>→ Essential</button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Fair use limits */}
+                <div style={sectionTitle}>Fair use limits (per AI action, per tier)</div>
+                <div style={{ background: F.bg, border: `1px solid ${F.border}`, borderRadius: 10, overflow: "hidden", marginBottom: 8 }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1.6fr 1fr 1fr 70px", background: F.surface, padding: "8px 12px", fontSize: 10.5, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em", borderBottom: `1px solid ${F.border}` }}>
+                    <div>Action</div>
+                    <div>AI Essential</div>
+                    <div>AI Pro</div>
+                    <div></div>
+                  </div>
+                  {limited.length === 0 && <div style={{ padding: 14, fontSize: 12.5, color: F.muted, fontStyle: "italic", textAlign: "center" }}>No fair-use limits set. Add limits to any AI action that consumes inference cost.</div>}
+                  {limited.map(f => {
+                    const al = f.actionLimits;
+                    const tierCell = (t) => (
+                      <div style={{ fontSize: 12, color: F.plum, lineHeight: 1.5 }}>
+                        <div>{al.perUser?.[t] != null ? `${al.perUser[t]} / user / ${al.unit}` : "—"}</div>
+                        <div style={{ color: F.muted, fontSize: 11.5 }}>{al.perAccount?.[t] != null ? `${al.perAccount[t]} / account / ${al.unit}` : "—"}</div>
+                      </div>
+                    );
+                    return (
+                      <div key={f.id} style={{ display: "grid", gridTemplateColumns: "1.6fr 1fr 1fr 70px", padding: "10px 12px", borderBottom: `1px solid ${F.border}`, alignItems: "center" }}>
+                        <div style={{ fontSize: 12.5, fontWeight: 600, color: F.plum }}>{f.name} <span style={{ fontSize: 10, fontWeight: 700, color: F.muted2 }}>· {effectiveTier(f).toUpperCase()}</span></div>
+                        {tierCell("essential")}
+                        {tierCell("pro")}
+                        <button onClick={() => setEditLimits(f.id)} style={{ ...bt(), padding: "3px 8px", fontSize: 10.5 }}>edit</button>
+                      </div>
+                    );
+                  })}
+                </div>
+                <button onClick={() => { const first = feats.find(f => !f.actionLimits); if (first) setEditLimits(first.id); }} style={{ ...bt(), fontSize: 12 }}>+ Add fair-use limit</button>
+                <p style={{ margin: "10px 0 0", fontSize: 11.5, color: F.muted, fontStyle: "italic" }}>Essential = generous-but-bounded so most schools never hit it. Pro = high cap to safeguard our inference investment.</p>
+              </div>
+            )}
+          </div>
+        );
+      })}
+
+      {/* Launch timeline */}
+      <div style={card}>
+        <div style={sectionTitle}>Launch timeline</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {MONZ_PRODUCTS.map(prod => {
+            const ready = proReadyDate(prod);
+            const ship = proShipped(prod);
+            const pct = ship.total > 0 ? Math.round((ship.done / ship.total) * 100) : 0;
+            return (
+              <div key={prod} style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{ minWidth: 110, fontSize: 13, fontWeight: 700, color: F.plum }}>{prod} Pro</div>
+                <div style={{ flex: 1, height: 8, borderRadius: 4, background: F.bg, border: `1px solid ${F.border}`, overflow: "hidden" }}>
+                  <div style={{ width: `${pct}%`, height: "100%", background: ready.complete ? F.green : F.plum, transition: "width 0.3s" }} />
+                </div>
+                <div style={{ minWidth: 170, fontSize: 12, color: F.muted, fontWeight: 600, textAlign: "right" }}>{ready.label}</div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Rationale editor modal */}
+      {editFeatObj && (
+        <Modal onClose={() => setEditFeat(null)}>
+          <h3 style={{ margin: "0 0 6px", fontSize: 18, fontWeight: 700, color: F.plum }}>Why is this {effectiveTier(editFeatObj) === "pro" ? "Pro" : effectiveTier(editFeatObj) === "essential" ? "Essential" : "Unassigned"}?</h3>
+          <p style={{ margin: "0 0 14px", fontSize: 13, color: F.muted }}>{editFeatObj.name} · {editFeatObj.product}</p>
+          <div style={lb}>Value rationale</div>
+          <textarea value={editFeatObj.valueRationale || ""} onChange={e => setFeatField(editFeatObj.id, { valueRationale: e.target.value })} rows={5} placeholder="e.g. saves 5+ hrs/wk of manual application review; unlocks predictive enrolment likelihood" style={{ ...inp, width: "100%", resize: "vertical" }} />
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 16 }}>
+            <button onClick={() => setEditFeat(null)} style={bt("primary")}>Done</button>
+          </div>
+        </Modal>
+      )}
+
+      {/* Limits editor modal */}
+      {editLimitsObj && (
+        <LimitsModal feat={editLimitsObj} feats={featuresByProduct(editLimitsObj.product)} onPick={(id) => setEditLimits(id)} onChange={(patch) => setFeatField(editLimitsObj.id, patch)} onClose={() => setEditLimits(null)} />
+      )}
+    </>
+  );
+}
+
+function LimitsModal({ feat, feats, onPick, onChange, onClose }) {
+  const al = feat.actionLimits || { perUser: { essential: null, pro: null }, perAccount: { essential: null, pro: null }, unit: "day" };
+  const setField = (path, val) => {
+    const next = { ...al };
+    if (path === "unit") next.unit = val;
+    else { const [scope, tier] = path.split("."); next[scope] = { ...next[scope], [tier]: val === "" ? null : Number(val) }; }
+    onChange({ actionLimits: next });
+  };
+  return (
+    <Modal onClose={onClose}>
+      <h3 style={{ margin: "0 0 6px", fontSize: 18, fontWeight: 700, color: F.plum }}>Fair use limits</h3>
+      <p style={{ margin: "0 0 14px", fontSize: 13, color: F.muted }}>Set per-user and per-account caps for this AI action. Leave blank to mean "unlimited" or "not applicable".</p>
+      <div style={lb}>Action</div>
+      <select value={feat.id} onChange={e => onPick(parseInt(e.target.value))} style={{ ...inp, width: "100%", cursor: "pointer", marginBottom: 14 }}>
+        {feats.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+      </select>
+      <div style={lb}>Reset window</div>
+      <select value={al.unit} onChange={e => setField("unit", e.target.value)} style={{ ...inp, width: "100%", cursor: "pointer", marginBottom: 14 }}>
+        <option value="day">per day</option>
+        <option value="week">per week</option>
+        <option value="month">per month</option>
+      </select>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
+        <div>
+          <div style={lb}>Per user · Essential</div>
+          <input type="number" min="0" value={al.perUser?.essential ?? ""} onChange={e => setField("perUser.essential", e.target.value)} placeholder="—" style={{ ...inp, width: "100%" }} />
+        </div>
+        <div>
+          <div style={lb}>Per user · Pro</div>
+          <input type="number" min="0" value={al.perUser?.pro ?? ""} onChange={e => setField("perUser.pro", e.target.value)} placeholder="—" style={{ ...inp, width: "100%" }} />
+        </div>
+        <div>
+          <div style={lb}>Per account · Essential</div>
+          <input type="number" min="0" value={al.perAccount?.essential ?? ""} onChange={e => setField("perAccount.essential", e.target.value)} placeholder="—" style={{ ...inp, width: "100%" }} />
+        </div>
+        <div>
+          <div style={lb}>Per account · Pro</div>
+          <input type="number" min="0" value={al.perAccount?.pro ?? ""} onChange={e => setField("perAccount.pro", e.target.value)} placeholder="—" style={{ ...inp, width: "100%" }} />
+        </div>
+      </div>
+      <p style={{ margin: "0 0 14px", fontSize: 11.5, color: F.muted, fontStyle: "italic" }}>Essential's lower limits both shape the value gap and keep our inference spend bounded for free users. Pro's higher caps still protect against runaway power-user costs.</p>
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
+        <button onClick={() => { onChange({ actionLimits: null }); onClose(); }} style={bt("ghost")}>Remove limits</button>
+        <button onClick={onClose} style={bt("primary")}>Done</button>
+      </div>
+    </Modal>
+  );
+}
+
 /* ── Main App ── */
 export default function App() {
   const [page, setPage] = useState("product");
@@ -825,9 +1255,10 @@ export default function App() {
             <span style={{ fontSize: 11, fontWeight: 700, color: F.yellow, letterSpacing: "0.08em", textTransform: "uppercase" }}>Product Trackers</span>
           </div>
         </div>
-        <div style={{ display: "flex", gap: 8 }}>
-          {navBtn("product", "Product Transformation")}
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          {navBtn("product", <><span className="lbl-full">Product Transformation</span><span className="lbl-short">Product</span></>)}
           {navBtn("ai", <><span className="lbl-full">AI Powered Features</span><span className="lbl-short">AI Features</span></>)}
+          {navBtn("monz", "AI Monetization")}
         </div>
       </div>
       <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 28px" }}>
@@ -836,6 +1267,7 @@ export default function App() {
           extraRowInfo={(init) => (<>{init.product && chip(init.product)}{init.priority && <span style={{ fontSize: 10, padding: "2px 7px", borderRadius: 4, background: pC(init.priority), color: "#fff", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em" }}>{init.priority}</span>}</>)}
           extraDetailFields={(init, setField) => (<><div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>{init.product && chip(init.product)}{init.type && chip(init.type)}{init.priority && <span style={{ fontSize: 11, padding: "3px 8px", borderRadius: 4, background: pC(init.priority), color: "#fff", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em" }}>{init.priority}</span>}</div><div style={{ display: "flex", gap: 12, marginBottom: 12 }}><div style={{ flex: 1 }}><div style={lb}>Effort</div><div style={{ fontSize: 13, color: F.plum, fontWeight: 700 }}>{(init.effort||"medium").charAt(0).toUpperCase()+(init.effort||"medium").slice(1)}</div></div><div style={{ flex: 1 }}><div style={lb}>Impact</div><div style={{ fontSize: 13, color: F.plum, fontWeight: 700 }}>{(init.impact||"medium").charAt(0).toUpperCase()+(init.impact||"medium").slice(1)}</div></div></div></>)}
         />}
+        {page === "monz" && <AiMonetizationPage />}
       </div>
     </div>
   );

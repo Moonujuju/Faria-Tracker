@@ -845,6 +845,8 @@ function AiMonetizationPage() {
   const setProductField = (prod, patch) => setMz(prev => ({ ...prev, products: { ...prev.products, [prod]: { ...prev.products[prod], ...patch } } }));
   const setDiscount = (idx, patch) => setMz(prev => ({ ...prev, bundleDiscounts: prev.bundleDiscounts.map((d, i) => i === idx ? { ...d, ...patch } : d) }));
   const setFilterBullet = (idx, val) => setMz(prev => ({ ...prev, framework: { ...prev.framework, proFilter: prev.framework.proFilter.map((b, i) => i === idx ? val : b) } }));
+  const addFilterRule = () => setMz(prev => ({ ...prev, framework: { ...prev.framework, proFilter: [...prev.framework.proFilter, ""] } }));
+  const removeFilterRule = (idx) => setMz(prev => ({ ...prev, framework: { ...prev.framework, proFilter: prev.framework.proFilter.filter((_, i) => i !== idx) } }));
   const toggleExpand = (p) => setExpanded(prev => { const n = new Set(prev); if (n.has(p)) n.delete(p); else n.add(p); return n; });
   const toggleBundle = (p) => setBundlePick(prev => { const n = new Set(prev); if (n.has(p)) n.delete(p); else n.add(p); return n; });
 
@@ -928,11 +930,13 @@ function AiMonetizationPage() {
             <p style={{ margin: "0 0 12px", fontSize: 12.5, color: F.plum, fontWeight: 700, textAlign: "center" }}>A feature crosses into AI Pro when it…</p>
             <div style={{ display: "flex", flexDirection: "column", gap: 7, flex: 1 }}>
               {mz.framework.proFilter.map((b, i) => (
-                <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, background: F.surface, border: `1px solid ${F.border}`, borderRadius: 7, padding: "6px 10px" }}>
+                <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, background: F.surface, border: `1px solid ${F.border}`, borderRadius: 7, padding: "6px 8px 6px 10px" }}>
                   <span style={{ width: 18, height: 18, borderRadius: 9, background: F.pink, color: "#fff", fontSize: 10, fontWeight: 800, display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{i + 1}</span>
-                  <input value={b} onChange={e => setFilterBullet(i, e.target.value)} style={{ flex: 1, fontSize: 12.5, padding: "2px 4px", border: "none", background: "transparent", color: F.plum, outline: "none", fontFamily: "inherit", fontWeight: 500 }} />
+                  <input value={b} onChange={e => setFilterBullet(i, e.target.value)} placeholder="New rule…" style={{ flex: 1, fontSize: 12.5, padding: "2px 4px", border: "none", background: "transparent", color: F.plum, outline: "none", fontFamily: "inherit", fontWeight: 500, minWidth: 0 }} />
+                  <button onClick={() => removeFilterRule(i)} title="Remove rule" style={{ width: 20, height: 20, borderRadius: 10, border: "none", background: "transparent", color: F.muted2, cursor: "pointer", fontSize: 16, lineHeight: 1, padding: 0, flexShrink: 0, display: "inline-flex", alignItems: "center", justifyContent: "center", fontFamily: "inherit" }} onMouseEnter={e => { e.currentTarget.style.background = F.bg; e.currentTarget.style.color = F.pink; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = F.muted2; }}>×</button>
                 </div>
               ))}
+              <button onClick={addFilterRule} style={{ marginTop: 2, padding: "6px 10px", borderRadius: 7, border: `1px dashed ${F.borderStrong}`, background: "transparent", color: F.plum, fontSize: 11.5, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>+ Add rule</button>
             </div>
             <div style={{ marginTop: 12, fontSize: 11.5, color: F.muted, fontStyle: "italic", textAlign: "center" }}>Pass <strong style={{ color: F.plum }}>any one</strong> rule → Pro. Else → Essential.</div>
           </div>
@@ -964,9 +968,19 @@ function AiMonetizationPage() {
                 <div style={{ fontSize: 11, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em" }}>{p}</div>
                 <input value={pd.sku} onChange={e => setProductField(p, { sku: e.target.value })} style={{ ...inp, width: "100%", marginTop: 6, fontWeight: 700 }} />
                 <div style={{ display: "flex", gap: 6, marginTop: 10, alignItems: "center" }}>
-                  <span style={{ fontSize: 16, fontWeight: 700, color: F.plum }}>$</span>
-                  <input type="number" min="0" step="0.01" value={pd.price} onChange={e => setProductField(p, { price: parseFloat(e.target.value) || 0 })} style={{ ...inp, width: 90, fontWeight: 700, fontSize: 16 }} />
-                  <input value={pd.unit} onChange={e => setProductField(p, { unit: e.target.value })} style={{ ...inp, flex: 1, fontSize: 12 }} />
+                  <span style={{ fontSize: 18, fontWeight: 700, color: F.plum }}>$</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={pd.price ? pd.price : ""}
+                    placeholder="0"
+                    onChange={e => {
+                      const v = e.target.value;
+                      setProductField(p, { price: v === "" ? null : (parseFloat(v) || 0) });
+                    }}
+                    style={{ ...inp, flex: 1, fontWeight: 700, fontSize: 18 }}
+                  />
                 </div>
               </div>
             );

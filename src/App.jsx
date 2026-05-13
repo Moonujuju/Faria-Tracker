@@ -310,17 +310,20 @@ const DEFAULT_AI = [
    (separate from faria-ai-v12). Feature-level tier + rationale +
    action limits live ON the AI feature objects in faria-ai-v12
    (added additively — not in DEFAULT_AI literals). */
-const MONZ_PRODUCTS = ["OpenApply", "ManageBac+", "Atlas"];
+const MONZ_PRODUCTS = ["OpenApply", "ManageBac+", "Atlas", "SchoolsBuddy", "Vectare"];
 const DEFAULT_MONETIZATION = {
   products: {
-    "OpenApply":  { sku: "OpenApply AI Pro",  unit: "per student / year", price: 0, wowOutcomes: ["", "", ""] },
-    "ManageBac+": { sku: "ManageBac+ AI Pro", unit: "per student / year", price: 0, wowOutcomes: ["", "", ""] },
-    "Atlas":      { sku: "Atlas AI Pro",      unit: "per student / year", price: 0, wowOutcomes: ["", "", ""] },
+    "OpenApply":    { sku: "OpenApply AI Pro",    unit: "per account / year", price: 0 },
+    "ManageBac+":   { sku: "ManageBac+ AI Pro",   unit: "per account / year", price: 0 },
+    "Atlas":        { sku: "Atlas AI Pro",        unit: "per account / year", price: 0 },
+    "SchoolsBuddy": { sku: "SchoolsBuddy AI Pro", unit: "per account / year", price: 0 },
+    "Vectare":      { sku: "Vectare AI Pro",      unit: "per account / year", price: 0 },
   },
   bundleDiscounts: [
     { products: 2, pct: 10 },
     { products: 3, pct: 20 },
     { products: 4, pct: 25 },
+    { products: 5, pct: 30 },
   ],
   framework: {
     proFilter: [
@@ -840,11 +843,6 @@ function AiMonetizationPage() {
   // Mutators
   const setFeatField = (id, patch) => setAi(prev => ({ ...prev, inits: prev.inits.map(f => f.id === id ? { ...f, ...patch } : f) }));
   const setProductField = (prod, patch) => setMz(prev => ({ ...prev, products: { ...prev.products, [prod]: { ...prev.products[prod], ...patch } } }));
-  const setWow = (prod, idx, val) => setMz(prev => {
-    const list = [...(prev.products[prod]?.wowOutcomes || ["", "", ""])];
-    list[idx] = val;
-    return { ...prev, products: { ...prev.products, [prod]: { ...prev.products[prod], wowOutcomes: list } } };
-  });
   const setDiscount = (idx, patch) => setMz(prev => ({ ...prev, bundleDiscounts: prev.bundleDiscounts.map((d, i) => i === idx ? { ...d, ...patch } : d) }));
   const setFilterBullet = (idx, val) => setMz(prev => ({ ...prev, framework: { ...prev.framework, proFilter: prev.framework.proFilter.map((b, i) => i === idx ? val : b) } }));
   const toggleExpand = (p) => setExpanded(prev => { const n = new Set(prev); if (n.has(p)) n.delete(p); else n.add(p); return n; });
@@ -899,30 +897,66 @@ function AiMonetizationPage() {
         <p style={{ margin: "4px 0 0", fontSize: 13.5, color: F.muted }}>Working framework for AI Essential vs AI Pro across Faria products. Edit anything inline — this is a living document.</p>
       </div>
 
-      {/* Framework card */}
+      {/* Framework card — visual side-by-side with demarcation rules in the middle */}
       <div style={card}>
         <div style={sectionTitle}>Framework</div>
-        <p style={{ margin: "0 0 10px", fontSize: 13.5, color: F.plum, lineHeight: 1.55 }}>
-          Two tiers: <strong>AI Essential</strong> (free) and <strong>AI Pro</strong> (separate paid SKU per product).
-          If a school subscribes to AI Pro for more than one product, a bundle discount stacks across products.
-          Each product needs <strong>2–3 candidate "wow" outcomes</strong> identified, scoped, and validated before its paid AI SKU goes live.
-        </p>
-        <p style={{ margin: "10px 0 8px", fontSize: 13, color: F.plum, fontWeight: 700 }}>A feature qualifies for AI Pro when it:</p>
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          {mz.framework.proFilter.map((b, i) => (
-            <div key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ width: 6, height: 6, borderRadius: "50%", background: F.pink, flexShrink: 0 }} />
-              <input value={b} onChange={e => setFilterBullet(i, e.target.value)} style={{ ...inp, flex: 1, fontSize: 13 }} />
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1.15fr 1fr",
+          gap: 0,
+          borderRadius: 10,
+          overflow: "hidden",
+          border: `1px solid ${F.border}`,
+        }}>
+          {/* AI Essential */}
+          <div style={{ background: F.lightYellow + "55", padding: "20px 22px", borderRight: `1px solid ${F.border}` }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+              <span style={{ fontSize: 13, fontWeight: 800, color: F.plum, textTransform: "uppercase", letterSpacing: "0.08em" }}>AI Essential</span>
+              <span style={{ fontSize: 10, fontWeight: 800, color: F.plum, background: F.yellow, padding: "2px 8px", borderRadius: 4 }}>FREE</span>
             </div>
-          ))}
+            <p style={{ margin: "0 0 12px", fontSize: 12.5, color: F.plum, fontWeight: 700 }}>Default-on for every school</p>
+            <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12.5, color: F.muted, lineHeight: 1.65 }}>
+              <li>Broad, low-friction AI conveniences shipped to every customer</li>
+              <li>The everyday "table-stakes" surface for AI inside Faria products</li>
+              <li>Lower fair-use caps to keep inference cost bounded on the free tier</li>
+            </ul>
+          </div>
+
+          {/* Demarcation rules */}
+          <div style={{ background: F.bg, padding: "20px 22px", display: "flex", flexDirection: "column" }}>
+            <div style={{ fontSize: 10.5, fontWeight: 800, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6, textAlign: "center" }}>Demarcation line</div>
+            <p style={{ margin: "0 0 12px", fontSize: 12.5, color: F.plum, fontWeight: 700, textAlign: "center" }}>A feature crosses into AI Pro when it…</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 7, flex: 1 }}>
+              {mz.framework.proFilter.map((b, i) => (
+                <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, background: F.surface, border: `1px solid ${F.border}`, borderRadius: 7, padding: "6px 10px" }}>
+                  <span style={{ width: 18, height: 18, borderRadius: 9, background: F.pink, color: "#fff", fontSize: 10, fontWeight: 800, display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{i + 1}</span>
+                  <input value={b} onChange={e => setFilterBullet(i, e.target.value)} style={{ flex: 1, fontSize: 12.5, padding: "2px 4px", border: "none", background: "transparent", color: F.plum, outline: "none", fontFamily: "inherit", fontWeight: 500 }} />
+                </div>
+              ))}
+            </div>
+            <div style={{ marginTop: 12, fontSize: 11.5, color: F.muted, fontStyle: "italic", textAlign: "center" }}>Pass <strong style={{ color: F.plum }}>any one</strong> rule → Pro. Else → Essential.</div>
+          </div>
+
+          {/* AI Pro */}
+          <div style={{ background: F.plum, padding: "20px 22px", color: F.paper, borderLeft: `1px solid ${F.border}` }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+              <span style={{ fontSize: 13, fontWeight: 800, color: F.paper, textTransform: "uppercase", letterSpacing: "0.08em" }}>AI Pro</span>
+              <span style={{ fontSize: 10, fontWeight: 800, color: F.plum, background: F.yellow, padding: "2px 8px", borderRadius: 4 }}>PAID SKU</span>
+            </div>
+            <p style={{ margin: "0 0 12px", fontSize: 12.5, color: F.paper, fontWeight: 700, opacity: 0.95 }}>Separate SKU per product · bundle discount stacks</p>
+            <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12.5, color: F.paper, opacity: 0.88, lineHeight: 1.65 }}>
+              <li>Workflow-class wins that are worth paying for</li>
+              <li>Higher fair-use caps for real production workloads</li>
+              <li>Each product validates 2–3 "wow" outcomes before paid go-live</li>
+            </ul>
+          </div>
         </div>
-        <p style={{ margin: "12px 0 0", fontSize: 12.5, color: F.muted, fontStyle: "italic" }}>If a candidate doesn't pass one of those, it stays in AI Essential.</p>
       </div>
 
       {/* SKUs & pricing */}
       <div style={card}>
         <div style={sectionTitle}>SKUs &amp; pricing</div>
-        <div style={{ display: "grid", gridTemplateColumns: `repeat(${MONZ_PRODUCTS.length}, minmax(0,1fr))`, gap: 14 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12 }}>
           {MONZ_PRODUCTS.map(p => {
             const pd = mz.products[p] || { sku: "", unit: "", price: 0 };
             return (
@@ -994,17 +1028,30 @@ function AiMonetizationPage() {
 
             {isOpen && (
               <div style={{ marginTop: 16 }}>
-                {/* Wow outcomes */}
+                {/* "Wow" outcomes — surfaced from Pro features. Edit each feature's outcome inline. */}
                 <div style={{ marginBottom: 18 }}>
-                  <div style={sectionTitle}>"Wow" outcomes — validate 2–3 before paid go-live</div>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                    {[0, 1, 2].map(i => (
-                      <div key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <span style={{ fontSize: 11, fontWeight: 700, color: F.muted2, minWidth: 16 }}>{i + 1}.</span>
-                        <input value={pd.wowOutcomes?.[i] || ""} onChange={e => setWow(prod, i, e.target.value)} placeholder={`What's the "wow" outcome #${i + 1} for ${prod}?`} style={{ ...inp, flex: 1 }} />
-                      </div>
-                    ))}
-                  </div>
+                  <div style={sectionTitle}>"Wow" outcomes — carried from Pro features</div>
+                  {pro.length === 0 ? (
+                    <p style={{ margin: 0, fontSize: 12.5, color: F.muted, fontStyle: "italic" }}>No Pro features yet. Move features into Pro and set their "wow" outcome to track 2–3 validation targets before paid go-live.</p>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                      {pro.map(f => (
+                        <div key={f.id} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "8px 12px", background: F.bg, border: `1px solid ${F.border}`, borderRadius: 8 }}>
+                          <span style={{ color: F.pink, fontSize: 14, lineHeight: 1.2, paddingTop: 1 }}>★</span>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: 12.5, fontWeight: 700, color: F.plum }}>{f.name}</div>
+                            {f.wowOutcome ? (
+                              <div style={{ fontSize: 12, color: F.plum, marginTop: 3, lineHeight: 1.5 }}>{f.wowOutcome}</div>
+                            ) : (
+                              <div style={{ fontSize: 11.5, color: F.muted2, marginTop: 3, fontStyle: "italic" }}>No wow outcome set yet.</div>
+                            )}
+                          </div>
+                          <button onClick={() => setEditFeat(f.id)} style={{ ...bt("ghost"), padding: "3px 8px", fontSize: 10.5 }}>edit</button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <p style={{ margin: "10px 0 0", fontSize: 11.5, color: F.muted, fontStyle: "italic" }}>Validate 2–3 of these before {prod} AI Pro goes live.</p>
                 </div>
 
                 {/* Feature buckets */}
@@ -1028,9 +1075,10 @@ function AiMonetizationPage() {
                               <span style={{ flex: 1, fontSize: 12.5, fontWeight: 600, color: F.plum }}>{f.name}</span>
                               <span style={{ fontSize: 10, color: F.muted2, fontWeight: 600 }}>{fmt(f.deadline)}</span>
                             </div>
+                            {f.wowOutcome && b.key === "pro" && <div style={{ fontSize: 11.5, color: F.pink, marginLeft: 12, marginBottom: 4, lineHeight: 1.45, fontWeight: 600 }}>★ {f.wowOutcome}</div>}
                             {f.valueRationale && <div style={{ fontSize: 11.5, color: F.muted, marginLeft: 12, marginBottom: 6, lineHeight: 1.4 }}><span style={{ fontWeight: 700, color: F.muted2 }}>Why {b.title}:</span> {f.valueRationale}</div>}
                             <div style={{ display: "flex", gap: 4, marginLeft: 12, flexWrap: "wrap" }}>
-                              <button onClick={() => setEditFeat(f.id)} style={{ ...bt("ghost"), padding: "3px 8px", fontSize: 10.5 }}>edit rationale</button>
+                              <button onClick={() => setEditFeat(f.id)} style={{ ...bt("ghost"), padding: "3px 8px", fontSize: 10.5 }}>edit</button>
                               {b.key !== "pro" && <button onClick={() => setFeatField(f.id, { tier: "pro" })} style={{ ...bt(), padding: "3px 8px", fontSize: 10.5 }}>→ Pro</button>}
                               {b.key !== "essential" && <button onClick={() => setFeatField(f.id, { tier: "essential" })} style={{ ...bt(), padding: "3px 8px", fontSize: 10.5 }}>→ Essential</button>}
                               <button onClick={() => setFeatField(f.id, { tier: "unassigned" })} style={{ ...bt("ghost"), padding: "3px 8px", fontSize: 10.5, color: F.muted }}>→ Unassigned</button>
@@ -1116,13 +1164,19 @@ function AiMonetizationPage() {
         </div>
       </div>
 
-      {/* Rationale editor modal */}
+      {/* Feature details editor modal — wow outcome + value rationale */}
       {editFeatObj && (
         <Modal onClose={() => setEditFeat(null)}>
-          <h3 style={{ margin: "0 0 6px", fontSize: 18, fontWeight: 700, color: F.plum }}>Why is this {effectiveTier(editFeatObj) === "pro" ? "Pro" : effectiveTier(editFeatObj) === "essential" ? "Essential" : "Unassigned"}?</h3>
-          <p style={{ margin: "0 0 14px", fontSize: 13, color: F.muted }}>{editFeatObj.name} · {editFeatObj.product}</p>
+          <h3 style={{ margin: "0 0 4px", fontSize: 18, fontWeight: 700, color: F.plum }}>Feature details</h3>
+          <p style={{ margin: "0 0 16px", fontSize: 13, color: F.muted }}>{editFeatObj.name} · {editFeatObj.product} · <strong style={{ color: F.plum }}>{effectiveTier(editFeatObj) === "pro" ? "AI Pro" : effectiveTier(editFeatObj) === "essential" ? "AI Essential" : "Unassigned"}</strong></p>
+
+          <div style={lb}>"Wow" outcome <span style={{ color: F.pink, marginLeft: 4 }}>★</span></div>
+          <input value={editFeatObj.wowOutcome || ""} onChange={e => setFeatField(editFeatObj.id, { wowOutcome: e.target.value })} placeholder='e.g. 15% conversion lift in admissions pipeline' style={{ ...inp, width: "100%", marginBottom: 4 }} />
+          <p style={{ margin: "4px 0 14px", fontSize: 11.5, color: F.muted, fontStyle: "italic" }}>The single measurable "wow" we'll validate before {editFeatObj.product} AI Pro goes live. Surfaced at the top of the {editFeatObj.product} block.</p>
+
           <div style={lb}>Value rationale</div>
-          <textarea value={editFeatObj.valueRationale || ""} onChange={e => setFeatField(editFeatObj.id, { valueRationale: e.target.value })} rows={5} placeholder="e.g. saves 5+ hrs/wk of manual application review; unlocks predictive enrolment likelihood" style={{ ...inp, width: "100%", resize: "vertical" }} />
+          <textarea value={editFeatObj.valueRationale || ""} onChange={e => setFeatField(editFeatObj.id, { valueRationale: e.target.value })} rows={4} placeholder="Why is this Pro (or Essential)? e.g. saves 5+ hrs/wk of manual review; unlocks predictive enrolment likelihood" style={{ ...inp, width: "100%", resize: "vertical" }} />
+
           <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 16 }}>
             <button onClick={() => setEditFeat(null)} style={bt("primary")}>Done</button>
           </div>

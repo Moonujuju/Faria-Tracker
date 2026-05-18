@@ -1254,6 +1254,325 @@ function LimitsModal({ feat, feats, onPick, onChange, onClose }) {
   );
 }
 
+/* ── Release Handoff Page ─────────────────────────────────
+   Static framework / explainer page. Documents the AAA / AA / A
+   release tiering, the ProductBoard 2.0 hub, the monthly per-product
+   sync, and a worked example timeline + retro metrics for an AAA
+   release (AI Lead Scoring). No data persistence — pure content.
+   Styles live in a single <style> block so we can use media queries
+   for the retro grids and timeline. */
+function ReleaseHandoffPage() {
+  const styles = `
+    .rh-wrap { max-width: 940px; margin: 0 auto; }
+    .rh-hero { background: ${F.gradient}; border-radius: 16px; padding: 40px 32px; position: relative; overflow: hidden; margin-bottom: 28px; }
+    .rh-hero-t1 { position: absolute; height: 14px; border-radius: 9999px; background: rgba(250,229,159,0.55); width: 320px; top: 28px; right: -70px; }
+    .rh-hero-t2 { position: absolute; height: 14px; border-radius: 9999px; background: rgba(246,175,222,0.45); width: 200px; bottom: 32px; right: 40px; }
+    .rh-hero-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: ${F.plum}; opacity: 0.7; margin: 0 0 8px; position: relative; z-index: 2; }
+    .rh-hero h1 { font-size: 32px; font-weight: 700; line-height: 1.15; margin: 0; color: ${F.plum}; max-width: 520px; position: relative; z-index: 2; }
+    .rh-hero p { font-size: 15px; font-weight: 500; line-height: 1.3; margin: 10px 0 0; color: ${F.plum}; opacity: 0.85; max-width: 480px; position: relative; z-index: 2; }
+
+    .rh-section { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: ${F.lightPlum}; margin: 36px 0 16px; }
+
+    .rh-tier-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+    .rh-tier { border-radius: 12px; padding: 22px 20px; min-height: 170px; position: relative; }
+    .rh-tier-badge { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; padding: 4px 9px; border-radius: 4px; margin-bottom: 12px; }
+    .rh-tier-name { font-size: 20px; font-weight: 700; line-height: 1.15; margin: 0 0 8px; }
+    .rh-tier-desc { font-size: 12px; font-weight: 500; line-height: 1.35; opacity: 0.85; }
+    .rh-tier-flow { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; margin-top: 16px; color: ${F.plum}; }
+    .rh-dot { width: 28px; height: 28px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; background: ${F.plum}; color: ${F.yellow}; }
+    .rh-tier-aaa { background: ${F.yellow}; color: ${F.plum}; }
+    .rh-tier-aaa .rh-tier-badge { background: ${F.plum}; color: ${F.yellow}; }
+    .rh-tier-aa { background: ${F.orange}; color: ${F.plum}; }
+    .rh-tier-aa .rh-tier-badge { background: ${F.plum}; color: ${F.yellow}; }
+    .rh-tier-a { background: ${F.surface}; color: ${F.plum}; border: 0.5px solid rgba(55,2,60,0.15); }
+    .rh-tier-a .rh-tier-badge { background: ${F.lightPlum}; color: ${F.paper}; }
+    .rh-tier-a .rh-dot { background: ${F.lightPlum}; color: ${F.paper}; }
+
+    .rh-hub { background: ${F.surface}; border-radius: 16px; padding: 28px 32px; position: relative; overflow: hidden; border: 0.5px solid rgba(55,2,60,0.15); }
+    .rh-hub-t1 { position: absolute; right: -40px; top: 30px; width: 260px; height: 12px; background: ${F.yellow}; border-radius: 9999px; opacity: 0.3; }
+    .rh-hub h2 { font-size: 24px; font-weight: 700; line-height: 1.15; margin: 0 0 4px; color: ${F.plum}; position: relative; z-index: 2; }
+    .rh-hub .rh-hub-desc { font-size: 14px; font-weight: 500; margin: 0 0 22px; color: ${F.lightPlum}; position: relative; z-index: 2; }
+    .rh-hub-flow { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; position: relative; z-index: 2; margin-bottom: 24px; }
+    .rh-hub-pill { background: ${F.plum}; color: ${F.yellow}; padding: 11px 20px; border-radius: 9999px; font-size: 14px; font-weight: 700; }
+    .rh-hub-arrow { color: ${F.plum}; font-size: 22px; font-weight: 700; }
+    .rh-hub-receivers { display: flex; gap: 8px; flex-wrap: wrap; }
+    .rh-hub-receiver { background: ${F.paper}; border: 0.5px solid rgba(55,2,60,0.25); color: ${F.plum}; padding: 9px 16px; border-radius: 9999px; font-size: 13px; font-weight: 600; }
+
+    .rh-pkg-title { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: ${F.lightPlum}; margin: 0 0 12px; position: relative; z-index: 2; }
+    .rh-pkg-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; position: relative; z-index: 2; }
+    .rh-pkg-item { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; font-weight: 500; color: ${F.plum}; line-height: 1.35; padding: 4px 0; }
+    .rh-pkg-bullet { width: 6px; height: 6px; border-radius: 50%; background: ${F.pink}; flex-shrink: 0; margin-top: 7px; }
+    .rh-pkg-label { font-weight: 700; color: ${F.plum}; }
+    .rh-pkg-desc { color: ${F.lightPlum}; opacity: 0.85; }
+
+    .rh-prods { display: flex; gap: 12px; flex-wrap: wrap; }
+    .rh-pchip { display: flex; align-items: center; gap: 10px; background: ${F.surface}; border: 0.5px solid rgba(55,2,60,0.15); border-radius: 9999px; padding: 8px 18px 8px 8px; }
+    .rh-picon { width: 32px; height: 32px; border-radius: 50%; background: ${F.plum}; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .rh-pinit { font-size: 11px; font-weight: 800; background: ${F.gradientIcon}; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent; }
+    .rh-pname { font-size: 13px; font-weight: 700; color: ${F.plum}; }
+
+    .rh-divider { height: 0.5px; background: rgba(55,2,60,0.15); margin: 32px 0; }
+
+    .rh-subhero { background: ${F.gradient}; border-radius: 16px; padding: 26px 28px; position: relative; overflow: hidden; }
+    .rh-subhero-track { position: absolute; height: 12px; border-radius: 9999px; background: rgba(250,229,159,0.55); width: 260px; top: 26px; right: -55px; }
+    .rh-sh-header { display: flex; align-items: center; gap: 14px; position: relative; z-index: 2; }
+    .rh-sh-icon { width: 44px; height: 44px; border-radius: 50%; background: ${F.plum}; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .rh-sh-icon-text { font-size: 15px; font-weight: 800; background: ${F.gradientIcon}; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent; }
+    .rh-sh-eyebrow { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: ${F.plum}; opacity: 0.7; margin: 0 0 4px; }
+    .rh-subhero h2 { font-size: 24px; font-weight: 700; line-height: 1.15; margin: 0; color: ${F.plum}; }
+    .rh-sh-meta { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; position: relative; z-index: 2; }
+    .rh-chip-dark { background: ${F.plum}; color: ${F.yellow}; padding: 7px 13px; border-radius: 9999px; font-size: 12px; font-weight: 700; }
+    .rh-chip-light { background: rgba(55,2,60,0.15); color: ${F.plum}; padding: 7px 13px; border-radius: 9999px; font-size: 12px; font-weight: 600; }
+
+    .rh-phase { display: grid; grid-template-columns: 120px 1fr; gap: 18px; position: relative; padding-bottom: 18px; }
+    .rh-phase:last-child { padding-bottom: 0; }
+    .rh-phase-time { padding-top: 18px; text-align: right; padding-right: 4px; }
+    .rh-phase-when { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: ${F.lightPlum}; opacity: 0.7; }
+    .rh-phase-date { font-size: 14px; font-weight: 700; color: ${F.plum}; line-height: 1.15; margin-top: 3px; }
+    .rh-phase-card { border-radius: 12px; padding: 16px 18px; position: relative; background: ${F.surface}; border: 0.5px solid rgba(55,2,60,0.15); }
+    .rh-phase-card.rh-pink { background: rgba(246,175,222,0.5); border-color: rgba(231,55,172,0.35); }
+    .rh-phase-card.rh-orange { background: rgba(251,197,161,0.6); border-color: rgba(247,139,67,0.4); }
+    .rh-phase-card.rh-yellow { background: rgba(250,229,159,0.75); border-color: rgba(247,211,95,0.5); }
+    .rh-phase-card.rh-gradient { background: ${F.gradient}; border-color: transparent; }
+    .rh-phase-header { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+    .rh-phase-marker { width: 28px; height: 28px; border-radius: 50%; background: ${F.plum}; color: ${F.yellow}; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; flex-shrink: 0; }
+    .rh-phase-title { font-size: 16px; font-weight: 700; line-height: 1.15; color: ${F.plum}; }
+    .rh-phase-body { font-size: 13px; font-weight: 500; line-height: 1.4; margin: 4px 0 12px; color: ${F.plum}; }
+    .rh-phase-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+    .rh-tag { padding: 4px 10px; border-radius: 9999px; font-size: 11px; font-weight: 700; letter-spacing: 0.3px; background: ${F.plum}; color: ${F.yellow}; }
+    .rh-tag-mute { background: rgba(55,2,60,0.12); color: ${F.plum}; border: 0.5px solid rgba(55,2,60,0.2); }
+
+    .rh-retro-intervals { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
+    .rh-retro-interval { background: ${F.surface}; border: 0.5px solid rgba(55,2,60,0.15); border-radius: 10px; padding: 14px; text-align: center; }
+    .rh-ri-label { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: ${F.lightPlum}; opacity: 0.7; }
+    .rh-ri-value { font-size: 22px; font-weight: 800; color: ${F.plum}; margin-top: 4px; line-height: 1.1; }
+    .rh-ri-sub { font-size: 11px; font-weight: 500; color: ${F.lightPlum}; opacity: 0.8; margin-top: 4px; }
+
+    .rh-retro-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+    .rh-retro { border-radius: 12px; padding: 20px; }
+    .rh-retro-mkt { background: ${F.yellow}; color: ${F.plum}; }
+    .rh-retro-sales { background: ${F.orange}; color: ${F.plum}; }
+    .rh-retro-product { background: ${F.lightPink}; color: ${F.plum}; }
+    .rh-retro-ic { width: 32px; height: 32px; border-radius: 50%; background: rgba(55,2,60,0.15); display: flex; align-items: center; justify-content: center; margin-bottom: 12px; font-size: 14px; font-weight: 800; color: ${F.plum}; }
+    .rh-retro h3 { font-size: 15px; font-weight: 700; margin: 0 0 14px; line-height: 1.15; color: ${F.plum}; }
+    .rh-rmetric { margin-bottom: 14px; padding-bottom: 14px; border-bottom: 0.5px solid rgba(55,2,60,0.18); }
+    .rh-rmetric:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+    .rh-rm-label { font-size: 12px; font-weight: 700; color: ${F.plum}; line-height: 1.25; margin-bottom: 4px; }
+    .rh-rm-eg { font-size: 11px; font-weight: 500; color: ${F.plum}; opacity: 0.85; line-height: 1.4; }
+    .rh-rm-target { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px; background: ${F.plum}; color: ${F.yellow}; margin-top: 6px; letter-spacing: 0.3px; }
+
+    .rh-grule { height: 4px; border-radius: 2px; background: ${F.gradient}; margin: 36px 0 0; opacity: 0.6; }
+    .rh-footer { text-align: center; font-size: 11px; color: ${F.lightPlum}; opacity: 0.6; margin-top: 20px; font-weight: 500; letter-spacing: 0.5px; }
+
+    @media (max-width: 760px) {
+      .rh-tier-row, .rh-retro-row { grid-template-columns: 1fr; }
+      .rh-pkg-grid { grid-template-columns: 1fr; }
+      .rh-retro-intervals { grid-template-columns: 1fr 1fr; }
+      .rh-phase { grid-template-columns: 90px 1fr; gap: 12px; }
+      .rh-hero h1 { font-size: 24px; }
+    }
+  `;
+
+  const packageItems = [
+    { l: "Problem.", d: "What's being solved, for which schools." },
+    { l: "Solution.", d: "Plain language, no jargon." },
+    { l: "Goals + success metrics.", d: "What good looks like." },
+    { l: "Story angle.", d: "What's different, why now." },
+    { l: "Target audience.", d: "Buyer, user, school segment." },
+    { l: "Scope.", d: "What's in, what's out." },
+    { l: "Known limitations.", d: "Edge cases, things to avoid promising." },
+    { l: "Timeline.", d: "Beta date, GA date, rollout plan." },
+    { l: "Demo access.", d: "Live accounts, screenshots, walkthrough video." },
+    { l: "Product contact.", d: "Who to ask follow-up questions." },
+  ];
+
+  const products = [
+    { i: "OA", n: "OpenApply" },
+    { i: "MB", n: "ManageBac+" },
+    { i: "SB", n: "SchoolsBuddy" },
+    { i: "AT", n: "Atlas" },
+  ];
+
+  const phases = [
+    { w: "Week 1", date: "Mon 8 Jun", color: "", n: 1, t: "Product publishes the brief", body: "One-pager hits ProductBoard 2.0. Problem, solution, target schools, scope, GA date.", tags: [{ l: "Product" }] },
+    { w: "Week 3", date: "Mon 22 Jun", color: "rh-pink", n: 2, t: "Marketing locks positioning", body: '"Spot the schools most likely to enrol, automatically." Story angle, persona, campaign plan drafted.', tags: [{ l: "Marketing" }, { l: "Sales review", mute: true }] },
+    { w: "Week 5", date: "Mon 13 Jul", color: "rh-orange", n: 3, t: "Sales enablement builds the kit", body: "Pitch deck slide, demo script, objection handling, FAQ. Battle card against generic CRMs.", tags: [{ l: "Sales enablement" }] },
+    { w: "Week 7", date: "Mon 3 Aug", color: "rh-yellow", n: 4, t: "Rep certification + dry run", body: "Live demo training using the demo environment. Every rep certified to pitch and demo lead scoring before launch day.", tags: [{ l: "Sales enablement" }, { l: "Product", mute: true }] },
+    { w: "Week 8", date: "Mon 17 Aug", color: "rh-gradient", n: 5, t: "Launch day", body: "In-app announcement, campaign live, blog up, sales sequences activated, support articles published.", tags: [{ l: "All teams" }] },
+    { w: "Week 12", date: "Mon 14 Sep", color: "", n: 6, t: "Retro: did it land?", body: "Adoption, ARR impact, rep confidence, support volume. Feeds the next launch.", tags: [{ l: "All teams" }] },
+  ];
+
+  const intervals = [
+    { lbl: "Launch day", val: "D+0", sub: "Mon 17 Aug" },
+    { lbl: "Early signal", val: "+30 days", sub: "Wed 16 Sep" },
+    { lbl: "Momentum", val: "+60 days", sub: "Fri 16 Oct" },
+    { lbl: "Verdict", val: "+90 days", sub: "Sun 15 Nov" },
+  ];
+
+  const retro = [
+    { cls: "rh-retro-mkt", icon: "M", title: "Marketing", metrics: [
+      { l: "Assets live on launch day", e: "Blog, landing page, email sequence, in-app banner all published by 9am GA day.", t: "D+0" },
+      { l: "Campaign engagement", e: "≥35% email open rate, ≥6% CTR, ≥150 demo requests attributed to launch campaign.", t: "D+30" },
+      { l: "Message consistency", e: "Audit 10 customer touchpoints across channels. Zero contradictory positioning.", t: "D+60" },
+    ] },
+    { cls: "rh-retro-sales", icon: "S", title: "Sales", metrics: [
+      { l: "Rep certification", e: "100% of AEs pass demo certification before launch day.", t: "D−7" },
+      { l: "Time-to-first-pitch", e: "≥80% of AEs mention AI Lead Scoring in a customer call within 14 days.", t: "D+30" },
+      { l: "Demo accuracy", e: "Spot-check 5 random call recordings. At least 4 demo the feature correctly.", t: "D+60" },
+      { l: "Wins tied to feature", e: "≥8 closed-won deals cite AI Lead Scoring as a decision factor.", t: "D+90" },
+    ] },
+    { cls: "rh-retro-product", icon: "P", title: "Product", metrics: [
+      { l: "Adoption at 30 days", e: "≥25% of eligible OA schools have enabled the feature.", t: "D+30" },
+      { l: "Adoption at 60 days", e: "≥45% adoption, with ≥60% weekly active among adopters.", t: "D+60" },
+      { l: "ARR impact", e: "≥$120k new ARR attributable to AI Lead Scoring in closed deals.", t: "D+90" },
+      { l: "Support ticket volume", e: "<15 tickets per week, no recurring confusion themes after week 4.", t: "D+60" },
+    ] },
+  ];
+
+  return (
+    <>
+      <style>{styles}</style>
+      <div className="rh-wrap">
+
+        <div className="rh-hero">
+          <div className="rh-hero-t1"></div>
+          <div className="rh-hero-t2"></div>
+          <p className="rh-hero-eyebrow">Faria Education Group</p>
+          <h1>Release handoff framework</h1>
+          <p>Product drives. Marketing scales. Sales lands.</p>
+        </div>
+
+        <div className="rh-section">01 — Tiering</div>
+        <div className="rh-tier-row">
+          <div className="rh-tier rh-tier-aaa">
+            <span className="rh-tier-badge">AAA</span>
+            <div className="rh-tier-name">Major</div>
+            <div className="rh-tier-desc">Full handoff with positioning, campaigns, training, and a launch moment.</div>
+            <div className="rh-tier-flow"><span className="rh-dot">P</span><span>→</span><span className="rh-dot">M</span><span>→</span><span className="rh-dot">S</span></div>
+          </div>
+          <div className="rh-tier rh-tier-aa">
+            <span className="rh-tier-badge">AA</span>
+            <div className="rh-tier-name">Moderate</div>
+            <div className="rh-tier-desc">Skip Marketing. Product artefacts handed to Sales and Support.</div>
+            <div className="rh-tier-flow"><span className="rh-dot">P</span><span>→</span><span className="rh-dot">S</span></div>
+          </div>
+          <div className="rh-tier rh-tier-a">
+            <span className="rh-tier-badge">A</span>
+            <div className="rh-tier-name">Minor</div>
+            <div className="rh-tier-desc">Release notes plus product artefacts. Lightweight, async only.</div>
+            <div className="rh-tier-flow"><span className="rh-dot">P</span><span>→</span><span className="rh-dot">S</span></div>
+          </div>
+        </div>
+
+        <div className="rh-section">02 — The hub</div>
+        <div className="rh-hub">
+          <div className="rh-hub-t1"></div>
+          <h2>ProductBoard 2.0</h2>
+          <p className="rh-hub-desc">Automated, async handoff. One source of truth.</p>
+          <div className="rh-hub-flow">
+            <div className="rh-hub-pill">Product</div>
+            <span className="rh-hub-arrow">→</span>
+            <div className="rh-hub-receivers">
+              <span className="rh-hub-receiver">Marketing</span>
+              <span className="rh-hub-receiver">Sales enablement</span>
+              <span className="rh-hub-receiver">Support</span>
+            </div>
+          </div>
+          <p className="rh-pkg-title">What gets handed off</p>
+          <div className="rh-pkg-grid">
+            {packageItems.map((it, i) => (
+              <div key={i} className="rh-pkg-item">
+                <span className="rh-pkg-bullet"></span>
+                <div><span className="rh-pkg-label">{it.l}</span> <span className="rh-pkg-desc">{it.d}</span></div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="rh-section">03 — Monthly sync, per product</div>
+        <div className="rh-prods">
+          {products.map((p, i) => (
+            <div key={i} className="rh-pchip">
+              <div className="rh-picon"><span className="rh-pinit">{p.i}</span></div>
+              <div className="rh-pname">{p.n}</div>
+            </div>
+          ))}
+        </div>
+
+        <div className="rh-divider"></div>
+
+        <div className="rh-subhero">
+          <div className="rh-subhero-track"></div>
+          <div className="rh-sh-header">
+            <div className="rh-sh-icon"><span className="rh-sh-icon-text">OA</span></div>
+            <div>
+              <p className="rh-sh-eyebrow">Worked example · OpenApply</p>
+              <h2>AI Lead Scoring</h2>
+            </div>
+          </div>
+          <div className="rh-sh-meta">
+            <span className="rh-chip-dark">AAA release</span>
+            <span className="rh-chip-light">~12 week handoff</span>
+            <span className="rh-chip-light">GA: Mon 17 Aug 2026</span>
+          </div>
+        </div>
+
+        <div className="rh-section">04 — Handoff timeline</div>
+        <div>
+          {phases.map((p, i) => (
+            <div key={i} className="rh-phase">
+              <div className="rh-phase-time">
+                <div className="rh-phase-when">{p.w}</div>
+                <div className="rh-phase-date">{p.date}</div>
+              </div>
+              <div className={`rh-phase-card ${p.color}`}>
+                <div className="rh-phase-header">
+                  <span className="rh-phase-marker">{p.n}</span>
+                  <span className="rh-phase-title">{p.t}</span>
+                </div>
+                <div className="rh-phase-body">{p.body}</div>
+                <div className="rh-phase-tags">
+                  {p.tags.map((t, ti) => <span key={ti} className={`rh-tag ${t.mute ? "rh-tag-mute" : ""}`}>{t.l}</span>)}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="rh-section">05 — Was it a success? Example targets for AI Lead Scoring</div>
+        <div className="rh-retro-intervals">
+          {intervals.map((it, i) => (
+            <div key={i} className="rh-retro-interval">
+              <div className="rh-ri-label">{it.lbl}</div>
+              <div className="rh-ri-value">{it.val}</div>
+              <div className="rh-ri-sub">{it.sub}</div>
+            </div>
+          ))}
+        </div>
+
+        <div className="rh-retro-row">
+          {retro.map((col, i) => (
+            <div key={i} className={`rh-retro ${col.cls}`}>
+              <div className="rh-retro-ic">{col.icon}</div>
+              <h3>{col.title}</h3>
+              {col.metrics.map((m, mi) => (
+                <div key={mi} className="rh-rmetric">
+                  <div className="rh-rm-label">{m.l}</div>
+                  <div className="rh-rm-eg">{m.e}</div>
+                  <span className="rh-rm-target">{m.t}</span>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+
+        <div className="rh-grule"></div>
+        <div className="rh-footer">Faria Education Group · Relentless pursuit of better</div>
+      </div>
+    </>
+  );
+}
+
 /* ── Main App ── */
 export default function App() {
   const [page, setPage] = useState("product");
@@ -1327,6 +1646,7 @@ export default function App() {
           {navBtn("product", <><span className="lbl-full">Product Transformation</span><span className="lbl-short">Product</span></>)}
           {navBtn("ai", <><span className="lbl-full">AI Powered Features</span><span className="lbl-short">AI Features</span></>)}
           {navBtn("monz", "AI Monetization")}
+          {navBtn("handoff", <><span className="lbl-full">Release Handoff</span><span className="lbl-short">Handoff</span></>)}
         </div>
       </div>
       <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 28px" }}>
@@ -1336,6 +1656,7 @@ export default function App() {
           extraDetailFields={(init, setField) => (<><div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>{init.product && chip(init.product)}{init.type && chip(init.type)}{init.priority && <span style={{ fontSize: 11, padding: "3px 8px", borderRadius: 4, background: pC(init.priority), color: "#fff", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em" }}>{init.priority}</span>}</div><div style={{ display: "flex", gap: 12, marginBottom: 12 }}><div style={{ flex: 1 }}><div style={lb}>Effort</div><div style={{ fontSize: 13, color: F.plum, fontWeight: 700 }}>{(init.effort||"medium").charAt(0).toUpperCase()+(init.effort||"medium").slice(1)}</div></div><div style={{ flex: 1 }}><div style={lb}>Impact</div><div style={{ fontSize: 13, color: F.plum, fontWeight: 700 }}>{(init.impact||"medium").charAt(0).toUpperCase()+(init.impact||"medium").slice(1)}</div></div></div></>)}
         />}
         {page === "monz" && <AiMonetizationPage />}
+        {page === "handoff" && <ReleaseHandoffPage />}
       </div>
     </div>
   );

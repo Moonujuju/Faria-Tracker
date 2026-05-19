@@ -1395,7 +1395,7 @@ function ReleaseHandoffPage() {
 
   const phases = [
     { w: "Week 1", date: "Mon 8 Jun", color: "", n: 1, t: "Product publishes the brief", body: "One-pager hits ProductBoard 2.0. Problem, solution, target schools, scope, GA date.", tags: [{ l: "Product" }] },
-    { w: "Week 3", date: "Mon 22 Jun", color: "rh-pink", n: 2, t: "Marketing locks positioning", body: '"Spot the schools most likely to enrol, automatically." Story angle, persona, campaign plan drafted.', tags: [{ l: "Marketing" }, { l: "Sales review", mute: true }] },
+    { w: "Week 3", date: "Mon 22 Jun", color: "rh-pink", n: 2, t: "Product Marketing locks positioning", body: '"Spot the schools most likely to enrol, automatically." Story angle, persona, campaign plan drafted.', tags: [{ l: "Product Marketing" }, { l: "Sales review", mute: true }] },
     { w: "Week 5", date: "Mon 13 Jul", color: "rh-orange", n: 3, t: "Sales enablement builds the kit", body: "Pitch deck slide, demo script, objection handling, FAQ. Battle card against generic CRMs.", tags: [{ l: "Sales enablement" }] },
     { w: "Week 7", date: "Mon 3 Aug", color: "rh-yellow", n: 4, t: "Rep certification + dry run", body: "Live demo training using the demo environment. Every rep certified to pitch and demo lead scoring before launch day.", tags: [{ l: "Sales enablement" }, { l: "Product", mute: true }] },
     { w: "Week 8", date: "Mon 17 Aug", color: "rh-gradient", n: 5, t: "Launch day", body: "In-app announcement, campaign live, blog up, sales sequences activated, support articles published.", tags: [{ l: "All teams" }] },
@@ -1410,10 +1410,10 @@ function ReleaseHandoffPage() {
   ];
 
   const retro = [
-    { cls: "rh-retro-mkt", icon: "M", title: "Marketing", metrics: [
-      { l: "Assets live on launch day", e: "Blog, landing page, email sequence, in-app banner all published by 9am GA day.", t: "D+0" },
-      { l: "Campaign engagement", e: "≥35% email open rate, ≥6% CTR, ≥150 demo requests attributed to launch campaign.", t: "D+30" },
-      { l: "Message consistency", e: "Audit 10 customer touchpoints across channels. Zero contradictory positioning.", t: "D+60" },
+    { cls: "rh-retro-mkt", icon: "PM", title: "Product Marketing", metrics: [
+      { l: "Launch-day readiness", e: "Landing page live, GTM Playbook deck (Sales/CE enablement materials) finalised, and in-app assets (Pendo) published by 9:00 AM on GA day.", t: "D+0" },
+      { l: "GTM enablement", e: "Live GTM enablement sessions delivered to all relevant sales/CE teams (recordings shared). Attendees achieve an average quiz score of ≥85% on positioning, personas, differentiation, and key use cases. All priority enterprise opportunities supplied with tailored assets.", t: "D+7→30" },
+      { l: "Message consistency audit", e: "Audit 8–10 customer touchpoints (landing page, product webpage, blog post, Demand Gen campaign, demo script, Pendo guide, help-centre article, webinar synopsis + slides, discovery call). Zero contradictory positioning.", t: "D+60" },
     ] },
     { cls: "rh-retro-sales", icon: "S", title: "Sales", metrics: [
       { l: "Rep certification", e: "100% of AEs pass demo certification before launch day.", t: "D−7" },
@@ -1473,7 +1473,7 @@ function ReleaseHandoffPage() {
             <div className="rh-hub-pill">Product</div>
             <span className="rh-hub-arrow">→</span>
             <div className="rh-hub-receivers">
-              <span className="rh-hub-receiver">Marketing</span>
+              <span className="rh-hub-receiver">Product Marketing</span>
               <span className="rh-hub-receiver">Sales enablement</span>
               <span className="rh-hub-receiver">Support</span>
             </div>
@@ -1565,6 +1565,10 @@ function ReleaseHandoffPage() {
             </div>
           ))}
         </div>
+
+        <p style={{ margin: "16px auto 0", maxWidth: 720, fontSize: 12, color: F.muted, fontStyle: "italic", lineHeight: 1.55, textAlign: "center" }}>
+          Demand Generation reports operational campaign metrics (email open rate, CTR, demo requests) as <strong style={{ color: F.plum, fontStyle: "normal" }}>downstream indicators</strong> of PMM success — not core measures of it. PMM owns launch readiness, message quality, and GTM effectiveness; DG executes campaigns using PMM's messaging and assets.
+        </p>
 
         <div className="rh-grule"></div>
         <div className="rh-footer">Faria Education Group · Relentless pursuit of better</div>

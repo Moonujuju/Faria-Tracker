@@ -813,6 +813,7 @@ function TrackerPage({ title, subtitle, storageKey, defaults, ModalComponent, ex
    and writes them back; reads/writes monetization config to
    faria-ai-monetization-v1. */
 function AiMonetizationPage() {
+  const [view, setView] = useState("plan"); // "plan" | "fairuse" — sub-page toggle under the header
   const [ai, setAi] = useState({ inits: [] });
   const [mz, setMz] = useState(DEFAULT_MONETIZATION);
   const [readyAi, setReadyAi] = useState(false);
@@ -894,11 +895,35 @@ function AiMonetizationPage() {
 
   return (
     <>
-      <div style={{ marginBottom: 18 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700, margin: 0, color: F.plum, lineHeight: 1.15 }}>Current Monetization Plan (open discussion)</h1>
-        <p style={{ margin: "4px 0 0", fontSize: 13.5, color: F.muted }}>Working framework for AI Essential vs AI Pro across Faria products. Edit anything inline — this is a living document.</p>
+      <div style={{ marginBottom: 14 }}>
+        <h1 style={{ fontSize: 24, fontWeight: 700, margin: 0, color: F.plum, lineHeight: 1.15 }}>{view === "fairuse" ? "Fair Use Example" : "Current Monetization Plan (open discussion)"}</h1>
+        <p style={{ margin: "4px 0 0", fontSize: 13.5, color: F.muted }}>{view === "fairuse" ? "What hitting a fair-use limit looks like inside the product — illustrated with AI Profile Review on AI Essential." : "Working framework for AI Essential vs AI Pro across Faria products. Edit anything inline — this is a living document."}</p>
       </div>
 
+      {/* Sub-tab strip: Plan / Fair Use Example */}
+      <div style={{ display: "flex", gap: 8, marginBottom: 22, flexWrap: "wrap" }}>
+        {[
+          { id: "plan", label: "Plan" },
+          { id: "fairuse", label: "Fair Use Example" },
+        ].map(t => {
+          const active = view === t.id;
+          return (
+            <button key={t.id} onClick={() => setView(t.id)} style={{
+              padding: "6px 14px", borderRadius: 999, fontSize: 12.5, fontWeight: 700, cursor: "pointer",
+              background: active ? F.plum : F.surface,
+              color: active ? F.paper : F.plum,
+              border: `1px solid ${active ? F.plum : F.borderStrong}`,
+              transition: "all 0.15s",
+              fontFamily: "inherit",
+              letterSpacing: "0.01em",
+            }}>{t.label}</button>
+          );
+        })}
+      </div>
+
+      {view === "fairuse" && <FairUseExample />}
+
+      {view === "plan" && (<>
       {/* Framework card — visual side-by-side with demarcation rules in the middle */}
       <div style={card}>
         <div style={sectionTitle}>Framework</div>
@@ -1149,7 +1174,10 @@ function AiMonetizationPage() {
                     );
                   })}
                 </div>
-                <button onClick={() => { const first = feats.find(f => !f.actionLimits); if (first) setEditLimits(first.id); }} style={{ ...bt(), fontSize: 12 }}>+ Add fair-use limit</button>
+                <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+                  <button onClick={() => { const first = feats.find(f => !f.actionLimits); if (first) setEditLimits(first.id); }} style={{ ...bt(), fontSize: 12 }}>+ Add fair-use limit</button>
+                  <button onClick={() => setView("fairuse")} style={{ ...bt("ghost"), fontSize: 12, color: F.pink, fontWeight: 700 }}>See live mockup →</button>
+                </div>
                 <p style={{ margin: "10px 0 0", fontSize: 11.5, color: F.muted, fontStyle: "italic" }}>Essential = generous-but-bounded so most schools never hit it. Pro = high cap to safeguard our inference investment.</p>
               </div>
             )}
@@ -1177,6 +1205,7 @@ function AiMonetizationPage() {
           })}
         </div>
       </div>
+      </>)}
 
       {/* Feature details editor modal — wow outcome + value rationale */}
       {editFeatObj && (
@@ -1251,6 +1280,280 @@ function LimitsModal({ feat, feats, onPick, onChange, onClose }) {
         <button onClick={onClose} style={bt("primary")}>Done</button>
       </div>
     </Modal>
+  );
+}
+
+/* ── Fair Use Example (sub-page of AI Monetization) ───────
+   Static mockup deck — what hitting a fair-use limit looks like
+   inside the actual product. Deliberately styled with OpenApply
+   neutrals (Open Sans, grayscale text, plum brand, amber warnings)
+   so the panels feel authentic to the in-product UX rather than the
+   bright Faria tracker chrome. */
+function FairUseExample() {
+  const styles = `
+    .fue-deck { font-family: 'Open Sans', system-ui, sans-serif; color: #101828; font-size: 14px; line-height: 1.45; }
+    .fue-intro { margin: 0 0 28px; padding: 18px 20px; background: #ECE9EF; border: 1px solid #E0DAE6; border-radius: 10px; }
+    .fue-intro h2 { font-size: 16px; margin: 0 0 6px 0; color: ${F.plum}; font-weight: 700; }
+    .fue-intro p { color: #667085; margin: 0; font-size: 13px; }
+
+    .fue-variant { margin-bottom: 36px; }
+    .fue-variant-name h3 { font-size: 16px; margin: 0 0 4px 0; color: ${F.plum}; font-weight: 700; }
+    .fue-variant-name p { margin: 0 0 16px 0; color: #667085; font-size: 12.5px; }
+
+    .fue-surface { margin-bottom: 12px; }
+    .fue-surface-label { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.6px; color: #667085; font-weight: 700; margin-bottom: 8px; }
+
+    .fue-plan-tag { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px 3px 7px; border-radius: 999px; font-size: 10px; font-weight: 700; letter-spacing: 0.4px; line-height: 1.4; background: #F6F4FA; color: #5D3460; border: 1px solid #EFE9F3; white-space: nowrap; }
+    .fue-plan-tag .fue-spark { font-size: 10px; line-height: 1; }
+
+    .fue-panel-row { display: flex; gap: 22px; align-items: flex-start; }
+    .fue-panel { width: 380px; min-height: 540px; background: #fff; border: 1px solid #EAECF0; border-radius: 8px; box-shadow: 0 4px 12px rgba(16,24,40,0.08); display: flex; flex-direction: column; overflow: hidden; flex-shrink: 0; max-width: 100%; }
+
+    .fue-panel-head { display: flex; align-items: center; padding: 14px 16px 10px; border-bottom: 1px solid #EAECF0; gap: 10px; }
+    .fue-panel-head .fue-back, .fue-panel-head .fue-close { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #667085; font-size: 16px; flex-shrink: 0; }
+    .fue-panel-head .fue-ph-stack { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+    .fue-panel-head .fue-ph-title { font-weight: 700; font-size: 14px; line-height: 1.2; }
+
+    .fue-panel-sub { padding: 14px 18px 6px; font-size: 12px; color: #667085; }
+    .fue-panel-sub strong { color: #101828; font-weight: 600; }
+
+    .fue-summary { margin: 8px 18px 0; background: linear-gradient(180deg, #FBFAFD 0%, #F2EDF6 100%); border: 1px solid #EFE9F3; border-radius: 8px; padding: 14px 14px 12px; }
+    .fue-summary p { margin: 0 0 8px 0; font-size: 13px; line-height: 1.5; color: #101828; }
+    .fue-summary .fue-meta { display: inline-flex; align-items: center; gap: 5px; color: ${F.plum}; font-weight: 700; font-size: 12px; }
+    .fue-summary .fue-meta .fue-spark { font-size: 13px; }
+
+    .fue-meter { margin: 14px 18px 0; padding: 10px 12px; background: #fff; border: 1px solid #EAECF0; border-radius: 6px; display: flex; align-items: center; gap: 10px; }
+    .fue-meter .fue-dots { display: inline-flex; gap: 3px; }
+    .fue-meter .fue-dot { width: 10px; height: 10px; border-radius: 50%; background: #E4E7EC; }
+    .fue-meter .fue-dot.fue-filled { background: #98a2b3; }
+    .fue-meter .fue-dot.fue-amber { background: #F59D00; }
+    .fue-meter .fue-mlabel { font-size: 12px; color: #344054; flex: 1; }
+    .fue-meter .fue-mlabel .fue-resets { color: #667085; }
+    .fue-meter.fue-amber-meter { background: #FFF8E6; border-color: #F1D58C; }
+    .fue-meter.fue-amber-meter .fue-mlabel { color: #6b4500; font-weight: 600; }
+
+    .fue-callout { margin: 12px 18px 0; padding: 10px 12px; background: #FFF8E6; border: 1px solid #F1D58C; border-radius: 6px; font-size: 12px; color: #6b4500; line-height: 1.5; }
+    .fue-callout strong { color: #6b4500; font-weight: 700; }
+    .fue-callout a { color: ${F.plum}; font-weight: 700; text-decoration: none; }
+
+    .fue-blocked { margin: 12px 18px 0; padding: 16px; background: #FAFAFB; border: 1px solid #EAECF0; border-radius: 8px; }
+    .fue-blocked .fue-bk-title { font-weight: 700; font-size: 14px; margin: 0 0 6px 0; color: #101828; }
+    .fue-blocked p { font-size: 13px; color: #344054; margin: 0 0 8px 0; line-height: 1.5; }
+    .fue-blocked .fue-reset-line { font-size: 12px; color: #667085; margin: 0 0 14px 0; }
+    .fue-blocked .fue-cta-stack { display: flex; flex-direction: column; gap: 8px; }
+
+    .fue-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 14px; border-radius: 6px; font-size: 13px; font-weight: 700; border: 1px solid transparent; text-decoration: none; line-height: 1; font-family: inherit; }
+    .fue-btn-primary { background: ${F.plum}; color: #fff; }
+    .fue-btn-secondary { background: #fff; color: #101828; border-color: #EAECF0; }
+    .fue-btn-block { width: 100%; padding: 12px 14px; font-size: 14px; }
+
+    .fue-panel-spacer { flex: 1; }
+    .fue-panel-foot { padding: 12px 18px 16px; border-top: 1px solid #EAECF0; display: flex; flex-direction: column; gap: 8px; background: #fff; }
+    .fue-panel-foot .fue-start-btn { width: 100%; background: ${F.plum}; color: #fff; border: none; padding: 14px 16px; border-radius: 6px; font-weight: 700; font-size: 14px; font-family: inherit; }
+    .fue-panel-foot .fue-disclaimer { font-size: 11px; color: #98a2b3; line-height: 1.5; margin: 0; }
+
+    .fue-postrun { background: #fff; border: 1px solid #EAECF0; border-radius: 8px; padding: 12px 16px; font-size: 13px; color: #667085; display: flex; align-items: center; gap: 10px; box-shadow: 0 1px 2px rgba(16,24,40,0.05); max-width: 380px; }
+    .fue-postrun.fue-amber-post { background: #FFF8E6; border-color: #F1D58C; color: #6b4500; font-weight: 600; }
+    .fue-postrun .fue-pr-dot { width: 6px; height: 6px; border-radius: 50%; background: #98a2b3; flex-shrink: 0; }
+    .fue-postrun.fue-amber-post .fue-pr-dot { background: #F59D00; }
+    .fue-postrun a { color: ${F.plum}; font-weight: 700; text-decoration: none; margin-left: auto; white-space: nowrap; }
+    .fue-surface.fue-na .fue-postrun { background: transparent; border: 1px dashed #EAECF0; color: #98a2b3; font-style: italic; box-shadow: none; }
+
+    @media (max-width: 760px) {
+      .fue-panel { width: 100%; }
+    }
+  `;
+
+  // Reusable panel header (back / title / plan tag / close)
+  const PanelHead = () => (
+    <div className="fue-panel-head">
+      <div className="fue-back">←</div>
+      <div className="fue-ph-stack">
+        <div className="fue-ph-title">AI Profile Review</div>
+        <span className="fue-plan-tag"><span className="fue-spark">✦</span> AI Essential</span>
+      </div>
+      <div className="fue-close">✕</div>
+    </div>
+  );
+
+  const PanelSub = () => (
+    <div className="fue-panel-sub">Reviewing applicant profile · <strong>Olivia Zhang</strong></div>
+  );
+
+  const SummaryCard = () => (
+    <div className="fue-summary">
+      <p>AI will generate a summary covering academic background, language fit, application status, and family context.</p>
+      <span className="fue-meta"><span className="fue-spark">✦</span> 25 fields · 5 dimensions</span>
+    </div>
+  );
+
+  const Disclaimer = ({ showStart }) => (
+    <div className="fue-panel-foot">
+      {showStart && <button className="fue-start-btn">Start</button>}
+      <p className="fue-disclaimer">AI-generated summaries may contain errors. Please verify against source documents.</p>
+    </div>
+  );
+
+  return (
+    <>
+      <style>{styles}</style>
+      <div className="fue-deck">
+        <div className="fue-intro">
+          <h2>AI Usage Limits · AI Profile Review</h2>
+          <p>Four states a school user on the AI Essential plan can land in, shown across the launcher side panel and the post-run confirmation footer. Tone shifts from neutral → amber → muted-blocked. No red.</p>
+        </div>
+
+        {/* ── State 1: Plenty left ─────────────────────────────────────── */}
+        <section className="fue-variant">
+          <div className="fue-variant-name">
+            <h3>Plenty left</h3>
+            <p>User has 4 of 5 monthly reviews remaining. Quiet meter, no upgrade pressure.</p>
+          </div>
+
+          <div className="fue-surface">
+            <div className="fue-surface-label">Launcher / Start panel</div>
+            <div className="fue-panel-row">
+              <div className="fue-panel">
+                <PanelHead />
+                <PanelSub />
+                <SummaryCard />
+                <div className="fue-meter">
+                  <span className="fue-dots">
+                    <span className="fue-dot fue-filled"></span>
+                    <span className="fue-dot fue-filled"></span>
+                    <span className="fue-dot fue-filled"></span>
+                    <span className="fue-dot fue-filled"></span>
+                    <span className="fue-dot"></span>
+                  </span>
+                  <span className="fue-mlabel"><strong style={{ color: "#101828" }}>4 of 5</strong> reviews left <span className="fue-resets">· resets Jun 1</span></span>
+                </div>
+                <div className="fue-panel-spacer"></div>
+                <Disclaimer showStart />
+              </div>
+            </div>
+          </div>
+
+          <div className="fue-surface">
+            <div className="fue-surface-label">Post-run footer (after pressing Start, review complete)</div>
+            <div className="fue-postrun">
+              <span className="fue-pr-dot"></span>
+              <span>Review generated. You have <strong style={{ color: "#101828" }}>3 reviews left</strong> this month · resets Jun 1.</span>
+            </div>
+          </div>
+        </section>
+
+        {/* ── State 2: One left ────────────────────────────────────────── */}
+        <section className="fue-variant">
+          <div className="fue-variant-name">
+            <h3>One left</h3>
+            <p>User has 1 of 5 remaining. Amber warning — still actionable, first soft mention of AI Pro.</p>
+          </div>
+
+          <div className="fue-surface">
+            <div className="fue-surface-label">Launcher / Start panel</div>
+            <div className="fue-panel-row">
+              <div className="fue-panel">
+                <PanelHead />
+                <PanelSub />
+                <SummaryCard />
+                <div className="fue-meter fue-amber-meter">
+                  <span className="fue-dots">
+                    <span className="fue-dot fue-amber"></span>
+                    <span className="fue-dot"></span>
+                    <span className="fue-dot"></span>
+                    <span className="fue-dot"></span>
+                    <span className="fue-dot"></span>
+                  </span>
+                  <span className="fue-mlabel"><strong>Only 1 of 5</strong> reviews left · resets Jun 1</span>
+                </div>
+                <div className="fue-callout">
+                  After this review you'll need to wait until <strong>Jun 1</strong> or <a href="#" onClick={e => e.preventDefault()}>upgrade to AI Pro to unlock more</a>.
+                </div>
+                <div className="fue-panel-spacer"></div>
+                <Disclaimer showStart />
+              </div>
+            </div>
+          </div>
+
+          <div className="fue-surface">
+            <div className="fue-surface-label">Post-run footer (after pressing Start)</div>
+            <div className="fue-postrun fue-amber-post">
+              <span className="fue-pr-dot"></span>
+              <span>That was your last review this month · resets Jun 1.</span>
+              <a href="#" onClick={e => e.preventDefault()}>Upgrade to AI Pro →</a>
+            </div>
+          </div>
+        </section>
+
+        {/* ── State 3: Your reviews used up ────────────────────────────── */}
+        <section className="fue-variant">
+          <div className="fue-variant-name">
+            <h3>Your reviews used up</h3>
+            <p>User has used all 5/month. Account still has capacity for other users. Copy makes it clear the cap is personal.</p>
+          </div>
+
+          <div className="fue-surface">
+            <div className="fue-surface-label">Launcher / Start panel</div>
+            <div className="fue-panel-row">
+              <div className="fue-panel">
+                <PanelHead />
+                <PanelSub />
+                <div className="fue-blocked">
+                  <h4 className="fue-bk-title">You've used your 5 reviews this month</h4>
+                  <p>AI Essential gives each user 5 AI Profile Reviews per month. You'll be able to run reviews again on <strong>Jun 1</strong>.</p>
+                  <p className="fue-reset-line">Resets in 11 days · other users at your school may still have capacity.</p>
+                  <div className="fue-cta-stack">
+                    <a href="#" onClick={e => e.preventDefault()} className="fue-btn fue-btn-primary fue-btn-block">Upgrade to AI Pro to unlock more →</a>
+                    <a href="#" onClick={e => e.preventDefault()} className="fue-btn fue-btn-secondary fue-btn-block">View AI plans</a>
+                  </div>
+                </div>
+                <div className="fue-panel-spacer"></div>
+                <Disclaimer showStart={false} />
+              </div>
+            </div>
+          </div>
+
+          <div className="fue-surface fue-na">
+            <div className="fue-surface-label">Post-run footer</div>
+            <div className="fue-postrun">N/A — no action ran, so nothing to confirm.</div>
+          </div>
+        </section>
+
+        {/* ── State 4: School account at its limit ─────────────────────── */}
+        <section className="fue-variant">
+          <div className="fue-variant-name">
+            <h3>School account at its limit</h3>
+            <p>Account hit 15/month. User personally may still have capacity but is blocked because the account cap is reached.</p>
+          </div>
+
+          <div className="fue-surface">
+            <div className="fue-surface-label">Launcher / Start panel</div>
+            <div className="fue-panel-row">
+              <div className="fue-panel">
+                <PanelHead />
+                <PanelSub />
+                <div className="fue-blocked">
+                  <h4 className="fue-bk-title">Your school has used all 15 reviews this month</h4>
+                  <p>AI Essential gives each school 15 AI Profile Reviews per month across all users. The shared monthly pool resets on <strong>Jun 1</strong>.</p>
+                  <p className="fue-reset-line">Resets in 11 days · you may have personal reviews remaining, but the school-wide pool is full.</p>
+                  <div className="fue-cta-stack">
+                    <a href="#" onClick={e => e.preventDefault()} className="fue-btn fue-btn-primary fue-btn-block">Upgrade to AI Pro to unlock more →</a>
+                    <a href="#" onClick={e => e.preventDefault()} className="fue-btn fue-btn-secondary fue-btn-block">View AI plans</a>
+                  </div>
+                </div>
+                <div className="fue-panel-spacer"></div>
+                <Disclaimer showStart={false} />
+              </div>
+            </div>
+          </div>
+
+          <div className="fue-surface fue-na">
+            <div className="fue-surface-label">Post-run footer</div>
+            <div className="fue-postrun">N/A — no action ran, so nothing to confirm.</div>
+          </div>
+        </section>
+      </div>
+    </>
   );
 }
 
@@ -1608,7 +1911,7 @@ export default function App() {
       color: F.plum,
       padding: "0 0 48px",
     }}>
-      <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700;6..12,800&display=swap" rel="stylesheet" />
+      <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700;6..12,800&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet" />
       <style>{`
         .lbl-full { display: inline; }
         .lbl-short { display: none; }

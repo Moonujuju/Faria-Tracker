@@ -1359,6 +1359,81 @@ function FairUseExample() {
     .fue-postrun a { color: ${F.plum}; font-weight: 700; text-decoration: none; margin-left: auto; white-space: nowrap; }
     .fue-surface.fue-na .fue-postrun { background: transparent; border: 1px dashed #EAECF0; color: #98a2b3; font-style: italic; box-shadow: none; }
 
+    /* ── Side-by-side comparison (Model A vs Model B) ─── */
+    .fue-cmp-section { margin: 0 0 40px; }
+    .fue-cmp-heading { font-size: 16px; font-weight: 700; color: ${F.plum}; margin: 0 0 4px 0; font-family: 'Nunito Sans','Trebuchet MS',system-ui,sans-serif; }
+    .fue-cmp-sub { font-size: 12.5px; color: #667085; margin: 0 0 18px 0; }
+    .fue-cmp-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 18px; align-items: stretch; }
+    .fue-cmp-col { background: #fff; border: 1px solid #EAECF0; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 1px 2px rgba(16,24,40,0.05); }
+    .fue-cmp-banner { padding: 14px 18px; border-bottom: 1px solid #EAECF0; }
+    .fue-cmp-banner.fue-cmp-banner-a { background: #F6F4FA; }
+    .fue-cmp-banner.fue-cmp-banner-b { background: #FFF8E6; }
+    .fue-cmp-tag { display: inline-block; font-size: 10px; font-weight: 800; letter-spacing: 1.5px; padding: 3px 8px; border-radius: 4px; margin-bottom: 6px; }
+    .fue-cmp-banner-a .fue-cmp-tag { background: ${F.plum}; color: #fff; }
+    .fue-cmp-banner-b .fue-cmp-tag { background: #6b4500; color: #FFF8E6; }
+    .fue-cmp-title { font-size: 15px; font-weight: 700; color: #101828; margin: 0 0 3px 0; line-height: 1.25; }
+    .fue-cmp-tagline { font-size: 12px; color: #667085; margin: 0; line-height: 1.4; }
+    .fue-cmp-body { padding: 16px 18px 0; display: flex; flex-direction: column; gap: 14px; flex: 1; }
+
+    /* mock launcher (smaller, fits inside the comparison column) */
+    .fue-cmp-mini-panel { background: #fff; border: 1px solid #EAECF0; border-radius: 8px; padding: 12px 12px 10px; box-shadow: 0 1px 2px rgba(16,24,40,0.04); }
+    .fue-cmp-mp-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .fue-cmp-mp-title { font-size: 12.5px; font-weight: 700; color: #101828; flex: 1; }
+    .fue-cmp-mp-sub { font-size: 11px; color: #667085; margin: 0 0 10px 0; }
+    .fue-cmp-mp-sub strong { color: #101828; font-weight: 600; }
+
+    /* per-feature meter (Model A) */
+    .fue-cmp-pf-meter { display: flex; align-items: center; gap: 9px; padding: 8px 10px; background: #fff; border: 1px solid #EAECF0; border-radius: 6px; }
+    .fue-cmp-pf-meter .fue-dots { display: inline-flex; gap: 3px; }
+    .fue-cmp-pf-meter .fue-dot { width: 9px; height: 9px; border-radius: 50%; background: #E4E7EC; }
+    .fue-cmp-pf-meter .fue-dot.fue-filled { background: #98a2b3; }
+    .fue-cmp-pf-meter .fue-mlabel { font-size: 11.5px; color: #344054; flex: 1; }
+    .fue-cmp-pf-meter .fue-mlabel strong { color: #101828; }
+    .fue-cmp-pf-meter .fue-resets { color: #667085; }
+
+    /* pooled-credit meter (Model B) */
+    .fue-cmp-pool-meter { padding: 10px 12px; background: #fff; border: 1px solid #EAECF0; border-radius: 6px; }
+    .fue-cmp-pool-label { display: flex; justify-content: space-between; align-items: baseline; font-size: 11.5px; color: #344054; margin-bottom: 7px; }
+    .fue-cmp-pool-label strong { color: #101828; font-weight: 700; }
+    .fue-cmp-pool-reset { font-size: 10.5px; color: #667085; font-weight: 500; }
+    .fue-cmp-pool-track { height: 8px; background: #ECE9EF; border-radius: 4px; overflow: hidden; display: flex; }
+    .fue-cmp-pool-fill-a { background: ${F.plum}; }
+    .fue-cmp-pool-fill-b { background: ${F.pink}; }
+
+    /* sibling card (Model A) — shows the other feature's independent counter */
+    .fue-cmp-sibling { padding: 12px 14px; background: #FAFAFB; border: 1px solid #EAECF0; border-radius: 8px; }
+    .fue-cmp-sibling-eyebrow { font-size: 10px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: #98a2b3; margin: 0 0 8px 0; }
+    .fue-cmp-sibling-row { display: flex; align-items: center; gap: 9px; }
+    .fue-cmp-sibling-name { font-size: 12.5px; font-weight: 600; color: #101828; flex: 1; }
+    .fue-cmp-sibling-count { font-size: 11.5px; color: #667085; font-weight: 600; }
+
+    /* breakdown card (Model B) — stacked bar + key */
+    .fue-cmp-breakdown { padding: 12px 14px; background: #FAFAFB; border: 1px solid #EAECF0; border-radius: 8px; }
+    .fue-cmp-bd-eyebrow { font-size: 10px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: #98a2b3; margin: 0 0 9px 0; }
+    .fue-cmp-bd-total { font-size: 12px; color: #344054; margin-bottom: 8px; }
+    .fue-cmp-bd-total strong { color: #101828; font-weight: 700; }
+    .fue-cmp-bd-bar { height: 10px; background: #ECE9EF; border-radius: 5px; overflow: hidden; display: flex; margin-bottom: 10px; }
+    .fue-cmp-bd-seg-a { background: ${F.plum}; }
+    .fue-cmp-bd-seg-b { background: ${F.pink}; }
+    .fue-cmp-bd-key { display: flex; flex-direction: column; gap: 5px; font-size: 11.5px; color: #344054; }
+    .fue-cmp-bd-key-row { display: flex; align-items: center; gap: 7px; }
+    .fue-cmp-bd-swatch { width: 9px; height: 9px; border-radius: 2px; flex-shrink: 0; }
+    .fue-cmp-bd-key-name { flex: 1; }
+    .fue-cmp-bd-key-val { font-weight: 700; color: #101828; }
+    .fue-cmp-bd-cost { font-size: 10.5px; color: #667085; margin-top: 8px; font-style: italic; }
+
+    /* verdict bullets */
+    .fue-cmp-verdict { padding: 12px 18px 16px; border-top: 1px solid #EAECF0; background: #FAFAFB; }
+    .fue-cmp-verdict-eyebrow { font-size: 10px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: #667085; margin: 0 0 8px 0; }
+    .fue-cmp-verdict ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
+    .fue-cmp-verdict li { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; line-height: 1.45; color: #344054; }
+    .fue-cmp-verdict li .fue-mark { flex-shrink: 0; font-weight: 800; width: 14px; text-align: center; line-height: 1.45; }
+    .fue-cmp-verdict li.fue-pro .fue-mark { color: ${F.pink}; }
+    .fue-cmp-verdict li.fue-con .fue-mark { color: #98a2b3; }
+
+    .fue-deep-heading { font-size: 16px; font-weight: 700; color: ${F.plum}; margin: 36px 0 4px 0; font-family: 'Nunito Sans','Trebuchet MS',system-ui,sans-serif; }
+    .fue-deep-sub { font-size: 12.5px; color: #667085; margin: 0 0 22px 0; }
+
     @media (max-width: 760px) {
       .fue-panel { width: 100%; }
     }
@@ -1399,9 +1474,138 @@ function FairUseExample() {
       <style>{styles}</style>
       <div className="fue-deck">
         <div className="fue-intro">
-          <h2>AI Usage Limits · AI Profile Review</h2>
-          <p>Four states a school user on the AI Essential plan can land in, shown across the launcher side panel and the post-run confirmation footer. Tone shifts from neutral → amber → muted-blocked. No red.</p>
+          <h2>AI Usage Limits — Two models, side by side</h2>
+          <p>How school users on AI Essential experience usage limits across AI features. Two candidate models are shown side-by-side below — pick the one that gives the better user experience. Beneath that, a per-feature deep dive walks through the four states a single feature can land in (Model A in action).</p>
         </div>
+
+        {/* ── Side-by-side comparison: Model A vs Model B ──────────────── */}
+        <div className="fue-cmp-section">
+          <h3 className="fue-cmp-heading">Compare &amp; contrast</h3>
+          <p className="fue-cmp-sub">Two ways to rate-limit AI on AI Essential. Same school user, same two features — AI Profile Review and AI Lead Scoring. Different counter UX.</p>
+          <div className="fue-cmp-grid">
+
+            {/* ─── Model A: per-feature limits ─── */}
+            <div className="fue-cmp-col">
+              <div className="fue-cmp-banner fue-cmp-banner-a">
+                <span className="fue-cmp-tag">MODEL A</span>
+                <h4 className="fue-cmp-title">Per-feature limits</h4>
+                <p className="fue-cmp-tagline">Each AI feature has its own independent monthly counter.</p>
+              </div>
+              <div className="fue-cmp-body">
+                <div className="fue-cmp-mini-panel">
+                  <div className="fue-cmp-mp-head">
+                    <span className="fue-cmp-mp-title">AI Profile Review</span>
+                    <span className="fue-plan-tag"><span className="fue-spark">✦</span> AI Essential</span>
+                  </div>
+                  <p className="fue-cmp-mp-sub">Reviewing <strong>Olivia Zhang</strong></p>
+                  <div className="fue-cmp-pf-meter">
+                    <span className="fue-dots">
+                      <span className="fue-dot fue-filled"></span>
+                      <span className="fue-dot fue-filled"></span>
+                      <span className="fue-dot fue-filled"></span>
+                      <span className="fue-dot fue-filled"></span>
+                      <span className="fue-dot"></span>
+                    </span>
+                    <span className="fue-mlabel"><strong>4 of 5</strong> reviews left <span className="fue-resets">· resets Jun 1</span></span>
+                  </div>
+                </div>
+
+                <div className="fue-cmp-sibling">
+                  <p className="fue-cmp-sibling-eyebrow">Your other AI feature, on its own counter</p>
+                  <div className="fue-cmp-sibling-row">
+                    <span className="fue-dots">
+                      <span className="fue-dot fue-filled"></span>
+                      <span className="fue-dot fue-filled"></span>
+                      <span className="fue-dot fue-filled"></span>
+                      <span className="fue-dot fue-filled"></span>
+                      <span className="fue-dot fue-filled"></span>
+                      <span className="fue-dot fue-filled"></span>
+                      <span className="fue-dot fue-filled"></span>
+                      <span className="fue-dot"></span>
+                      <span className="fue-dot"></span>
+                      <span className="fue-dot"></span>
+                    </span>
+                    <span className="fue-cmp-sibling-name">AI Lead Scoring</span>
+                    <span className="fue-cmp-sibling-count"><strong style={{ color: "#101828" }}>7 of 10</strong> left</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="fue-cmp-verdict">
+                <p className="fue-cmp-verdict-eyebrow">UX trade-offs</p>
+                <ul>
+                  <li className="fue-pro"><span className="fue-mark">✓</span><span>Predictable per feature — a user always knows their AI Profile Review budget independently of Lead Scoring.</span></li>
+                  <li className="fue-pro"><span className="fue-mark">✓</span><span>Hitting one feature's cap doesn't block the other.</span></li>
+                  <li className="fue-con"><span className="fue-mark">✗</span><span>Two counters to remember. Hitting AI Profile Review's cap while AI Lead Scoring sits 7-of-10 unused can feel arbitrary.</span></li>
+                </ul>
+              </div>
+            </div>
+
+            {/* ─── Model B: shared credit pool ─── */}
+            <div className="fue-cmp-col">
+              <div className="fue-cmp-banner fue-cmp-banner-b">
+                <span className="fue-cmp-tag">MODEL B</span>
+                <h4 className="fue-cmp-title">Shared budget across features</h4>
+                <p className="fue-cmp-tagline">One monthly pool of AI credits, drawn from by every feature.</p>
+              </div>
+              <div className="fue-cmp-body">
+                <div className="fue-cmp-mini-panel">
+                  <div className="fue-cmp-mp-head">
+                    <span className="fue-cmp-mp-title">AI Profile Review</span>
+                    <span className="fue-plan-tag"><span className="fue-spark">✦</span> AI Essential</span>
+                  </div>
+                  <p className="fue-cmp-mp-sub">Reviewing <strong>Olivia Zhang</strong></p>
+                  <div className="fue-cmp-pool-meter">
+                    <div className="fue-cmp-pool-label">
+                      <span><strong>60 of 100</strong> AI credits left</span>
+                      <span className="fue-cmp-pool-reset">resets Jun 1</span>
+                    </div>
+                    <div className="fue-cmp-pool-track">
+                      <div className="fue-cmp-pool-fill-a" style={{ width: "24%" }}></div>
+                      <div className="fue-cmp-pool-fill-b" style={{ width: "16%" }}></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="fue-cmp-breakdown">
+                  <p className="fue-cmp-bd-eyebrow">Your AI credit breakdown this month</p>
+                  <p className="fue-cmp-bd-total"><strong>40 of 100</strong> credits used · shared pool across all AI features</p>
+                  <div className="fue-cmp-bd-bar">
+                    <div className="fue-cmp-bd-seg-a" style={{ width: "60%" }}></div>
+                    <div className="fue-cmp-bd-seg-b" style={{ width: "40%" }}></div>
+                  </div>
+                  <div className="fue-cmp-bd-key">
+                    <div className="fue-cmp-bd-key-row">
+                      <span className="fue-cmp-bd-swatch" style={{ background: F.plum }}></span>
+                      <span className="fue-cmp-bd-key-name">AI Profile Review · 4 runs × 6 credits</span>
+                      <span className="fue-cmp-bd-key-val">24</span>
+                    </div>
+                    <div className="fue-cmp-bd-key-row">
+                      <span className="fue-cmp-bd-swatch" style={{ background: F.pink }}></span>
+                      <span className="fue-cmp-bd-key-name">AI Lead Scoring · 8 runs × 2 credits</span>
+                      <span className="fue-cmp-bd-key-val">16</span>
+                    </div>
+                  </div>
+                  <p className="fue-cmp-bd-cost">Cost map: Profile Review = 6 credits · Lead Scoring = 2 credits per run.</p>
+                </div>
+              </div>
+
+              <div className="fue-cmp-verdict">
+                <p className="fue-cmp-verdict-eyebrow">UX trade-offs</p>
+                <ul>
+                  <li className="fue-pro"><span className="fue-mark">✓</span><span>One simple counter — minimal mental model for the user.</span></li>
+                  <li className="fue-pro"><span className="fue-mark">✓</span><span>Flexible — schools concentrate credits where they matter most this month.</span></li>
+                  <li className="fue-con"><span className="fue-mark">✗</span><span>Heavy use of one feature can starve the other. Credits ≠ runs — users must learn the cost map (6 vs 2).</span></li>
+                </ul>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        {/* Existing 4-state deck below = Model A deep dive */}
+        <h3 className="fue-deep-heading">Per-feature deep dive — four states</h3>
+        <p className="fue-deep-sub">What Model A looks like for a single feature across the month. Tone shifts from neutral → amber → muted-blocked. No red.</p>
 
         {/* ── State 1: Plenty left ─────────────────────────────────────── */}
         <section className="fue-variant">

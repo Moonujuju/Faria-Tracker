@@ -1332,9 +1332,13 @@ function FairUseExample() {
     .fue-meter.fue-amber-meter { background: #FFF8E6; border-color: #F1D58C; }
     .fue-meter.fue-amber-meter .fue-mlabel { color: #6b4500; font-weight: 600; }
 
-    .fue-callout { margin: 12px 18px 0; padding: 10px 12px; background: #FFF8E6; border: 1px solid #F1D58C; border-radius: 6px; font-size: 12px; color: #6b4500; line-height: 1.5; }
+    .fue-callout { margin: 12px 18px 0; padding: 10px 12px; background: #FFF8E6; border: 1px solid #F1D58C; border-radius: 6px; font-size: 12px; color: #6b4500; line-height: 1.6; }
     .fue-callout strong { color: #6b4500; font-weight: 700; }
-    .fue-callout a { color: ${F.plum}; font-weight: 700; text-decoration: none; }
+    .fue-callout a { color: ${F.plum}; font-weight: 800; text-decoration: none; background: #fff; padding: 1px 7px; margin: 0 1px; border-radius: 4px; border: 1px solid #F1D58C; }
+
+    /* Soft upgrade chip — shown in Plenty-left panels (no urgency, just an option) */
+    .fue-soft-upgrade { margin: 12px 18px 0; padding: 8px 12px; background: #F6F4FA; border: 1px solid #EFE9F3; border-radius: 6px; font-size: 11.5px; color: #5D3460; line-height: 1.5; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .fue-soft-upgrade a { color: ${F.plum}; font-weight: 800; text-decoration: none; white-space: nowrap; }
 
     .fue-blocked { margin: 12px 18px 0; padding: 16px; background: #FAFAFB; border: 1px solid #EAECF0; border-radius: 8px; }
     .fue-blocked .fue-bk-title { font-weight: 700; font-size: 14px; margin: 0 0 6px 0; color: #101828; }
@@ -1369,7 +1373,7 @@ function FairUseExample() {
     .fue-cmp-banner.fue-cmp-banner-a { background: #F6F4FA; }
     .fue-cmp-banner.fue-cmp-banner-b { background: #FFF8E6; }
     .fue-cmp-banner.fue-cmp-banner-c { background: #E8F5EE; }
-    .fue-cmp-tag { display: inline-block; font-size: 10px; font-weight: 800; letter-spacing: 1.5px; padding: 3px 8px; border-radius: 4px; margin-bottom: 6px; }
+    .fue-cmp-tag { display: inline-block; font-size: 10px; font-weight: 800; letter-spacing: 0.8px; padding: 3px 9px; border-radius: 4px; margin-bottom: 6px; }
     .fue-cmp-banner-a .fue-cmp-tag { background: ${F.plum}; color: #fff; }
     .fue-cmp-banner-b .fue-cmp-tag { background: #6b4500; color: #FFF8E6; }
     .fue-cmp-banner-c .fue-cmp-tag { background: ${F.green}; color: #fff; }
@@ -1444,7 +1448,7 @@ function FairUseExample() {
     .fue-model-section-sub { font-size: 12.5px; color: #667085; margin: 0 0 22px 0; }
 
     /* State-level model tag (small chip above each variant name) */
-    .fue-state-tag { display: inline-block; font-size: 9.5px; font-weight: 800; letter-spacing: 1.5px; padding: 2px 7px; border-radius: 3px; margin-bottom: 6px; }
+    .fue-state-tag { display: inline-block; font-size: 9.5px; font-weight: 800; letter-spacing: 0.7px; padding: 2px 8px; border-radius: 3px; margin-bottom: 6px; white-space: nowrap; }
     .fue-state-tag.fue-tag-a { background: ${F.plum}; color: #fff; }
     .fue-state-tag.fue-tag-b { background: #6b4500; color: #FFF8E6; }
     .fue-state-tag.fue-tag-c { background: ${F.green}; color: #fff; }
@@ -1526,14 +1530,13 @@ function FairUseExample() {
 
   const SummaryCard = () => (
     <div className="fue-summary">
-      <p>AI will generate a summary covering academic background, language fit, application status, and family context.</p>
-      <span className="fue-meta"><span className="fue-spark">✦</span> 25 fields · 5 dimensions</span>
+      <p>Generate an AI summary for this profile.</p>
     </div>
   );
 
   const Disclaimer = ({ showStart }) => (
     <div className="fue-panel-foot">
-      {showStart && <button className="fue-start-btn">Start</button>}
+      {showStart && <button className="fue-start-btn">Review Profile</button>}
       <p className="fue-disclaimer">AI-generated summaries may contain errors. Please verify against source documents.</p>
     </div>
   );
@@ -1549,6 +1552,14 @@ function FairUseExample() {
           <span className="fue-usage-mini-val">{r.val}</span>
         </div>
       ))}
+    </div>
+  );
+
+  // ── Soft upgrade chip shown on Plenty-left states ────────
+  const SoftUpgrade = () => (
+    <div className="fue-soft-upgrade">
+      <span>Want more headroom?</span>
+      <a href="#" onClick={e => e.preventDefault()}>Upgrade to AI Pro to unlock more now</a>
     </div>
   );
 
@@ -1568,6 +1579,7 @@ function FairUseExample() {
         </span>
         <span className="fue-mlabel"><strong style={{ color: "#101828" }}>4 of 5</strong> reviews left <span className="fue-resets">· resets Jun 1</span></span>
       </div>
+      <SoftUpgrade />
       <div className="fue-panel-spacer"></div>
       <Disclaimer showStart />
     </div>
@@ -1588,7 +1600,7 @@ function FairUseExample() {
         <span className="fue-mlabel"><strong>Only 1 of 5</strong> reviews left · resets Jun 1</span>
       </div>
       <div className="fue-callout">
-        After this review you'll need to wait until <strong>Jun 1</strong> or <a href="#" onClick={e => e.preventDefault()}>upgrade to AI Pro to unlock more</a>.
+        After this review you'll need to wait until <strong>Jun 1</strong> or <a href="#" onClick={e => e.preventDefault()}>upgrade to AI Pro to unlock more now</a>.
       </div>
       <div className="fue-panel-spacer"></div>
       <Disclaimer showStart />
@@ -1603,7 +1615,7 @@ function FairUseExample() {
         <p>AI Essential gives each user 5 AI Profile Reviews per month. You'll be able to run reviews again on <strong>Jun 1</strong>.</p>
         <p className="fue-reset-line">Resets in 11 days · other users at your school may still have capacity.</p>
         <div className="fue-cta-stack">
-          <a href="#" onClick={e => e.preventDefault()} className="fue-btn fue-btn-primary fue-btn-block">Upgrade to AI Pro to unlock more →</a>
+          <a href="#" onClick={e => e.preventDefault()} className="fue-btn fue-btn-primary fue-btn-block">Upgrade to AI Pro to unlock more now</a>
           <a href="#" onClick={e => e.preventDefault()} className="fue-btn fue-btn-secondary fue-btn-block">View AI plans</a>
         </div>
       </div>
@@ -1620,7 +1632,7 @@ function FairUseExample() {
         <p>AI Essential gives each school 15 AI Profile Reviews per month across all users. The shared monthly pool resets on <strong>Jun 1</strong>.</p>
         <p className="fue-reset-line">Resets in 11 days · you may have personal reviews remaining, but the school-wide pool is full.</p>
         <div className="fue-cta-stack">
-          <a href="#" onClick={e => e.preventDefault()} className="fue-btn fue-btn-primary fue-btn-block">Upgrade to AI Pro to unlock more →</a>
+          <a href="#" onClick={e => e.preventDefault()} className="fue-btn fue-btn-primary fue-btn-block">Upgrade to AI Pro to unlock more now</a>
           <a href="#" onClick={e => e.preventDefault()} className="fue-btn fue-btn-secondary fue-btn-block">View AI plans</a>
         </div>
       </div>
@@ -1647,7 +1659,7 @@ function FairUseExample() {
       <p>{body}</p>
       <p className="fue-reset-line">{resetLine}</p>
       <div className="fue-cta-stack">
-        <a href="#" onClick={e => e.preventDefault()} className="fue-btn fue-btn-primary fue-btn-block">Upgrade to AI Pro to unlock more →</a>
+        <a href="#" onClick={e => e.preventDefault()} className="fue-btn fue-btn-primary fue-btn-block">Upgrade to AI Pro to unlock more now</a>
         <a href="#" onClick={e => e.preventDefault()} className="fue-btn fue-btn-secondary fue-btn-block">View AI plans</a>
       </div>
     </div>
@@ -1655,11 +1667,12 @@ function FairUseExample() {
   const BPlenty = () => (
     <div className="fue-panel">
       <PanelHead /><PanelSub /><SummaryCard />
-      <BarMeter label={<><strong>60 of 100</strong> AI credits left</>} fillPct={40} />
-      <UsageMini eyebrow="40 credits used · by feature" rows={[
-        { color: F.plum, name: "AI Profile Review", val: "24 credits" },
-        { color: F.pink, name: "AI Lead Scoring",  val: "16 credits" },
+      <BarMeter label={<><strong>30 of 50</strong> AI credits left</>} fillPct={40} />
+      <UsageMini eyebrow="20 credits used · by feature" rows={[
+        { color: F.plum, name: "AI Profile Review", val: "12 credits" },
+        { color: F.pink, name: "AI Lead Scoring",  val: "8 credits" },
       ]} />
+      <SoftUpgrade />
       <div className="fue-panel-spacer"></div>
       <Disclaimer showStart />
     </div>
@@ -1667,29 +1680,45 @@ function FairUseExample() {
   const BApproaching = () => (
     <div className="fue-panel">
       <PanelHead /><PanelSub /><SummaryCard />
-      <BarMeter amber label={<><strong>Only 8 of 100</strong> AI credits left</>} fillPct={8} />
-      <UsageMini eyebrow="92 credits used · by feature" rows={[
-        { color: F.plum, name: "AI Profile Review", val: "72 credits" },
-        { color: F.pink, name: "AI Lead Scoring",  val: "20 credits" },
+      <BarMeter amber label={<><strong>Only 4 of 50</strong> AI credits left</>} fillPct={8} />
+      <UsageMini eyebrow="46 credits used · by feature" rows={[
+        { color: F.plum, name: "AI Profile Review", val: "36 credits" },
+        { color: F.pink, name: "AI Lead Scoring",  val: "10 credits" },
       ]} />
       <div className="fue-callout">
-        This review costs <strong>6 credits</strong>. Once you're at 0 you'll need to wait until <strong>Jun 1</strong> or <a href="#" onClick={e => e.preventDefault()}>upgrade to AI Pro to unlock more</a>.
+        This review costs <strong>6 credits</strong>. Once you're at 0 you'll need to wait until <strong>Jun 1</strong> or <a href="#" onClick={e => e.preventDefault()}>upgrade to AI Pro to unlock more now</a>.
       </div>
       <div className="fue-panel-spacer"></div>
       <Disclaimer showStart />
+    </div>
+  );
+  const BUserCap = () => (
+    <div className="fue-panel">
+      <PanelHead /><PanelSub />
+      <BlockedCard
+        title="You've used your 18 AI credits this month"
+        body={<>AI Essential gives each user 18 AI credits per month, within the school's 50-credit pool. You'll be able to use AI again on <strong>Jun 1</strong>.</>}
+        resetLine="Resets in 11 days · your school still has credits remaining — other users may still be able to run AI."
+      />
+      <UsageMini eyebrow="Your 18 credits used · by feature" rows={[
+        { color: F.plum, name: "AI Profile Review", val: "12 credits" },
+        { color: F.pink, name: "AI Lead Scoring",  val: "6 credits" },
+      ]} />
+      <div className="fue-panel-spacer"></div>
+      <Disclaimer showStart={false} />
     </div>
   );
   const BExhausted = () => (
     <div className="fue-panel">
       <PanelHead /><PanelSub />
       <BlockedCard
-        title="Your school has used all 100 AI credits this month"
-        body={<>AI Essential gives each school 100 AI credits per month, shared across all AI features. The pool resets on <strong>Jun 1</strong>.</>}
+        title="Your school has used all 50 AI credits this month"
+        body={<>AI Essential gives each school 50 AI credits per month, shared across all AI features. The pool resets on <strong>Jun 1</strong>.</>}
         resetLine="Resets in 11 days · this affects every AI feature for every user at your school."
       />
-      <UsageMini eyebrow="100 credits used · by feature" rows={[
-        { color: F.plum, name: "AI Profile Review", val: "84 credits" },
-        { color: F.pink, name: "AI Lead Scoring",  val: "16 credits" },
+      <UsageMini eyebrow="50 credits used · by feature" rows={[
+        { color: F.plum, name: "AI Profile Review", val: "42 credits" },
+        { color: F.pink, name: "AI Lead Scoring",  val: "8 credits" },
       ]} />
       <div className="fue-panel-spacer"></div>
       <Disclaimer showStart={false} />
@@ -1700,11 +1729,12 @@ function FairUseExample() {
   const CPlenty = () => (
     <div className="fue-panel">
       <PanelHead /><PanelSub /><SummaryCard />
-      <BarMeter label={<><strong>18 of 30</strong> AI actions left</>} fillPct={60} fillColor={F.green} />
-      <UsageMini eyebrow="12 actions used · by feature" rows={[
-        { color: F.plum, name: "AI Profile Review", val: "8 actions" },
-        { color: F.pink, name: "AI Lead Scoring",  val: "4 actions" },
+      <BarMeter label={<><strong>6 of 10</strong> AI actions left</>} fillPct={60} fillColor={F.green} />
+      <UsageMini eyebrow="4 actions used · by feature" rows={[
+        { color: F.plum, name: "AI Profile Review", val: "2 actions" },
+        { color: F.pink, name: "AI Lead Scoring",  val: "2 actions" },
       ]} />
+      <SoftUpgrade />
       <div className="fue-panel-spacer"></div>
       <Disclaimer showStart />
     </div>
@@ -1712,29 +1742,45 @@ function FairUseExample() {
   const CApproaching = () => (
     <div className="fue-panel">
       <PanelHead /><PanelSub /><SummaryCard />
-      <BarMeter amber label={<><strong>Only 3 of 30</strong> AI actions left</>} fillPct={10} />
-      <UsageMini eyebrow="27 actions used · by feature" rows={[
-        { color: F.plum, name: "AI Profile Review", val: "18 actions" },
-        { color: F.pink, name: "AI Lead Scoring",  val: "9 actions" },
+      <BarMeter amber label={<><strong>Only 1 of 10</strong> AI actions left</>} fillPct={10} />
+      <UsageMini eyebrow="9 actions used · by feature" rows={[
+        { color: F.plum, name: "AI Profile Review", val: "6 actions" },
+        { color: F.pink, name: "AI Lead Scoring",  val: "3 actions" },
       ]} />
       <div className="fue-callout">
-        After 3 more AI actions (any feature) you'll need to wait until <strong>Jun 1</strong> or <a href="#" onClick={e => e.preventDefault()}>upgrade to AI Pro to unlock more</a>.
+        After 1 more AI action (any feature) you'll need to wait until <strong>Jun 1</strong> or <a href="#" onClick={e => e.preventDefault()}>upgrade to AI Pro to unlock more now</a>.
       </div>
       <div className="fue-panel-spacer"></div>
       <Disclaimer showStart />
+    </div>
+  );
+  const CUserCap = () => (
+    <div className="fue-panel">
+      <PanelHead /><PanelSub />
+      <BlockedCard
+        title="You've used your 4 AI actions this month"
+        body={<>AI Essential gives each user 4 AI actions per month, within the school's 10-action pool. You'll be able to use AI again on <strong>Jun 1</strong>.</>}
+        resetLine="Resets in 11 days · your school still has actions remaining — other users may still be able to run AI."
+      />
+      <UsageMini eyebrow="Your 4 actions used · by feature" rows={[
+        { color: F.plum, name: "AI Profile Review", val: "2 actions" },
+        { color: F.pink, name: "AI Lead Scoring",  val: "2 actions" },
+      ]} />
+      <div className="fue-panel-spacer"></div>
+      <Disclaimer showStart={false} />
     </div>
   );
   const CExhausted = () => (
     <div className="fue-panel">
       <PanelHead /><PanelSub />
       <BlockedCard
-        title="Your school has used all 30 AI actions this month"
-        body={<>AI Essential gives each school 30 AI actions per month, shared across all AI features. Every AI run counts as 1. The pool resets on <strong>Jun 1</strong>.</>}
+        title="Your school has used all 10 AI actions this month"
+        body={<>AI Essential gives each school 10 AI actions per month, shared across all AI features. Every AI run counts as 1. The pool resets on <strong>Jun 1</strong>.</>}
         resetLine="Resets in 11 days · this affects every AI feature for every user at your school."
       />
-      <UsageMini eyebrow="30 actions used · by feature" rows={[
-        { color: F.plum, name: "AI Profile Review", val: "20 actions" },
-        { color: F.pink, name: "AI Lead Scoring",  val: "10 actions" },
+      <UsageMini eyebrow="10 actions used · by feature" rows={[
+        { color: F.plum, name: "AI Profile Review", val: "6 actions" },
+        { color: F.pink, name: "AI Lead Scoring",  val: "4 actions" },
       ]} />
       <div className="fue-panel-spacer"></div>
       <Disclaimer showStart={false} />
@@ -1751,8 +1797,8 @@ function FairUseExample() {
       <style>{styles}</style>
       <div className="fue-deck">
         <div className="fue-intro">
-          <h2>AI Usage Limits — Two models, side by side</h2>
-          <p>How school users on AI Essential experience usage limits across AI features. Two candidate models are shown side-by-side below — pick the one that gives the better user experience. Beneath that, a per-feature deep dive walks through the four states a single feature can land in (Model A in action).</p>
+          <h2>AI Usage Limits — three candidate models</h2>
+          <p>How school users on AI Essential experience usage limits across AI features. Three candidate models are shown side-by-side below — pick the one that gives the better user experience. Beneath that, a state-by-state deep dive lines up the four states a user can land in (Plenty left, Approaching the limit, User-level cap reached, School pool exhausted) across all three models.</p>
         </div>
 
         {/* ── Side-by-side comparison: Model A vs Model B vs Model C ─── */}
@@ -1764,7 +1810,7 @@ function FairUseExample() {
             {/* ─── Model A: per-feature limits ─── */}
             <div className="fue-cmp-col">
               <div className="fue-cmp-banner fue-cmp-banner-a">
-                <span className="fue-cmp-tag">MODEL A</span>
+                <span className="fue-cmp-tag">MODEL A · PER-FEATURE</span>
                 <h4 className="fue-cmp-title">Per-feature limits</h4>
                 <p className="fue-cmp-tagline">Each AI feature has its own independent monthly counter.</p>
               </div>
@@ -1812,7 +1858,7 @@ function FairUseExample() {
             {/* ─── Model B: shared credit pool (weighted) ─── */}
             <div className="fue-cmp-col">
               <div className="fue-cmp-banner fue-cmp-banner-b">
-                <span className="fue-cmp-tag">MODEL B</span>
+                <span className="fue-cmp-tag">MODEL B · CREDITS</span>
                 <h4 className="fue-cmp-title">Shared credits across features</h4>
                 <p className="fue-cmp-tagline">One monthly pool of AI credits, drawn from by every feature.</p>
               </div>
@@ -1825,7 +1871,7 @@ function FairUseExample() {
                   <p className="fue-cmp-mp-sub">Reviewing <strong>Olivia Zhang</strong></p>
                   <div className="fue-cmp-pool-meter">
                     <div className="fue-cmp-pool-label">
-                      <span><strong>60 of 100</strong> AI credits left</span>
+                      <span><strong>30 of 50</strong> AI credits left</span>
                       <span className="fue-cmp-pool-reset">resets Jun 1</span>
                     </div>
                     <div className="fue-cmp-pool-track">
@@ -1837,7 +1883,7 @@ function FairUseExample() {
 
                 <div className="fue-cmp-breakdown">
                   <p className="fue-cmp-bd-eyebrow">Your AI credit breakdown this month</p>
-                  <p className="fue-cmp-bd-total"><strong>40 of 100</strong> credits used · shared pool across all AI features</p>
+                  <p className="fue-cmp-bd-total"><strong>20 of 50</strong> credits used · shared pool across all AI features</p>
                   <div className="fue-cmp-bd-bar">
                     <div className="fue-cmp-bd-seg-a" style={{ width: "60%" }}></div>
                     <div className="fue-cmp-bd-seg-b" style={{ width: "40%" }}></div>
@@ -1846,12 +1892,12 @@ function FairUseExample() {
                     <div className="fue-cmp-bd-key-row">
                       <span className="fue-cmp-bd-swatch" style={{ background: F.plum }}></span>
                       <span className="fue-cmp-bd-key-name">AI Profile Review</span>
-                      <span className="fue-cmp-bd-key-val">24 credits</span>
+                      <span className="fue-cmp-bd-key-val">12 credits</span>
                     </div>
                     <div className="fue-cmp-bd-key-row">
                       <span className="fue-cmp-bd-swatch" style={{ background: F.pink }}></span>
                       <span className="fue-cmp-bd-key-name">AI Lead Scoring</span>
-                      <span className="fue-cmp-bd-key-val">16 credits</span>
+                      <span className="fue-cmp-bd-key-val">8 credits</span>
                     </div>
                   </div>
                 </div>
@@ -1862,7 +1908,7 @@ function FairUseExample() {
             {/* ─── Model C: pooled actions (flat, no credit weighting) ─── */}
             <div className="fue-cmp-col">
               <div className="fue-cmp-banner fue-cmp-banner-c">
-                <span className="fue-cmp-tag">MODEL C</span>
+                <span className="fue-cmp-tag">MODEL C · ACTIONS</span>
                 <h4 className="fue-cmp-title">Shared actions across features</h4>
                 <p className="fue-cmp-tagline">One monthly pool of AI actions. Every action = 1, no matter the feature.</p>
               </div>
@@ -1875,7 +1921,7 @@ function FairUseExample() {
                   <p className="fue-cmp-mp-sub">Reviewing <strong>Olivia Zhang</strong></p>
                   <div className="fue-cmp-pool-meter">
                     <div className="fue-cmp-pool-label">
-                      <span><strong>18 of 30</strong> AI actions left</span>
+                      <span><strong>6 of 10</strong> AI actions left</span>
                       <span className="fue-cmp-pool-reset">resets Jun 1</span>
                     </div>
                     <div className="fue-cmp-pool-track">
@@ -1886,21 +1932,21 @@ function FairUseExample() {
 
                 <div className="fue-cmp-breakdown">
                   <p className="fue-cmp-bd-eyebrow">Your AI action breakdown this month</p>
-                  <p className="fue-cmp-bd-total"><strong>12 of 30</strong> actions used · shared pool across all AI features</p>
+                  <p className="fue-cmp-bd-total"><strong>4 of 10</strong> actions used · shared pool across all AI features</p>
                   <div className="fue-cmp-bd-bar">
-                    <div style={{ width: "67%", height: "100%", background: F.plum }}></div>
-                    <div style={{ width: "33%", height: "100%", background: F.pink }}></div>
+                    <div style={{ width: "50%", height: "100%", background: F.plum }}></div>
+                    <div style={{ width: "50%", height: "100%", background: F.pink }}></div>
                   </div>
                   <div className="fue-cmp-bd-key">
                     <div className="fue-cmp-bd-key-row">
                       <span className="fue-cmp-bd-swatch" style={{ background: F.plum }}></span>
                       <span className="fue-cmp-bd-key-name">AI Profile Review</span>
-                      <span className="fue-cmp-bd-key-val">8 actions</span>
+                      <span className="fue-cmp-bd-key-val">2 actions</span>
                     </div>
                     <div className="fue-cmp-bd-key-row">
                       <span className="fue-cmp-bd-swatch" style={{ background: F.pink }}></span>
                       <span className="fue-cmp-bd-key-name">AI Lead Scoring</span>
-                      <span className="fue-cmp-bd-key-val">4 actions</span>
+                      <span className="fue-cmp-bd-key-val">2 actions</span>
                     </div>
                   </div>
                   <p className="fue-cmp-bd-cost">Every AI action = 1. No cost map to learn.</p>
@@ -1926,15 +1972,15 @@ function FairUseExample() {
             </div>
             <div className="fue-by-state-cells">
               <div className="fue-by-state-cell">
-                <span className="fue-state-tag fue-tag-a">MODEL A</span>
+                <span className="fue-state-tag fue-tag-a">MODEL A · PER-FEATURE</span>
                 <APlenty />
               </div>
               <div className="fue-by-state-cell">
-                <span className="fue-state-tag fue-tag-b">MODEL B</span>
+                <span className="fue-state-tag fue-tag-b">MODEL B · CREDITS</span>
                 <BPlenty />
               </div>
               <div className="fue-by-state-cell">
-                <span className="fue-state-tag fue-tag-c">MODEL C</span>
+                <span className="fue-state-tag fue-tag-c">MODEL C · ACTIONS</span>
                 <CPlenty />
               </div>
             </div>
@@ -1948,38 +1994,38 @@ function FairUseExample() {
             </div>
             <div className="fue-by-state-cells">
               <div className="fue-by-state-cell">
-                <span className="fue-state-tag fue-tag-a">MODEL A</span>
+                <span className="fue-state-tag fue-tag-a">MODEL A · PER-FEATURE</span>
                 <AOneLeft />
               </div>
               <div className="fue-by-state-cell">
-                <span className="fue-state-tag fue-tag-b">MODEL B</span>
+                <span className="fue-state-tag fue-tag-b">MODEL B · CREDITS</span>
                 <BApproaching />
               </div>
               <div className="fue-by-state-cell">
-                <span className="fue-state-tag fue-tag-c">MODEL C</span>
+                <span className="fue-state-tag fue-tag-c">MODEL C · ACTIONS</span>
                 <CApproaching />
               </div>
             </div>
           </div>
 
-          {/* Row 3 — User-level cap reached (Model A only; B and C have only a school-wide pool) */}
+          {/* Row 3 — User-level cap reached (all three models — each has a per-user sub-cap inside the school pool) */}
           <div className="fue-by-state-row">
             <div className="fue-by-state-row-header">
               <h4>User-level cap reached</h4>
-              <p>One specific user has hit a personal cap, but the school still has capacity. Only Model A has this concept — Models B and C use a single school-wide pool, so this state doesn't exist for them.</p>
+              <p>One specific user has hit their personal cap for the month. The school still has capacity, so other users may continue. Each model has its own per-user limit (5 reviews · 18 credits · 4 actions).</p>
             </div>
             <div className="fue-by-state-cells">
               <div className="fue-by-state-cell">
-                <span className="fue-state-tag fue-tag-a">MODEL A</span>
+                <span className="fue-state-tag fue-tag-a">MODEL A · PER-FEATURE</span>
                 <AReviewsUsedUp />
               </div>
               <div className="fue-by-state-cell">
-                <span className="fue-state-tag fue-tag-b">MODEL B</span>
-                <NACard>Not applicable.<br />Model B's pool is school-wide, so there is no per-user sub-cap.</NACard>
+                <span className="fue-state-tag fue-tag-b">MODEL B · CREDITS</span>
+                <BUserCap />
               </div>
               <div className="fue-by-state-cell">
-                <span className="fue-state-tag fue-tag-c">MODEL C</span>
-                <NACard>Not applicable.<br />Model C's pool is school-wide, so there is no per-user sub-cap.</NACard>
+                <span className="fue-state-tag fue-tag-c">MODEL C · ACTIONS</span>
+                <CUserCap />
               </div>
             </div>
           </div>
@@ -1992,15 +2038,15 @@ function FairUseExample() {
             </div>
             <div className="fue-by-state-cells">
               <div className="fue-by-state-cell">
-                <span className="fue-state-tag fue-tag-a">MODEL A</span>
+                <span className="fue-state-tag fue-tag-a">MODEL A · PER-FEATURE</span>
                 <ASchoolCap />
               </div>
               <div className="fue-by-state-cell">
-                <span className="fue-state-tag fue-tag-b">MODEL B</span>
+                <span className="fue-state-tag fue-tag-b">MODEL B · CREDITS</span>
                 <BExhausted />
               </div>
               <div className="fue-by-state-cell">
-                <span className="fue-state-tag fue-tag-c">MODEL C</span>
+                <span className="fue-state-tag fue-tag-c">MODEL C · ACTIONS</span>
                 <CExhausted />
               </div>
             </div>

@@ -1452,6 +1452,23 @@ function FairUseExample() {
     /* Small caption under the Model C side-by-side mock (replaces breakdown card) */
     .fue-cmp-caption { padding: 10px 12px; background: #F4FAF6; border: 1px solid #D7EEDF; border-radius: 8px; font-size: 12px; color: #1f5232; line-height: 1.5; font-style: italic; text-align: center; }
 
+    /* States grid — lays out a model's state mockups in columns (auto-fit) */
+    .fue-states-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; align-items: stretch; margin-top: 18px; }
+    .fue-states-grid .fue-variant { margin-bottom: 0; display: flex; flex-direction: column; }
+    .fue-states-grid .fue-variant-name { padding: 0 4px; }
+    .fue-states-grid .fue-variant-name h3 { font-size: 14.5px; }
+    .fue-states-grid .fue-variant-name p { font-size: 12px; min-height: 32px; }
+    .fue-states-grid .fue-panel-row { width: 100%; }
+    .fue-states-grid .fue-panel { width: 100%; min-height: 0; height: 100%; }
+
+    /* Per-state usage breakdown mini-card (Models B and C deep-dive states) */
+    .fue-usage-mini { margin: 12px 18px 0; padding: 9px 11px; background: #FAFAFB; border: 1px solid #EAECF0; border-radius: 6px; }
+    .fue-usage-mini-eyebrow { font-size: 9.5px; font-weight: 700; letter-spacing: 0.4px; text-transform: uppercase; color: #98a2b3; margin: 0 0 7px; }
+    .fue-usage-mini-row { display: flex; align-items: center; gap: 7px; font-size: 11.5px; padding: 1px 0; color: #344054; }
+    .fue-usage-mini-swatch { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+    .fue-usage-mini-name { flex: 1; }
+    .fue-usage-mini-val { font-weight: 700; color: #101828; white-space: nowrap; }
+
     /* Bar-style meter for Model B and Model C states (used in deep-dive panels) */
     .fue-bar-meter { margin: 14px 18px 0; padding: 10px 12px; background: #fff; border: 1px solid #EAECF0; border-radius: 6px; }
     .fue-bar-meter .fue-bm-row { display: flex; justify-content: space-between; align-items: baseline; font-size: 12px; color: #344054; margin-bottom: 6px; }
@@ -1598,16 +1615,15 @@ function FairUseExample() {
                   <div className="fue-cmp-bd-key">
                     <div className="fue-cmp-bd-key-row">
                       <span className="fue-cmp-bd-swatch" style={{ background: F.plum }}></span>
-                      <span className="fue-cmp-bd-key-name">AI Profile Review · 4 runs × 6 credits</span>
-                      <span className="fue-cmp-bd-key-val">24</span>
+                      <span className="fue-cmp-bd-key-name">AI Profile Review</span>
+                      <span className="fue-cmp-bd-key-val">24 credits</span>
                     </div>
                     <div className="fue-cmp-bd-key-row">
                       <span className="fue-cmp-bd-swatch" style={{ background: F.pink }}></span>
-                      <span className="fue-cmp-bd-key-name">AI Lead Scoring · 8 runs × 2 credits</span>
-                      <span className="fue-cmp-bd-key-val">16</span>
+                      <span className="fue-cmp-bd-key-name">AI Lead Scoring</span>
+                      <span className="fue-cmp-bd-key-val">16 credits</span>
                     </div>
                   </div>
-                  <p className="fue-cmp-bd-cost">Cost map: Profile Review = 6 credits · Lead Scoring = 2 credits per run.</p>
                 </div>
               </div>
               <div style={{ height: 18 }}></div>
@@ -1638,9 +1654,26 @@ function FairUseExample() {
                   </div>
                 </div>
 
-                <div className="fue-cmp-caption">
-                  Every AI action counts as 1 — no cost map to learn.<br />
-                  12 used this month: 8 AI Profile Reviews + 4 AI Lead Scorings.
+                <div className="fue-cmp-breakdown">
+                  <p className="fue-cmp-bd-eyebrow">Your AI action breakdown this month</p>
+                  <p className="fue-cmp-bd-total"><strong>12 of 30</strong> actions used · shared pool across all AI features</p>
+                  <div className="fue-cmp-bd-bar">
+                    <div style={{ width: "67%", height: "100%", background: F.plum }}></div>
+                    <div style={{ width: "33%", height: "100%", background: F.pink }}></div>
+                  </div>
+                  <div className="fue-cmp-bd-key">
+                    <div className="fue-cmp-bd-key-row">
+                      <span className="fue-cmp-bd-swatch" style={{ background: F.plum }}></span>
+                      <span className="fue-cmp-bd-key-name">AI Profile Review</span>
+                      <span className="fue-cmp-bd-key-val">8 actions</span>
+                    </div>
+                    <div className="fue-cmp-bd-key-row">
+                      <span className="fue-cmp-bd-swatch" style={{ background: F.pink }}></span>
+                      <span className="fue-cmp-bd-key-name">AI Lead Scoring</span>
+                      <span className="fue-cmp-bd-key-val">4 actions</span>
+                    </div>
+                  </div>
+                  <p className="fue-cmp-bd-cost">Every AI action = 1. No cost map to learn.</p>
                 </div>
               </div>
               <div style={{ height: 18 }}></div>
@@ -1659,6 +1692,7 @@ function FairUseExample() {
           </div>
           <p className="fue-model-section-sub">What Model A looks like for a single feature across the month. Tone shifts from neutral → amber → muted-blocked. No red.</p>
 
+          <div className="fue-states-grid">
           {/* A.1 Plenty left */}
           <section className="fue-variant">
             <div className="fue-variant-name">
@@ -1769,6 +1803,7 @@ function FairUseExample() {
               </div>
             </div>
           </section>
+          </div>
         </div>
 
         {/* ============ MODEL B · STATES ============ */}
@@ -1779,6 +1814,7 @@ function FairUseExample() {
           </div>
           <p className="fue-model-section-sub">One school-wide credit pool. Fewer states to design because there's only one counter to drain — same neutral → amber → blocked progression.</p>
 
+          <div className="fue-states-grid">
           {/* B.1 Plenty left */}
           <section className="fue-variant">
             <div className="fue-variant-name">
@@ -1798,6 +1834,19 @@ function FairUseExample() {
                   </div>
                   <div className="fue-bm-track">
                     <div className="fue-bm-fill" style={{ width: "40%" }}></div>
+                  </div>
+                </div>
+                <div className="fue-usage-mini">
+                  <p className="fue-usage-mini-eyebrow">40 credits used · by feature</p>
+                  <div className="fue-usage-mini-row">
+                    <span className="fue-usage-mini-swatch" style={{ background: F.plum }}></span>
+                    <span className="fue-usage-mini-name">AI Profile Review</span>
+                    <span className="fue-usage-mini-val">24 credits</span>
+                  </div>
+                  <div className="fue-usage-mini-row">
+                    <span className="fue-usage-mini-swatch" style={{ background: F.pink }}></span>
+                    <span className="fue-usage-mini-name">AI Lead Scoring</span>
+                    <span className="fue-usage-mini-val">16 credits</span>
                   </div>
                 </div>
                 <div className="fue-panel-spacer"></div>
@@ -1825,6 +1874,19 @@ function FairUseExample() {
                   </div>
                   <div className="fue-bm-track">
                     <div className="fue-bm-fill" style={{ width: "8%" }}></div>
+                  </div>
+                </div>
+                <div className="fue-usage-mini">
+                  <p className="fue-usage-mini-eyebrow">92 credits used · by feature</p>
+                  <div className="fue-usage-mini-row">
+                    <span className="fue-usage-mini-swatch" style={{ background: F.plum }}></span>
+                    <span className="fue-usage-mini-name">AI Profile Review</span>
+                    <span className="fue-usage-mini-val">72 credits</span>
+                  </div>
+                  <div className="fue-usage-mini-row">
+                    <span className="fue-usage-mini-swatch" style={{ background: F.pink }}></span>
+                    <span className="fue-usage-mini-name">AI Lead Scoring</span>
+                    <span className="fue-usage-mini-val">20 credits</span>
                   </div>
                 </div>
                 <div className="fue-callout">
@@ -1856,11 +1918,25 @@ function FairUseExample() {
                     <a href="#" onClick={e => e.preventDefault()} className="fue-btn fue-btn-secondary fue-btn-block">View AI plans</a>
                   </div>
                 </div>
+                <div className="fue-usage-mini">
+                  <p className="fue-usage-mini-eyebrow">100 credits used · by feature</p>
+                  <div className="fue-usage-mini-row">
+                    <span className="fue-usage-mini-swatch" style={{ background: F.plum }}></span>
+                    <span className="fue-usage-mini-name">AI Profile Review</span>
+                    <span className="fue-usage-mini-val">84 credits</span>
+                  </div>
+                  <div className="fue-usage-mini-row">
+                    <span className="fue-usage-mini-swatch" style={{ background: F.pink }}></span>
+                    <span className="fue-usage-mini-name">AI Lead Scoring</span>
+                    <span className="fue-usage-mini-val">16 credits</span>
+                  </div>
+                </div>
                 <div className="fue-panel-spacer"></div>
                 <Disclaimer showStart={false} />
               </div>
             </div>
           </section>
+          </div>
         </div>
 
         {/* ============ MODEL C · STATES ============ */}
@@ -1871,6 +1947,7 @@ function FairUseExample() {
           </div>
           <p className="fue-model-section-sub">One school-wide action pool. Every AI run counts as 1 — no cost map to learn. Simplest mental model for the user.</p>
 
+          <div className="fue-states-grid">
           {/* C.1 Plenty left */}
           <section className="fue-variant">
             <div className="fue-variant-name">
@@ -1890,6 +1967,19 @@ function FairUseExample() {
                   </div>
                   <div className="fue-bm-track">
                     <div className="fue-bm-fill" style={{ width: "60%", background: F.green }}></div>
+                  </div>
+                </div>
+                <div className="fue-usage-mini">
+                  <p className="fue-usage-mini-eyebrow">12 actions used · by feature</p>
+                  <div className="fue-usage-mini-row">
+                    <span className="fue-usage-mini-swatch" style={{ background: F.plum }}></span>
+                    <span className="fue-usage-mini-name">AI Profile Review</span>
+                    <span className="fue-usage-mini-val">8 actions</span>
+                  </div>
+                  <div className="fue-usage-mini-row">
+                    <span className="fue-usage-mini-swatch" style={{ background: F.pink }}></span>
+                    <span className="fue-usage-mini-name">AI Lead Scoring</span>
+                    <span className="fue-usage-mini-val">4 actions</span>
                   </div>
                 </div>
                 <div className="fue-panel-spacer"></div>
@@ -1917,6 +2007,19 @@ function FairUseExample() {
                   </div>
                   <div className="fue-bm-track">
                     <div className="fue-bm-fill" style={{ width: "10%" }}></div>
+                  </div>
+                </div>
+                <div className="fue-usage-mini">
+                  <p className="fue-usage-mini-eyebrow">27 actions used · by feature</p>
+                  <div className="fue-usage-mini-row">
+                    <span className="fue-usage-mini-swatch" style={{ background: F.plum }}></span>
+                    <span className="fue-usage-mini-name">AI Profile Review</span>
+                    <span className="fue-usage-mini-val">18 actions</span>
+                  </div>
+                  <div className="fue-usage-mini-row">
+                    <span className="fue-usage-mini-swatch" style={{ background: F.pink }}></span>
+                    <span className="fue-usage-mini-name">AI Lead Scoring</span>
+                    <span className="fue-usage-mini-val">9 actions</span>
                   </div>
                 </div>
                 <div className="fue-callout">
@@ -1948,11 +2051,25 @@ function FairUseExample() {
                     <a href="#" onClick={e => e.preventDefault()} className="fue-btn fue-btn-secondary fue-btn-block">View AI plans</a>
                   </div>
                 </div>
+                <div className="fue-usage-mini">
+                  <p className="fue-usage-mini-eyebrow">30 actions used · by feature</p>
+                  <div className="fue-usage-mini-row">
+                    <span className="fue-usage-mini-swatch" style={{ background: F.plum }}></span>
+                    <span className="fue-usage-mini-name">AI Profile Review</span>
+                    <span className="fue-usage-mini-val">20 actions</span>
+                  </div>
+                  <div className="fue-usage-mini-row">
+                    <span className="fue-usage-mini-swatch" style={{ background: F.pink }}></span>
+                    <span className="fue-usage-mini-name">AI Lead Scoring</span>
+                    <span className="fue-usage-mini-val">10 actions</span>
+                  </div>
+                </div>
                 <div className="fue-panel-spacer"></div>
                 <Disclaimer showStart={false} />
               </div>
             </div>
           </section>
+          </div>
         </div>
 
       </div>

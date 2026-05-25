@@ -1452,7 +1452,7 @@ function FairUseExample() {
     /* Small caption under the Model C side-by-side mock (replaces breakdown card) */
     .fue-cmp-caption { padding: 10px 12px; background: #F4FAF6; border: 1px solid #D7EEDF; border-radius: 8px; font-size: 12px; color: #1f5232; line-height: 1.5; font-style: italic; text-align: center; }
 
-    /* States grid — lays out a model's state mockups in columns (auto-fit) */
+    /* States grid — lays out a model's state mockups in columns (auto-fit) — deprecated, kept harmless */
     .fue-states-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; align-items: stretch; margin-top: 18px; }
     .fue-states-grid .fue-variant { margin-bottom: 0; display: flex; flex-direction: column; }
     .fue-states-grid .fue-variant-name { padding: 0 4px; }
@@ -1460,6 +1460,28 @@ function FairUseExample() {
     .fue-states-grid .fue-variant-name p { font-size: 12px; min-height: 32px; }
     .fue-states-grid .fue-panel-row { width: 100%; }
     .fue-states-grid .fue-panel { width: 100%; min-height: 0; height: 100%; }
+
+    /* By-state layout — each row is a state, cells are the three models side-by-side */
+    .fue-by-state-section { margin-top: 36px; }
+    .fue-by-state-heading { font-size: 16px; font-weight: 700; color: ${F.plum}; margin: 0 0 4px 0; font-family: 'Nunito Sans','Trebuchet MS',system-ui,sans-serif; }
+    .fue-by-state-sub { font-size: 12.5px; color: #667085; margin: 0 0 6px 0; }
+    .fue-by-state-hint { font-size: 11.5px; color: #98a2b3; font-style: italic; margin: 0 0 26px 0; }
+    .fue-by-state-row { margin-bottom: 36px; padding-top: 22px; border-top: 1px solid #EAECF0; }
+    .fue-by-state-row:first-of-type { border-top: none; padding-top: 0; }
+    .fue-by-state-row:last-child { margin-bottom: 0; }
+    .fue-by-state-row-header { margin-bottom: 14px; padding: 0 4px; }
+    .fue-by-state-row-header h4 { font-size: 15px; font-weight: 700; color: ${F.plum}; margin: 0 0 4px 0; font-family: 'Nunito Sans','Trebuchet MS',system-ui,sans-serif; }
+    .fue-by-state-row-header p { font-size: 12px; color: #667085; margin: 0; line-height: 1.5; }
+    .fue-by-state-cells { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; align-items: stretch; }
+    .fue-by-state-cell { display: flex; flex-direction: column; gap: 7px; position: relative; }
+    .fue-by-state-cell > .fue-state-tag { align-self: flex-start; margin-bottom: 0; }
+    .fue-by-state-cell .fue-panel { width: 100%; min-height: 0; height: 100%; transition: transform 0.22s cubic-bezier(0.2,0,0.2,1), box-shadow 0.22s ease; transform-origin: center center; }
+    .fue-by-state-cell:hover .fue-panel { transform: scale(1.12); box-shadow: 0 16px 40px rgba(16,24,40,0.22); z-index: 20; position: relative; }
+    .fue-by-state-cells:has(.fue-by-state-cell:hover) .fue-by-state-cell:not(:hover) .fue-panel { opacity: 0.45; filter: saturate(0.85); }
+    .fue-by-state-cells:has(.fue-by-state-cell:hover) .fue-by-state-cell:not(:hover) .fue-na-card { opacity: 0.45; }
+
+    /* NA card — for states that don't apply to a given model */
+    .fue-na-card { flex: 1; border: 1px dashed #D5CACB; border-radius: 8px; padding: 22px 18px; font-size: 12px; color: #8E7F8C; font-style: italic; display: flex; align-items: center; justify-content: center; text-align: center; line-height: 1.55; min-height: 200px; background: #FAF7F7; transition: opacity 0.22s ease; }
 
     /* Per-state usage breakdown mini-card (Models B and C deep-dive states) */
     .fue-usage-mini { margin: 12px 18px 0; padding: 9px 11px; background: #FAFAFB; border: 1px solid #EAECF0; border-radius: 6px; }
@@ -1514,6 +1536,214 @@ function FairUseExample() {
       {showStart && <button className="fue-start-btn">Start</button>}
       <p className="fue-disclaimer">AI-generated summaries may contain errors. Please verify against source documents.</p>
     </div>
+  );
+
+  // ── Reusable usage-mini breakdown card (Models B and C) ──
+  const UsageMini = ({ eyebrow, rows }) => (
+    <div className="fue-usage-mini">
+      <p className="fue-usage-mini-eyebrow">{eyebrow}</p>
+      {rows.map((r, i) => (
+        <div key={i} className="fue-usage-mini-row">
+          <span className="fue-usage-mini-swatch" style={{ background: r.color }}></span>
+          <span className="fue-usage-mini-name">{r.name}</span>
+          <span className="fue-usage-mini-val">{r.val}</span>
+        </div>
+      ))}
+    </div>
+  );
+
+  // ── Model A panels ───────────────────────────────────────
+  const APlenty = () => (
+    <div className="fue-panel">
+      <PanelHead />
+      <PanelSub />
+      <SummaryCard />
+      <div className="fue-meter">
+        <span className="fue-dots">
+          <span className="fue-dot fue-filled"></span>
+          <span className="fue-dot fue-filled"></span>
+          <span className="fue-dot fue-filled"></span>
+          <span className="fue-dot fue-filled"></span>
+          <span className="fue-dot"></span>
+        </span>
+        <span className="fue-mlabel"><strong style={{ color: "#101828" }}>4 of 5</strong> reviews left <span className="fue-resets">· resets Jun 1</span></span>
+      </div>
+      <div className="fue-panel-spacer"></div>
+      <Disclaimer showStart />
+    </div>
+  );
+  const AOneLeft = () => (
+    <div className="fue-panel">
+      <PanelHead />
+      <PanelSub />
+      <SummaryCard />
+      <div className="fue-meter fue-amber-meter">
+        <span className="fue-dots">
+          <span className="fue-dot fue-amber"></span>
+          <span className="fue-dot"></span>
+          <span className="fue-dot"></span>
+          <span className="fue-dot"></span>
+          <span className="fue-dot"></span>
+        </span>
+        <span className="fue-mlabel"><strong>Only 1 of 5</strong> reviews left · resets Jun 1</span>
+      </div>
+      <div className="fue-callout">
+        After this review you'll need to wait until <strong>Jun 1</strong> or <a href="#" onClick={e => e.preventDefault()}>upgrade to AI Pro to unlock more</a>.
+      </div>
+      <div className="fue-panel-spacer"></div>
+      <Disclaimer showStart />
+    </div>
+  );
+  const AReviewsUsedUp = () => (
+    <div className="fue-panel">
+      <PanelHead />
+      <PanelSub />
+      <div className="fue-blocked">
+        <h4 className="fue-bk-title">You've used your 5 reviews this month</h4>
+        <p>AI Essential gives each user 5 AI Profile Reviews per month. You'll be able to run reviews again on <strong>Jun 1</strong>.</p>
+        <p className="fue-reset-line">Resets in 11 days · other users at your school may still have capacity.</p>
+        <div className="fue-cta-stack">
+          <a href="#" onClick={e => e.preventDefault()} className="fue-btn fue-btn-primary fue-btn-block">Upgrade to AI Pro to unlock more →</a>
+          <a href="#" onClick={e => e.preventDefault()} className="fue-btn fue-btn-secondary fue-btn-block">View AI plans</a>
+        </div>
+      </div>
+      <div className="fue-panel-spacer"></div>
+      <Disclaimer showStart={false} />
+    </div>
+  );
+  const ASchoolCap = () => (
+    <div className="fue-panel">
+      <PanelHead />
+      <PanelSub />
+      <div className="fue-blocked">
+        <h4 className="fue-bk-title">Your school has used all 15 reviews this month</h4>
+        <p>AI Essential gives each school 15 AI Profile Reviews per month across all users. The shared monthly pool resets on <strong>Jun 1</strong>.</p>
+        <p className="fue-reset-line">Resets in 11 days · you may have personal reviews remaining, but the school-wide pool is full.</p>
+        <div className="fue-cta-stack">
+          <a href="#" onClick={e => e.preventDefault()} className="fue-btn fue-btn-primary fue-btn-block">Upgrade to AI Pro to unlock more →</a>
+          <a href="#" onClick={e => e.preventDefault()} className="fue-btn fue-btn-secondary fue-btn-block">View AI plans</a>
+        </div>
+      </div>
+      <div className="fue-panel-spacer"></div>
+      <Disclaimer showStart={false} />
+    </div>
+  );
+
+  // ── Model B panels (shared credit pool) ──────────────────
+  const BarMeter = ({ amber, label, fillPct, fillColor }) => (
+    <div className={"fue-bar-meter" + (amber ? " fue-bar-amber" : "")}>
+      <div className="fue-bm-row">
+        <span>{label}</span>
+        <span className="fue-bm-reset">resets Jun 1</span>
+      </div>
+      <div className="fue-bm-track">
+        <div className="fue-bm-fill" style={{ width: `${fillPct}%`, ...(fillColor ? { background: fillColor } : {}) }}></div>
+      </div>
+    </div>
+  );
+  const BlockedCard = ({ title, body, resetLine }) => (
+    <div className="fue-blocked">
+      <h4 className="fue-bk-title">{title}</h4>
+      <p>{body}</p>
+      <p className="fue-reset-line">{resetLine}</p>
+      <div className="fue-cta-stack">
+        <a href="#" onClick={e => e.preventDefault()} className="fue-btn fue-btn-primary fue-btn-block">Upgrade to AI Pro to unlock more →</a>
+        <a href="#" onClick={e => e.preventDefault()} className="fue-btn fue-btn-secondary fue-btn-block">View AI plans</a>
+      </div>
+    </div>
+  );
+  const BPlenty = () => (
+    <div className="fue-panel">
+      <PanelHead /><PanelSub /><SummaryCard />
+      <BarMeter label={<><strong>60 of 100</strong> AI credits left</>} fillPct={40} />
+      <UsageMini eyebrow="40 credits used · by feature" rows={[
+        { color: F.plum, name: "AI Profile Review", val: "24 credits" },
+        { color: F.pink, name: "AI Lead Scoring",  val: "16 credits" },
+      ]} />
+      <div className="fue-panel-spacer"></div>
+      <Disclaimer showStart />
+    </div>
+  );
+  const BApproaching = () => (
+    <div className="fue-panel">
+      <PanelHead /><PanelSub /><SummaryCard />
+      <BarMeter amber label={<><strong>Only 8 of 100</strong> AI credits left</>} fillPct={8} />
+      <UsageMini eyebrow="92 credits used · by feature" rows={[
+        { color: F.plum, name: "AI Profile Review", val: "72 credits" },
+        { color: F.pink, name: "AI Lead Scoring",  val: "20 credits" },
+      ]} />
+      <div className="fue-callout">
+        This review costs <strong>6 credits</strong>. Once you're at 0 you'll need to wait until <strong>Jun 1</strong> or <a href="#" onClick={e => e.preventDefault()}>upgrade to AI Pro to unlock more</a>.
+      </div>
+      <div className="fue-panel-spacer"></div>
+      <Disclaimer showStart />
+    </div>
+  );
+  const BExhausted = () => (
+    <div className="fue-panel">
+      <PanelHead /><PanelSub />
+      <BlockedCard
+        title="Your school has used all 100 AI credits this month"
+        body={<>AI Essential gives each school 100 AI credits per month, shared across all AI features. The pool resets on <strong>Jun 1</strong>.</>}
+        resetLine="Resets in 11 days · this affects every AI feature for every user at your school."
+      />
+      <UsageMini eyebrow="100 credits used · by feature" rows={[
+        { color: F.plum, name: "AI Profile Review", val: "84 credits" },
+        { color: F.pink, name: "AI Lead Scoring",  val: "16 credits" },
+      ]} />
+      <div className="fue-panel-spacer"></div>
+      <Disclaimer showStart={false} />
+    </div>
+  );
+
+  // ── Model C panels (shared action pool, flat 1-per-run) ──
+  const CPlenty = () => (
+    <div className="fue-panel">
+      <PanelHead /><PanelSub /><SummaryCard />
+      <BarMeter label={<><strong>18 of 30</strong> AI actions left</>} fillPct={60} fillColor={F.green} />
+      <UsageMini eyebrow="12 actions used · by feature" rows={[
+        { color: F.plum, name: "AI Profile Review", val: "8 actions" },
+        { color: F.pink, name: "AI Lead Scoring",  val: "4 actions" },
+      ]} />
+      <div className="fue-panel-spacer"></div>
+      <Disclaimer showStart />
+    </div>
+  );
+  const CApproaching = () => (
+    <div className="fue-panel">
+      <PanelHead /><PanelSub /><SummaryCard />
+      <BarMeter amber label={<><strong>Only 3 of 30</strong> AI actions left</>} fillPct={10} />
+      <UsageMini eyebrow="27 actions used · by feature" rows={[
+        { color: F.plum, name: "AI Profile Review", val: "18 actions" },
+        { color: F.pink, name: "AI Lead Scoring",  val: "9 actions" },
+      ]} />
+      <div className="fue-callout">
+        After 3 more AI actions (any feature) you'll need to wait until <strong>Jun 1</strong> or <a href="#" onClick={e => e.preventDefault()}>upgrade to AI Pro to unlock more</a>.
+      </div>
+      <div className="fue-panel-spacer"></div>
+      <Disclaimer showStart />
+    </div>
+  );
+  const CExhausted = () => (
+    <div className="fue-panel">
+      <PanelHead /><PanelSub />
+      <BlockedCard
+        title="Your school has used all 30 AI actions this month"
+        body={<>AI Essential gives each school 30 AI actions per month, shared across all AI features. Every AI run counts as 1. The pool resets on <strong>Jun 1</strong>.</>}
+        resetLine="Resets in 11 days · this affects every AI feature for every user at your school."
+      />
+      <UsageMini eyebrow="30 actions used · by feature" rows={[
+        { color: F.plum, name: "AI Profile Review", val: "20 actions" },
+        { color: F.pink, name: "AI Lead Scoring",  val: "10 actions" },
+      ]} />
+      <div className="fue-panel-spacer"></div>
+      <Disclaimer showStart={false} />
+    </div>
+  );
+
+  // NA card — used when a state doesn't apply to a model
+  const NACard = ({ children }) => (
+    <div className="fue-na-card">{children}</div>
   );
 
   return (
@@ -1682,393 +1912,98 @@ function FairUseExample() {
           </div>
         </div>
 
-        {/* ── Per-model state walkthroughs ───────────────────────────── */}
+        {/* ── By-state deep dive: one row per state, three model cells per row ─── */}
+        <div className="fue-by-state-section">
+          <h3 className="fue-by-state-heading">States — side by side across models</h3>
+          <p className="fue-by-state-sub">Same school-user moment, rendered under each model. Hover any panel to magnify it.</p>
+          <p className="fue-by-state-hint">Tip: hover over a panel to compare details up close.</p>
 
-        {/* ============ MODEL A · STATES ============ */}
-        <div className="fue-model-section">
-          <div className="fue-model-section-head">
-            <span className="fue-state-tag fue-tag-a">MODEL A</span>
-            <h3>States — per-feature limits</h3>
+          {/* Row 1 — Plenty left */}
+          <div className="fue-by-state-row">
+            <div className="fue-by-state-row-header">
+              <h4>Plenty left</h4>
+              <p>Early in the month. Quiet meter. No upgrade pressure.</p>
+            </div>
+            <div className="fue-by-state-cells">
+              <div className="fue-by-state-cell">
+                <span className="fue-state-tag fue-tag-a">MODEL A</span>
+                <APlenty />
+              </div>
+              <div className="fue-by-state-cell">
+                <span className="fue-state-tag fue-tag-b">MODEL B</span>
+                <BPlenty />
+              </div>
+              <div className="fue-by-state-cell">
+                <span className="fue-state-tag fue-tag-c">MODEL C</span>
+                <CPlenty />
+              </div>
+            </div>
           </div>
-          <p className="fue-model-section-sub">What Model A looks like for a single feature across the month. Tone shifts from neutral → amber → muted-blocked. No red.</p>
 
-          <div className="fue-states-grid">
-          {/* A.1 Plenty left */}
-          <section className="fue-variant">
-            <div className="fue-variant-name">
-              <span className="fue-state-tag fue-tag-a">MODEL A</span>
-              <h3>Plenty left</h3>
-              <p>User has 4 of 5 monthly reviews remaining. Quiet meter, no upgrade pressure.</p>
+          {/* Row 2 — Approaching the limit */}
+          <div className="fue-by-state-row">
+            <div className="fue-by-state-row-header">
+              <h4>Approaching the limit</h4>
+              <p>Few resources remaining. Amber warning. First soft mention of AI Pro.</p>
             </div>
-            <div className="fue-panel-row">
-              <div className="fue-panel">
-                <PanelHead />
-                <PanelSub />
-                <SummaryCard />
-                <div className="fue-meter">
-                  <span className="fue-dots">
-                    <span className="fue-dot fue-filled"></span>
-                    <span className="fue-dot fue-filled"></span>
-                    <span className="fue-dot fue-filled"></span>
-                    <span className="fue-dot fue-filled"></span>
-                    <span className="fue-dot"></span>
-                  </span>
-                  <span className="fue-mlabel"><strong style={{ color: "#101828" }}>4 of 5</strong> reviews left <span className="fue-resets">· resets Jun 1</span></span>
-                </div>
-                <div className="fue-panel-spacer"></div>
-                <Disclaimer showStart />
+            <div className="fue-by-state-cells">
+              <div className="fue-by-state-cell">
+                <span className="fue-state-tag fue-tag-a">MODEL A</span>
+                <AOneLeft />
+              </div>
+              <div className="fue-by-state-cell">
+                <span className="fue-state-tag fue-tag-b">MODEL B</span>
+                <BApproaching />
+              </div>
+              <div className="fue-by-state-cell">
+                <span className="fue-state-tag fue-tag-c">MODEL C</span>
+                <CApproaching />
               </div>
             </div>
-          </section>
-
-          {/* A.2 One left */}
-          <section className="fue-variant">
-            <div className="fue-variant-name">
-              <span className="fue-state-tag fue-tag-a">MODEL A</span>
-              <h3>One left</h3>
-              <p>User has 1 of 5 remaining. Amber warning — still actionable, first soft mention of AI Pro.</p>
-            </div>
-            <div className="fue-panel-row">
-              <div className="fue-panel">
-                <PanelHead />
-                <PanelSub />
-                <SummaryCard />
-                <div className="fue-meter fue-amber-meter">
-                  <span className="fue-dots">
-                    <span className="fue-dot fue-amber"></span>
-                    <span className="fue-dot"></span>
-                    <span className="fue-dot"></span>
-                    <span className="fue-dot"></span>
-                    <span className="fue-dot"></span>
-                  </span>
-                  <span className="fue-mlabel"><strong>Only 1 of 5</strong> reviews left · resets Jun 1</span>
-                </div>
-                <div className="fue-callout">
-                  After this review you'll need to wait until <strong>Jun 1</strong> or <a href="#" onClick={e => e.preventDefault()}>upgrade to AI Pro to unlock more</a>.
-                </div>
-                <div className="fue-panel-spacer"></div>
-                <Disclaimer showStart />
-              </div>
-            </div>
-          </section>
-
-          {/* A.3 Your reviews used up */}
-          <section className="fue-variant">
-            <div className="fue-variant-name">
-              <span className="fue-state-tag fue-tag-a">MODEL A</span>
-              <h3>Your reviews used up</h3>
-              <p>User has used all 5/month. Account still has capacity for other users. Copy makes it clear the cap is personal.</p>
-            </div>
-            <div className="fue-panel-row">
-              <div className="fue-panel">
-                <PanelHead />
-                <PanelSub />
-                <div className="fue-blocked">
-                  <h4 className="fue-bk-title">You've used your 5 reviews this month</h4>
-                  <p>AI Essential gives each user 5 AI Profile Reviews per month. You'll be able to run reviews again on <strong>Jun 1</strong>.</p>
-                  <p className="fue-reset-line">Resets in 11 days · other users at your school may still have capacity.</p>
-                  <div className="fue-cta-stack">
-                    <a href="#" onClick={e => e.preventDefault()} className="fue-btn fue-btn-primary fue-btn-block">Upgrade to AI Pro to unlock more →</a>
-                    <a href="#" onClick={e => e.preventDefault()} className="fue-btn fue-btn-secondary fue-btn-block">View AI plans</a>
-                  </div>
-                </div>
-                <div className="fue-panel-spacer"></div>
-                <Disclaimer showStart={false} />
-              </div>
-            </div>
-          </section>
-
-          {/* A.4 School account at its limit */}
-          <section className="fue-variant">
-            <div className="fue-variant-name">
-              <span className="fue-state-tag fue-tag-a">MODEL A</span>
-              <h3>School account at its limit</h3>
-              <p>Account hit 15/month. User personally may still have capacity but is blocked because the account cap is reached.</p>
-            </div>
-            <div className="fue-panel-row">
-              <div className="fue-panel">
-                <PanelHead />
-                <PanelSub />
-                <div className="fue-blocked">
-                  <h4 className="fue-bk-title">Your school has used all 15 reviews this month</h4>
-                  <p>AI Essential gives each school 15 AI Profile Reviews per month across all users. The shared monthly pool resets on <strong>Jun 1</strong>.</p>
-                  <p className="fue-reset-line">Resets in 11 days · you may have personal reviews remaining, but the school-wide pool is full.</p>
-                  <div className="fue-cta-stack">
-                    <a href="#" onClick={e => e.preventDefault()} className="fue-btn fue-btn-primary fue-btn-block">Upgrade to AI Pro to unlock more →</a>
-                    <a href="#" onClick={e => e.preventDefault()} className="fue-btn fue-btn-secondary fue-btn-block">View AI plans</a>
-                  </div>
-                </div>
-                <div className="fue-panel-spacer"></div>
-                <Disclaimer showStart={false} />
-              </div>
-            </div>
-          </section>
           </div>
-        </div>
 
-        {/* ============ MODEL B · STATES ============ */}
-        <div className="fue-model-section">
-          <div className="fue-model-section-head">
-            <span className="fue-state-tag fue-tag-b">MODEL B</span>
-            <h3>States — shared credits across features</h3>
+          {/* Row 3 — User-level cap reached (Model A only; B and C have only a school-wide pool) */}
+          <div className="fue-by-state-row">
+            <div className="fue-by-state-row-header">
+              <h4>User-level cap reached</h4>
+              <p>One specific user has hit a personal cap, but the school still has capacity. Only Model A has this concept — Models B and C use a single school-wide pool, so this state doesn't exist for them.</p>
+            </div>
+            <div className="fue-by-state-cells">
+              <div className="fue-by-state-cell">
+                <span className="fue-state-tag fue-tag-a">MODEL A</span>
+                <AReviewsUsedUp />
+              </div>
+              <div className="fue-by-state-cell">
+                <span className="fue-state-tag fue-tag-b">MODEL B</span>
+                <NACard>Not applicable.<br />Model B's pool is school-wide, so there is no per-user sub-cap.</NACard>
+              </div>
+              <div className="fue-by-state-cell">
+                <span className="fue-state-tag fue-tag-c">MODEL C</span>
+                <NACard>Not applicable.<br />Model C's pool is school-wide, so there is no per-user sub-cap.</NACard>
+              </div>
+            </div>
           </div>
-          <p className="fue-model-section-sub">One school-wide credit pool. Fewer states to design because there's only one counter to drain — same neutral → amber → blocked progression.</p>
 
-          <div className="fue-states-grid">
-          {/* B.1 Plenty left */}
-          <section className="fue-variant">
-            <div className="fue-variant-name">
-              <span className="fue-state-tag fue-tag-b">MODEL B</span>
-              <h3>Plenty left</h3>
-              <p>School has 60 of 100 AI credits remaining. Quiet meter, no upgrade pressure.</p>
+          {/* Row 4 — School pool exhausted */}
+          <div className="fue-by-state-row">
+            <div className="fue-by-state-row-header">
+              <h4>School pool exhausted</h4>
+              <p>Shared pool empty. Every user at the school is blocked from the affected feature(s) until the pool resets.</p>
             </div>
-            <div className="fue-panel-row">
-              <div className="fue-panel">
-                <PanelHead />
-                <PanelSub />
-                <SummaryCard />
-                <div className="fue-bar-meter">
-                  <div className="fue-bm-row">
-                    <span><strong>60 of 100</strong> AI credits left</span>
-                    <span className="fue-bm-reset">resets Jun 1</span>
-                  </div>
-                  <div className="fue-bm-track">
-                    <div className="fue-bm-fill" style={{ width: "40%" }}></div>
-                  </div>
-                </div>
-                <div className="fue-usage-mini">
-                  <p className="fue-usage-mini-eyebrow">40 credits used · by feature</p>
-                  <div className="fue-usage-mini-row">
-                    <span className="fue-usage-mini-swatch" style={{ background: F.plum }}></span>
-                    <span className="fue-usage-mini-name">AI Profile Review</span>
-                    <span className="fue-usage-mini-val">24 credits</span>
-                  </div>
-                  <div className="fue-usage-mini-row">
-                    <span className="fue-usage-mini-swatch" style={{ background: F.pink }}></span>
-                    <span className="fue-usage-mini-name">AI Lead Scoring</span>
-                    <span className="fue-usage-mini-val">16 credits</span>
-                  </div>
-                </div>
-                <div className="fue-panel-spacer"></div>
-                <Disclaimer showStart />
+            <div className="fue-by-state-cells">
+              <div className="fue-by-state-cell">
+                <span className="fue-state-tag fue-tag-a">MODEL A</span>
+                <ASchoolCap />
+              </div>
+              <div className="fue-by-state-cell">
+                <span className="fue-state-tag fue-tag-b">MODEL B</span>
+                <BExhausted />
+              </div>
+              <div className="fue-by-state-cell">
+                <span className="fue-state-tag fue-tag-c">MODEL C</span>
+                <CExhausted />
               </div>
             </div>
-          </section>
-
-          {/* B.2 Approaching limit */}
-          <section className="fue-variant">
-            <div className="fue-variant-name">
-              <span className="fue-state-tag fue-tag-b">MODEL B</span>
-              <h3>Approaching the limit</h3>
-              <p>Only 8 of 100 credits left — not even enough for two more Profile Reviews (6 credits each). Amber warning, first soft mention of AI Pro.</p>
-            </div>
-            <div className="fue-panel-row">
-              <div className="fue-panel">
-                <PanelHead />
-                <PanelSub />
-                <SummaryCard />
-                <div className="fue-bar-meter fue-bar-amber">
-                  <div className="fue-bm-row">
-                    <span><strong>Only 8 of 100</strong> AI credits left</span>
-                    <span className="fue-bm-reset">resets Jun 1</span>
-                  </div>
-                  <div className="fue-bm-track">
-                    <div className="fue-bm-fill" style={{ width: "8%" }}></div>
-                  </div>
-                </div>
-                <div className="fue-usage-mini">
-                  <p className="fue-usage-mini-eyebrow">92 credits used · by feature</p>
-                  <div className="fue-usage-mini-row">
-                    <span className="fue-usage-mini-swatch" style={{ background: F.plum }}></span>
-                    <span className="fue-usage-mini-name">AI Profile Review</span>
-                    <span className="fue-usage-mini-val">72 credits</span>
-                  </div>
-                  <div className="fue-usage-mini-row">
-                    <span className="fue-usage-mini-swatch" style={{ background: F.pink }}></span>
-                    <span className="fue-usage-mini-name">AI Lead Scoring</span>
-                    <span className="fue-usage-mini-val">20 credits</span>
-                  </div>
-                </div>
-                <div className="fue-callout">
-                  This review costs <strong>6 credits</strong>. Once you're at 0 you'll need to wait until <strong>Jun 1</strong> or <a href="#" onClick={e => e.preventDefault()}>upgrade to AI Pro to unlock more</a>.
-                </div>
-                <div className="fue-panel-spacer"></div>
-                <Disclaimer showStart />
-              </div>
-            </div>
-          </section>
-
-          {/* B.3 Pool exhausted */}
-          <section className="fue-variant">
-            <div className="fue-variant-name">
-              <span className="fue-state-tag fue-tag-b">MODEL B</span>
-              <h3>School credit pool exhausted</h3>
-              <p>All 100 credits used. Every user at the school is blocked from every AI feature until the pool resets — the simpler model means there's just one blocked state, not two.</p>
-            </div>
-            <div className="fue-panel-row">
-              <div className="fue-panel">
-                <PanelHead />
-                <PanelSub />
-                <div className="fue-blocked">
-                  <h4 className="fue-bk-title">Your school has used all 100 AI credits this month</h4>
-                  <p>AI Essential gives each school 100 AI credits per month, shared across all AI features. The pool resets on <strong>Jun 1</strong>.</p>
-                  <p className="fue-reset-line">Resets in 11 days · this affects every AI feature for every user at your school.</p>
-                  <div className="fue-cta-stack">
-                    <a href="#" onClick={e => e.preventDefault()} className="fue-btn fue-btn-primary fue-btn-block">Upgrade to AI Pro to unlock more →</a>
-                    <a href="#" onClick={e => e.preventDefault()} className="fue-btn fue-btn-secondary fue-btn-block">View AI plans</a>
-                  </div>
-                </div>
-                <div className="fue-usage-mini">
-                  <p className="fue-usage-mini-eyebrow">100 credits used · by feature</p>
-                  <div className="fue-usage-mini-row">
-                    <span className="fue-usage-mini-swatch" style={{ background: F.plum }}></span>
-                    <span className="fue-usage-mini-name">AI Profile Review</span>
-                    <span className="fue-usage-mini-val">84 credits</span>
-                  </div>
-                  <div className="fue-usage-mini-row">
-                    <span className="fue-usage-mini-swatch" style={{ background: F.pink }}></span>
-                    <span className="fue-usage-mini-name">AI Lead Scoring</span>
-                    <span className="fue-usage-mini-val">16 credits</span>
-                  </div>
-                </div>
-                <div className="fue-panel-spacer"></div>
-                <Disclaimer showStart={false} />
-              </div>
-            </div>
-          </section>
-          </div>
-        </div>
-
-        {/* ============ MODEL C · STATES ============ */}
-        <div className="fue-model-section">
-          <div className="fue-model-section-head">
-            <span className="fue-state-tag fue-tag-c">MODEL C</span>
-            <h3>States — shared actions across features (flat)</h3>
-          </div>
-          <p className="fue-model-section-sub">One school-wide action pool. Every AI run counts as 1 — no cost map to learn. Simplest mental model for the user.</p>
-
-          <div className="fue-states-grid">
-          {/* C.1 Plenty left */}
-          <section className="fue-variant">
-            <div className="fue-variant-name">
-              <span className="fue-state-tag fue-tag-c">MODEL C</span>
-              <h3>Plenty left</h3>
-              <p>School has 18 of 30 AI actions remaining. Quiet meter, no upgrade pressure.</p>
-            </div>
-            <div className="fue-panel-row">
-              <div className="fue-panel">
-                <PanelHead />
-                <PanelSub />
-                <SummaryCard />
-                <div className="fue-bar-meter">
-                  <div className="fue-bm-row">
-                    <span><strong>18 of 30</strong> AI actions left</span>
-                    <span className="fue-bm-reset">resets Jun 1</span>
-                  </div>
-                  <div className="fue-bm-track">
-                    <div className="fue-bm-fill" style={{ width: "60%", background: F.green }}></div>
-                  </div>
-                </div>
-                <div className="fue-usage-mini">
-                  <p className="fue-usage-mini-eyebrow">12 actions used · by feature</p>
-                  <div className="fue-usage-mini-row">
-                    <span className="fue-usage-mini-swatch" style={{ background: F.plum }}></span>
-                    <span className="fue-usage-mini-name">AI Profile Review</span>
-                    <span className="fue-usage-mini-val">8 actions</span>
-                  </div>
-                  <div className="fue-usage-mini-row">
-                    <span className="fue-usage-mini-swatch" style={{ background: F.pink }}></span>
-                    <span className="fue-usage-mini-name">AI Lead Scoring</span>
-                    <span className="fue-usage-mini-val">4 actions</span>
-                  </div>
-                </div>
-                <div className="fue-panel-spacer"></div>
-                <Disclaimer showStart />
-              </div>
-            </div>
-          </section>
-
-          {/* C.2 Approaching limit */}
-          <section className="fue-variant">
-            <div className="fue-variant-name">
-              <span className="fue-state-tag fue-tag-c">MODEL C</span>
-              <h3>Approaching the limit</h3>
-              <p>Only 3 of 30 actions left across every AI feature. Amber warning, first soft mention of AI Pro.</p>
-            </div>
-            <div className="fue-panel-row">
-              <div className="fue-panel">
-                <PanelHead />
-                <PanelSub />
-                <SummaryCard />
-                <div className="fue-bar-meter fue-bar-amber">
-                  <div className="fue-bm-row">
-                    <span><strong>Only 3 of 30</strong> AI actions left</span>
-                    <span className="fue-bm-reset">resets Jun 1</span>
-                  </div>
-                  <div className="fue-bm-track">
-                    <div className="fue-bm-fill" style={{ width: "10%" }}></div>
-                  </div>
-                </div>
-                <div className="fue-usage-mini">
-                  <p className="fue-usage-mini-eyebrow">27 actions used · by feature</p>
-                  <div className="fue-usage-mini-row">
-                    <span className="fue-usage-mini-swatch" style={{ background: F.plum }}></span>
-                    <span className="fue-usage-mini-name">AI Profile Review</span>
-                    <span className="fue-usage-mini-val">18 actions</span>
-                  </div>
-                  <div className="fue-usage-mini-row">
-                    <span className="fue-usage-mini-swatch" style={{ background: F.pink }}></span>
-                    <span className="fue-usage-mini-name">AI Lead Scoring</span>
-                    <span className="fue-usage-mini-val">9 actions</span>
-                  </div>
-                </div>
-                <div className="fue-callout">
-                  After 3 more AI actions (any feature) you'll need to wait until <strong>Jun 1</strong> or <a href="#" onClick={e => e.preventDefault()}>upgrade to AI Pro to unlock more</a>.
-                </div>
-                <div className="fue-panel-spacer"></div>
-                <Disclaimer showStart />
-              </div>
-            </div>
-          </section>
-
-          {/* C.3 Pool exhausted */}
-          <section className="fue-variant">
-            <div className="fue-variant-name">
-              <span className="fue-state-tag fue-tag-c">MODEL C</span>
-              <h3>School action pool exhausted</h3>
-              <p>All 30 actions used. Every user is blocked from every AI feature until the pool resets.</p>
-            </div>
-            <div className="fue-panel-row">
-              <div className="fue-panel">
-                <PanelHead />
-                <PanelSub />
-                <div className="fue-blocked">
-                  <h4 className="fue-bk-title">Your school has used all 30 AI actions this month</h4>
-                  <p>AI Essential gives each school 30 AI actions per month, shared across all AI features. Every AI run counts as 1. The pool resets on <strong>Jun 1</strong>.</p>
-                  <p className="fue-reset-line">Resets in 11 days · this affects every AI feature for every user at your school.</p>
-                  <div className="fue-cta-stack">
-                    <a href="#" onClick={e => e.preventDefault()} className="fue-btn fue-btn-primary fue-btn-block">Upgrade to AI Pro to unlock more →</a>
-                    <a href="#" onClick={e => e.preventDefault()} className="fue-btn fue-btn-secondary fue-btn-block">View AI plans</a>
-                  </div>
-                </div>
-                <div className="fue-usage-mini">
-                  <p className="fue-usage-mini-eyebrow">30 actions used · by feature</p>
-                  <div className="fue-usage-mini-row">
-                    <span className="fue-usage-mini-swatch" style={{ background: F.plum }}></span>
-                    <span className="fue-usage-mini-name">AI Profile Review</span>
-                    <span className="fue-usage-mini-val">20 actions</span>
-                  </div>
-                  <div className="fue-usage-mini-row">
-                    <span className="fue-usage-mini-swatch" style={{ background: F.pink }}></span>
-                    <span className="fue-usage-mini-name">AI Lead Scoring</span>
-                    <span className="fue-usage-mini-val">10 actions</span>
-                  </div>
-                </div>
-                <div className="fue-panel-spacer"></div>
-                <Disclaimer showStart={false} />
-              </div>
-            </div>
-          </section>
           </div>
         </div>
 

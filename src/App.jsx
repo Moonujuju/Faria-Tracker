@@ -1336,9 +1336,25 @@ function FairUseExample() {
     .fue-callout strong { color: #6b4500; font-weight: 700; }
     .fue-callout a { color: ${F.plum}; font-weight: 800; text-decoration: none; background: #fff; padding: 1px 7px; margin: 0 1px; border-radius: 4px; border: 1px solid #F1D58C; }
 
-    /* Soft upgrade chip — shown in Plenty-left panels (no urgency, just an option) */
-    .fue-soft-upgrade { margin: 12px 18px 0; padding: 8px 12px; background: #F6F4FA; border: 1px solid #EFE9F3; border-radius: 6px; font-size: 11.5px; color: #5D3460; line-height: 1.5; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-    .fue-soft-upgrade a { color: ${F.plum}; font-weight: 800; text-decoration: none; white-space: nowrap; }
+    /* Soft upgrade chip — subtle link tucked below the Review Profile button */
+    .fue-soft-upgrade { margin: 8px 0 0; padding: 0; background: none; border: none; font-size: 11px; line-height: 1.4; text-align: center; }
+    .fue-soft-upgrade a { color: #8E7F8C; font-weight: 600; text-decoration: underline; text-decoration-color: rgba(142,127,140,0.35); text-underline-offset: 2px; }
+    .fue-soft-upgrade a:hover { color: ${F.plum}; text-decoration-color: ${F.plum}; }
+
+    /* Collapsible "Total AI Usage" card — used in comparison columns and Plenty/Approaching deep-dive states */
+    .fue-usage-card { background: #FAFAFB; border: 1px solid #EAECF0; border-radius: 6px; overflow: hidden; margin-top: 12px; }
+    .fue-usage-card.fue-in-panel { margin: 12px 18px 0; }
+    .fue-usage-card summary { cursor: pointer; padding: 9px 11px; font-size: 11.5px; font-weight: 700; color: #344054; list-style: none; display: flex; align-items: center; gap: 8px; user-select: none; }
+    .fue-usage-card summary::-webkit-details-marker { display: none; }
+    .fue-usage-chevron { font-size: 9px; color: #98a2b3; transition: transform 0.15s ease; display: inline-block; line-height: 1; }
+    .fue-usage-card[open] .fue-usage-chevron { transform: rotate(90deg); }
+    .fue-usage-title { flex: 1; }
+    .fue-usage-header-val { font-size: 11px; font-weight: 600; color: #667085; white-space: nowrap; }
+    .fue-usage-rows { padding: 2px 11px 10px; display: flex; flex-direction: column; gap: 4px; }
+    .fue-usage-row { display: flex; align-items: center; gap: 7px; font-size: 11.5px; color: #344054; padding: 1px 0; }
+    .fue-usage-swatch { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+    .fue-usage-name { flex: 1; }
+    .fue-usage-val { font-weight: 700; color: #101828; white-space: nowrap; }
 
     .fue-blocked { margin: 12px 18px 0; padding: 16px; background: #FAFAFB; border: 1px solid #EAECF0; border-radius: 8px; }
     .fue-blocked .fue-bk-title { font-weight: 700; font-size: 14px; margin: 0 0 6px 0; color: #101828; }
@@ -1534,14 +1550,15 @@ function FairUseExample() {
     </div>
   );
 
-  const Disclaimer = ({ showStart }) => (
+  const Disclaimer = ({ showStart, softUpgrade }) => (
     <div className="fue-panel-foot">
       {showStart && <button className="fue-start-btn">Review Profile</button>}
+      {softUpgrade && <SoftUpgrade />}
       <p className="fue-disclaimer">AI-generated summaries may contain errors. Please verify against source documents.</p>
     </div>
   );
 
-  // ── Reusable usage-mini breakdown card (Models B and C) ──
+  // ── Reusable usage-mini breakdown card (Models B and C, expanded — used in UserCap/Exhausted states) ──
   const UsageMini = ({ eyebrow, rows }) => (
     <div className="fue-usage-mini">
       <p className="fue-usage-mini-eyebrow">{eyebrow}</p>
@@ -1555,11 +1572,30 @@ function FairUseExample() {
     </div>
   );
 
-  // ── Soft upgrade chip shown on Plenty-left states ────────
+  // ── Collapsible "Total AI Usage" card (used in comparison columns + Plenty/Approaching deep-dive states) ──
+  const TotalAIUsage = ({ headerVal, rows, inPanel = false }) => (
+    <details className={"fue-usage-card" + (inPanel ? " fue-in-panel" : "")}>
+      <summary>
+        <span className="fue-usage-chevron">▸</span>
+        <span className="fue-usage-title">Total AI Usage</span>
+        <span className="fue-usage-header-val">{headerVal}</span>
+      </summary>
+      <div className="fue-usage-rows">
+        {rows.map((r, i) => (
+          <div key={i} className="fue-usage-row">
+            <span className="fue-usage-swatch" style={{ background: r.color }}></span>
+            <span className="fue-usage-name">{r.name}</span>
+            <span className="fue-usage-val">{r.val}</span>
+          </div>
+        ))}
+      </div>
+    </details>
+  );
+
+  // ── Soft upgrade chip shown below the Review Profile button on non-blocked states ────────
   const SoftUpgrade = () => (
     <div className="fue-soft-upgrade">
-      <span>Want more headroom?</span>
-      <a href="#" onClick={e => e.preventDefault()}>Upgrade to AI Pro to unlock more now</a>
+      <a href="#" onClick={e => e.preventDefault()}>Upgrade to AI Pro to unlock more</a>
     </div>
   );
 
@@ -1579,9 +1615,8 @@ function FairUseExample() {
         </span>
         <span className="fue-mlabel"><strong style={{ color: "#101828" }}>4 of 5</strong> reviews left <span className="fue-resets">· resets Jun 1</span></span>
       </div>
-      <SoftUpgrade />
       <div className="fue-panel-spacer"></div>
-      <Disclaimer showStart />
+      <Disclaimer showStart softUpgrade />
     </div>
   );
   const AOneLeft = () => (
@@ -1599,11 +1634,8 @@ function FairUseExample() {
         </span>
         <span className="fue-mlabel"><strong>Only 1 of 5</strong> reviews left · resets Jun 1</span>
       </div>
-      <div className="fue-callout">
-        After this review you'll need to wait until <strong>Jun 1</strong> or <a href="#" onClick={e => e.preventDefault()}>upgrade to AI Pro to unlock more now</a>.
-      </div>
       <div className="fue-panel-spacer"></div>
-      <Disclaimer showStart />
+      <Disclaimer showStart softUpgrade />
     </div>
   );
   const AReviewsUsedUp = () => (
@@ -1615,7 +1647,7 @@ function FairUseExample() {
         <p>AI Essential gives each user 5 AI Profile Reviews per month. You'll be able to run reviews again on <strong>Jun 1</strong>.</p>
         <p className="fue-reset-line">Resets in 11 days · other users at your school may still have capacity.</p>
         <div className="fue-cta-stack">
-          <a href="#" onClick={e => e.preventDefault()} className="fue-btn fue-btn-primary fue-btn-block">Upgrade to AI Pro to unlock more now</a>
+          <a href="#" onClick={e => e.preventDefault()} className="fue-btn fue-btn-primary fue-btn-block">Upgrade to AI Pro to unlock more</a>
           <a href="#" onClick={e => e.preventDefault()} className="fue-btn fue-btn-secondary fue-btn-block">View AI plans</a>
         </div>
       </div>
@@ -1632,7 +1664,7 @@ function FairUseExample() {
         <p>AI Essential gives each school 15 AI Profile Reviews per month across all users. The shared monthly pool resets on <strong>Jun 1</strong>.</p>
         <p className="fue-reset-line">Resets in 11 days · you may have personal reviews remaining, but the school-wide pool is full.</p>
         <div className="fue-cta-stack">
-          <a href="#" onClick={e => e.preventDefault()} className="fue-btn fue-btn-primary fue-btn-block">Upgrade to AI Pro to unlock more now</a>
+          <a href="#" onClick={e => e.preventDefault()} className="fue-btn fue-btn-primary fue-btn-block">Upgrade to AI Pro to unlock more</a>
           <a href="#" onClick={e => e.preventDefault()} className="fue-btn fue-btn-secondary fue-btn-block">View AI plans</a>
         </div>
       </div>
@@ -1659,7 +1691,7 @@ function FairUseExample() {
       <p>{body}</p>
       <p className="fue-reset-line">{resetLine}</p>
       <div className="fue-cta-stack">
-        <a href="#" onClick={e => e.preventDefault()} className="fue-btn fue-btn-primary fue-btn-block">Upgrade to AI Pro to unlock more now</a>
+        <a href="#" onClick={e => e.preventDefault()} className="fue-btn fue-btn-primary fue-btn-block">Upgrade to AI Pro to unlock more</a>
         <a href="#" onClick={e => e.preventDefault()} className="fue-btn fue-btn-secondary fue-btn-block">View AI plans</a>
       </div>
     </div>
@@ -1668,28 +1700,24 @@ function FairUseExample() {
     <div className="fue-panel">
       <PanelHead /><PanelSub /><SummaryCard />
       <BarMeter label={<><strong>30 of 50</strong> AI credits left</>} fillPct={40} />
-      <UsageMini eyebrow="20 credits used · by feature" rows={[
+      <TotalAIUsage inPanel headerVal="20 of 50 credits used" rows={[
         { color: F.plum, name: "AI Profile Review", val: "12 credits" },
         { color: F.pink, name: "AI Lead Scoring",  val: "8 credits" },
       ]} />
-      <SoftUpgrade />
       <div className="fue-panel-spacer"></div>
-      <Disclaimer showStart />
+      <Disclaimer showStart softUpgrade />
     </div>
   );
   const BApproaching = () => (
     <div className="fue-panel">
       <PanelHead /><PanelSub /><SummaryCard />
       <BarMeter amber label={<><strong>Only 4 of 50</strong> AI credits left</>} fillPct={8} />
-      <UsageMini eyebrow="46 credits used · by feature" rows={[
+      <TotalAIUsage inPanel headerVal="46 of 50 credits used" rows={[
         { color: F.plum, name: "AI Profile Review", val: "36 credits" },
         { color: F.pink, name: "AI Lead Scoring",  val: "10 credits" },
       ]} />
-      <div className="fue-callout">
-        This review costs <strong>6 credits</strong>. Once you're at 0 you'll need to wait until <strong>Jun 1</strong> or <a href="#" onClick={e => e.preventDefault()}>upgrade to AI Pro to unlock more now</a>.
-      </div>
       <div className="fue-panel-spacer"></div>
-      <Disclaimer showStart />
+      <Disclaimer showStart softUpgrade />
     </div>
   );
   const BUserCap = () => (
@@ -1730,28 +1758,24 @@ function FairUseExample() {
     <div className="fue-panel">
       <PanelHead /><PanelSub /><SummaryCard />
       <BarMeter label={<><strong>6 of 10</strong> AI actions left</>} fillPct={60} fillColor={F.green} />
-      <UsageMini eyebrow="4 actions used · by feature" rows={[
+      <TotalAIUsage inPanel headerVal="4 of 10 actions used" rows={[
         { color: F.plum, name: "AI Profile Review", val: "2 actions" },
         { color: F.pink, name: "AI Lead Scoring",  val: "2 actions" },
       ]} />
-      <SoftUpgrade />
       <div className="fue-panel-spacer"></div>
-      <Disclaimer showStart />
+      <Disclaimer showStart softUpgrade />
     </div>
   );
   const CApproaching = () => (
     <div className="fue-panel">
       <PanelHead /><PanelSub /><SummaryCard />
       <BarMeter amber label={<><strong>Only 1 of 10</strong> AI actions left</>} fillPct={10} />
-      <UsageMini eyebrow="9 actions used · by feature" rows={[
+      <TotalAIUsage inPanel headerVal="9 of 10 actions used" rows={[
         { color: F.plum, name: "AI Profile Review", val: "6 actions" },
         { color: F.pink, name: "AI Lead Scoring",  val: "3 actions" },
       ]} />
-      <div className="fue-callout">
-        After 1 more AI action (any feature) you'll need to wait until <strong>Jun 1</strong> or <a href="#" onClick={e => e.preventDefault()}>upgrade to AI Pro to unlock more now</a>.
-      </div>
       <div className="fue-panel-spacer"></div>
-      <Disclaimer showStart />
+      <Disclaimer showStart softUpgrade />
     </div>
   );
   const CUserCap = () => (
@@ -1881,26 +1905,10 @@ function FairUseExample() {
                   </div>
                 </div>
 
-                <div className="fue-cmp-breakdown">
-                  <p className="fue-cmp-bd-eyebrow">Your AI credit breakdown this month</p>
-                  <p className="fue-cmp-bd-total"><strong>20 of 50</strong> credits used · shared pool across all AI features</p>
-                  <div className="fue-cmp-bd-bar">
-                    <div className="fue-cmp-bd-seg-a" style={{ width: "60%" }}></div>
-                    <div className="fue-cmp-bd-seg-b" style={{ width: "40%" }}></div>
-                  </div>
-                  <div className="fue-cmp-bd-key">
-                    <div className="fue-cmp-bd-key-row">
-                      <span className="fue-cmp-bd-swatch" style={{ background: F.plum }}></span>
-                      <span className="fue-cmp-bd-key-name">AI Profile Review</span>
-                      <span className="fue-cmp-bd-key-val">12 credits</span>
-                    </div>
-                    <div className="fue-cmp-bd-key-row">
-                      <span className="fue-cmp-bd-swatch" style={{ background: F.pink }}></span>
-                      <span className="fue-cmp-bd-key-name">AI Lead Scoring</span>
-                      <span className="fue-cmp-bd-key-val">8 credits</span>
-                    </div>
-                  </div>
-                </div>
+                <TotalAIUsage headerVal="20 of 50 credits used" rows={[
+                  { color: F.plum, name: "AI Profile Review", val: "12 credits" },
+                  { color: F.pink, name: "AI Lead Scoring",  val: "8 credits" },
+                ]} />
               </div>
               <div style={{ height: 18 }}></div>
             </div>
@@ -1930,27 +1938,11 @@ function FairUseExample() {
                   </div>
                 </div>
 
-                <div className="fue-cmp-breakdown">
-                  <p className="fue-cmp-bd-eyebrow">Your AI action breakdown this month</p>
-                  <p className="fue-cmp-bd-total"><strong>4 of 10</strong> actions used · shared pool across all AI features</p>
-                  <div className="fue-cmp-bd-bar">
-                    <div style={{ width: "50%", height: "100%", background: F.plum }}></div>
-                    <div style={{ width: "50%", height: "100%", background: F.pink }}></div>
-                  </div>
-                  <div className="fue-cmp-bd-key">
-                    <div className="fue-cmp-bd-key-row">
-                      <span className="fue-cmp-bd-swatch" style={{ background: F.plum }}></span>
-                      <span className="fue-cmp-bd-key-name">AI Profile Review</span>
-                      <span className="fue-cmp-bd-key-val">2 actions</span>
-                    </div>
-                    <div className="fue-cmp-bd-key-row">
-                      <span className="fue-cmp-bd-swatch" style={{ background: F.pink }}></span>
-                      <span className="fue-cmp-bd-key-name">AI Lead Scoring</span>
-                      <span className="fue-cmp-bd-key-val">2 actions</span>
-                    </div>
-                  </div>
-                  <p className="fue-cmp-bd-cost">Every AI action = 1. No cost map to learn.</p>
-                </div>
+                <TotalAIUsage headerVal="4 of 10 actions used" rows={[
+                  { color: F.plum, name: "AI Profile Review", val: "2 actions" },
+                  { color: F.pink, name: "AI Lead Scoring",  val: "2 actions" },
+                ]} />
+                <p style={{ margin: "8px 0 0", fontSize: 11, color: "#667085", fontStyle: "italic", textAlign: "center" }}>Every AI action = 1. No cost map to learn.</p>
               </div>
               <div style={{ height: 18 }}></div>
             </div>

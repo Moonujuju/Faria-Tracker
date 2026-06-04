@@ -3135,6 +3135,496 @@ function ReleaseHandoffPage() {
   );
 }
 
+/* ── AI Pods Page (top-level) ─────────────────────────────
+   Mirrors https://aipod-faria.netlify.app/ — Faria's transition
+   from Scrum to AI Pods methodology. Static content with 6 sub-tabs.
+   Source: ~/Downloads/faria-ai-pods_new.html */
+function AiPodsPage() {
+  const [tab, setTab] = useState("rhythm");
+  const styles = `
+    .aip-wrap { font-family: 'Nunito Sans','Trebuchet MS',system-ui,sans-serif; color: ${F.plum}; line-height: 1.2; -webkit-font-smoothing: antialiased; }
+
+    /* Header */
+    .aip-header { background: ${F.gradient}; padding: 48px 32px 54px; position: relative; overflow: hidden; border-radius: 16px; margin-bottom: 0; }
+    .aip-header .aip-track { position: absolute; height: 120px; width: 160%; left: -30%; bottom: -50px; background: ${F.lightYellow}; opacity: 0.5; border-radius: 80px; transform: rotate(-2deg); }
+    .aip-header h1 { font-size: 42px; font-weight: 800; line-height: 1.15; max-width: 780px; position: relative; z-index: 2; margin: 0; color: ${F.plum}; font-family: 'Nunito Sans','Trebuchet MS',system-ui,sans-serif; }
+    .aip-header p { font-size: 18px; font-weight: 500; margin: 14px 0 0; max-width: 620px; position: relative; z-index: 2; color: ${F.plum}; }
+    .aip-eyebrow { font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.7; margin-bottom: 12px; position: relative; z-index: 2; }
+
+    /* Tabs */
+    .aip-tabs { display: flex; gap: 8px; padding: 18px 0; position: relative; z-index: 10; flex-wrap: wrap; border-bottom: 1px solid rgba(55,2,60,0.08); margin-bottom: 28px; }
+    .aip-tab { font-family: 'Nunito Sans','Trebuchet MS',system-ui,sans-serif; font-size: 15px; font-weight: 700; border: none; background: transparent; color: ${F.plum}; padding: 11px 20px; border-radius: 30px; cursor: pointer; opacity: 0.55; transition: 0.18s; }
+    .aip-tab:hover { opacity: 0.85; }
+    .aip-tab.active { background: ${F.plum}; color: ${F.paper}; opacity: 1; }
+
+    .aip-panel { padding: 0 0 32px; animation: aipfade 0.3s ease; }
+    @keyframes aipfade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+    .aip-panel h2 { font-size: 28px; font-weight: 800; margin: 0 0 6px; color: ${F.plum}; font-family: 'Nunito Sans','Trebuchet MS',system-ui,sans-serif; }
+    .aip-lead { font-size: 16px; font-weight: 500; opacity: 0.75; margin: 0 0 24px; max-width: 680px; color: ${F.plum}; }
+
+    /* Swim grid (weekly rhythm) */
+    .aip-swim { background: #fff; border-radius: 16px; border: 1px solid rgba(55,2,60,0.08); overflow: hidden; margin-bottom: 16px; }
+    .aip-swim-grid { display: grid; grid-template-columns: 120px repeat(5, 1fr); }
+    .aip-swim-grid > div { padding: 12px; border-bottom: 1px solid rgba(55,2,60,0.07); border-right: 1px solid rgba(55,2,60,0.05); }
+    .aip-swim-grid > div:nth-child(6n) { border-right: none; }
+    .aip-sh { font-size: 13px; font-weight: 800; text-align: center; background: ${F.plum}; color: ${F.paper}; text-transform: uppercase; letter-spacing: 0.04em; border-bottom: none !important; }
+    .aip-sh.corner { background: ${F.lightPlum}; }
+    .aip-rolelbl { font-weight: 800; font-size: 14px; display: flex; align-items: center; gap: 8px; background: ${F.paper}; }
+    .aip-rolelbl .aip-ic { width: 10px; height: 10px; border-radius: 3px; }
+    .aip-ic-own { background: ${F.pink}; } .aip-ic-dev { background: ${F.orange}; } .aip-ic-qa { background: ${F.yellow}; }
+    .aip-cell { min-height: 84px; }
+    .aip-chip { display: block; font-size: 12px; font-weight: 600; padding: 6px 8px; border-radius: 7px; margin-bottom: 5px; line-height: 1.3; }
+    .aip-c-research { background: ${F.lightYellow}; }
+    .aip-c-learn { background: ${F.plum}; color: ${F.paper}; }
+    .aip-c-stake { background: ${F.lightPink}; }
+    .aip-c-lock { background: ${F.lightOrange}; }
+    .aip-c-work { background: rgba(55,2,60,0.06); }
+    .aip-c-muted { font-size: 11px; font-weight: 600; opacity: 0.5; font-style: italic; }
+    .aip-flow-note { background: #fff; border-left: 5px solid ${F.pink}; border-radius: 0 12px 12px 0; padding: 16px 20px; font-size: 14px; font-weight: 500; margin-top: 8px; color: ${F.plum}; }
+    .aip-flow-note b { font-weight: 800; }
+
+    /* Pipeline timeline */
+    .aip-timeline { background: #fff; border-radius: 16px; border: 1px solid rgba(55,2,60,0.08); overflow: hidden; }
+    .aip-tl-header { display: grid; grid-template-columns: 140px repeat(5, 1fr) 100px; gap: 1px; background: rgba(55,2,60,0.07); padding: 1px; }
+    .aip-tl-header > div { background: ${F.plum}; color: ${F.paper}; font-size: 12px; font-weight: 800; text-align: center; padding: 12px 8px; text-transform: uppercase; letter-spacing: 0.04em; }
+    .aip-tl-header .aip-tl-empty { background: ${F.lightPlum}; }
+    .aip-tl-track { display: grid; grid-template-columns: 140px repeat(5, 1fr) 100px; gap: 1px; background: rgba(55,2,60,0.07); padding: 1px; margin-bottom: 1px; }
+    .aip-tl-track .aip-lbl { background: ${F.paper}; font-size: 13px; font-weight: 800; padding: 16px 12px; display: flex; align-items: center; gap: 8px; }
+    .aip-tl-cell { background: #fff; padding: 14px 10px; font-size: 13px; font-weight: 700; line-height: 1.25; text-align: center; color: ${F.plum}; border: none; }
+    .aip-tl-cell.feature { background: rgba(232,55,172,0.08); }
+    .aip-tl-cell.qa { background: rgba(247,139,67,0.08); }
+    .aip-tl-cell.empty { background: #fff; }
+    .aip-tl-release-marker { background: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; color: ${F.pink}; gap: 4px; }
+    .aip-tl-release-marker .aip-dot { width: 8px; height: 8px; background: ${F.pink}; border-radius: 50%; }
+
+    /* Slicing */
+    .aip-slice-card { background: #fff; border-radius: 16px; border: 1px solid rgba(55,2,60,0.08); padding: 24px; margin-bottom: 16px; }
+    .aip-slice-card h4 { font-size: 15px; font-weight: 800; color: ${F.plum}; margin: 0 0 16px; }
+    .aip-slice-week-label { font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; }
+    .aip-slice-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .aip-slice { border-radius: 12px; padding: 14px; }
+    .aip-slice .aip-slice-tag { font-size: 11px; font-weight: 800; margin-bottom: 6px; }
+    .aip-slice .aip-slice-title { font-size: 13px; font-weight: 700; color: ${F.plum}; margin: 0 0 8px; }
+    .aip-slice .aip-slice-body { font-size: 12px; font-weight: 500; color: ${F.plum}; opacity: 0.7; line-height: 1.5; margin: 0; }
+
+    /* Pods */
+    .aip-pods { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .aip-pod { background: #fff; border-radius: 16px; padding: 22px; border: 1px solid rgba(55,2,60,0.08); position: relative; overflow: hidden; }
+    .aip-pod::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 6px; }
+    .aip-pod.p1::before { background: ${F.pink}; }
+    .aip-pod.p2::before { background: ${F.orange}; }
+    .aip-pod.p3::before { background: ${F.yellow}; }
+    .aip-pod.p4::before { background: ${F.lightPlum}; }
+    .aip-pod .aip-pod-owner { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.5; margin-bottom: 4px; }
+    .aip-pod h4 { font-size: 19px; font-weight: 800; margin: 0 0 10px; color: ${F.plum}; }
+    .aip-pod p { font-size: 13.5px; font-weight: 500; opacity: 0.8; margin: 0; color: ${F.plum}; }
+    .aip-pod .aip-pod-role { display: inline-block; font-size: 11px; font-weight: 700; background: ${F.paper}; padding: 4px 10px; border-radius: 20px; margin-top: 12px; color: ${F.plum}; }
+    .aip-pod.special { grid-column: span 3; background: ${F.plum}; color: ${F.paper}; }
+    .aip-pod.special::before { display: none; }
+    .aip-pod.special h4 { color: ${F.paper}; }
+    .aip-pod.special p { color: ${F.paper}; opacity: 0.85; }
+    .aip-pod.special .aip-pod-owner { color: ${F.paper}; opacity: 0.6; }
+    .aip-pod.special .aip-pod-role { background: rgba(240,235,235,0.15); color: ${F.paper}; }
+
+    /* Compare table */
+    .aip-cmp { width: 100%; border-collapse: separate; border-spacing: 0; background: #fff; border-radius: 16px; overflow: hidden; border: 1px solid rgba(55,2,60,0.08); }
+    .aip-cmp th { text-align: left; padding: 16px 20px; font-size: 14px; font-weight: 800; }
+    .aip-cmp th.h-scrum { background: ${F.lightPlum}; color: ${F.paper}; }
+    .aip-cmp th.h-pod { background: ${F.gradient}; }
+    .aip-cmp th.h-dim { background: ${F.plum}; color: ${F.paper}; }
+    .aip-cmp td { padding: 14px 20px; font-size: 14px; font-weight: 500; border-top: 1px solid rgba(55,2,60,0.07); vertical-align: top; color: ${F.plum}; }
+    .aip-cmp td.dim { font-weight: 800; background: ${F.paper}; }
+    .aip-cmp tr:hover td { background: rgba(232,55,172,0.04); }
+    .aip-cmp tr:hover td.dim { background: ${F.paper}; }
+
+    /* Risks */
+    .aip-risks { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .aip-risk { background: #fff; border-radius: 14px; padding: 20px; border: 1px solid rgba(55,2,60,0.08); border-top: 4px solid ${F.orange}; }
+    .aip-risk h4 { font-size: 16px; font-weight: 800; margin: 0 0 6px; color: ${F.plum}; }
+    .aip-risk p { font-size: 13.5px; font-weight: 500; opacity: 0.8; margin: 0; color: ${F.plum}; }
+    .aip-risk.high { border-top-color: ${F.pink}; }
+    .aip-risk .aip-tag { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; padding: 3px 9px; border-radius: 20px; background: ${F.lightOrange}; float: right; color: ${F.plum}; }
+    .aip-risk.high .aip-tag { background: ${F.lightPink}; }
+
+    @media (max-width: 860px) {
+      .aip-swim { overflow-x: auto; }
+      .aip-swim-grid { min-width: 760px; }
+      .aip-pods { grid-template-columns: 1fr; }
+      .aip-pod.special { grid-column: span 1; }
+      .aip-risks { grid-template-columns: 1fr; }
+      .aip-header h1 { font-size: 32px; }
+      .aip-slice-grid { grid-template-columns: 1fr; }
+      .aip-tl-header, .aip-tl-track { grid-template-columns: 110px repeat(5, 1fr) 80px; }
+    }
+  `;
+
+  const tabs = [
+    { id: "rhythm",   label: "Weekly rhythm" },
+    { id: "pipeline", label: "Staggered pipeline" },
+    { id: "slicing",  label: "Ticket slicing" },
+    { id: "pods",     label: "The pods" },
+    { id: "compare",  label: "Scrum vs Pods" },
+    { id: "watch",    label: "Watch-list" },
+  ];
+
+  return (
+    <>
+      <style>{styles}</style>
+      <div className="aip-wrap">
+
+        {/* HEADER */}
+        <header className="aip-header">
+          <div className="aip-eyebrow">Faria · Product Development · Ways of Working</div>
+          <h1>From Scrum to AI Pods</h1>
+          <p>Smaller teams. Single ownership. A weekly rhythm built for speed, with schools and stakeholders in the loop before we build.</p>
+          <div className="aip-track"></div>
+        </header>
+
+        {/* SUB-TAB STRIP */}
+        <div className="aip-tabs">
+          {tabs.map(t => (
+            <button key={t.id} className={"aip-tab" + (tab === t.id ? " active" : "")} onClick={() => setTab(t.id)}>{t.label}</button>
+          ))}
+        </div>
+
+        {/* WEEKLY RHYTHM */}
+        {tab === "rhythm" && (
+          <section className="aip-panel">
+            <h2>One week, three roles</h2>
+            <p className="aip-lead">While the pod owner shapes next week's build, the developer and QA are heads-down on the current cycle. Each lane shows what that role does, day by day.</p>
+            <div className="aip-swim">
+              <div className="aip-swim-grid">
+                <div className="aip-sh corner">Role</div>
+                <div className="aip-sh">Monday</div><div className="aip-sh">Tuesday</div><div className="aip-sh">Wednesday</div><div className="aip-sh">Thursday</div><div className="aip-sh">Friday</div>
+
+                <div className="aip-rolelbl"><span className="aip-ic aip-ic-own"></span>Pod Owner</div>
+                <div className="aip-cell">
+                  <span className="aip-chip aip-c-learn">📈 Review previous release outcome</span>
+                  <span className="aip-chip aip-c-research">🎯 Form hypothesis &amp; outcome plan</span>
+                  <span className="aip-chip aip-c-research">📊 Quant: usage &amp; product data</span>
+                </div>
+                <div className="aip-cell">
+                  <span className="aip-chip aip-c-research">☎️ Qual: school calls &amp; interviews</span>
+                  <span className="aip-chip aip-c-research">Shape spec &amp; prototype with AI</span>
+                </div>
+                <div className="aip-cell">
+                  <span className="aip-chip aip-c-stake">Share prototype — schools<br /><span style={{ fontSize: 10, opacity: 0.6 }}>🏫 WhatsApp + key contacts</span></span>
+                  <span className="aip-chip aip-c-stake">Share prototype — internal<br /><span style={{ fontSize: 10, opacity: 0.6 }}>👥 sales, support, implementation</span></span>
+                </div>
+                <div className="aip-cell">
+                  <span className="aip-chip aip-c-stake">Gather &amp; fold in feedback</span>
+                  <span className="aip-chip aip-c-lock">👥 PMT review — align on scope</span>
+                </div>
+                <div className="aip-cell">
+                  <span className="aip-chip aip-c-lock">Lock scope</span>
+                  <span className="aip-chip aip-c-lock">👨‍💻 Hand off to dev</span>
+                </div>
+
+                <div className="aip-rolelbl"><span className="aip-ic aip-ic-dev"></span>Developers</div>
+                <div className="aip-cell"><span className="aip-chip aip-c-work">Build current cycle's item</span></div>
+                <div className="aip-cell"><span className="aip-chip aip-c-work">Build</span></div>
+                <div className="aip-cell"><span className="aip-chip aip-c-work">Build</span></div>
+                <div className="aip-cell"><span className="aip-chip aip-c-work">Build — toward branch / prod</span></div>
+                <div className="aip-cell"><span className="aip-chip aip-c-work">Wrap &amp; review next item's handoff</span></div>
+
+                <div className="aip-rolelbl"><span className="aip-ic aip-ic-qa"></span>QA</div>
+                <div className="aip-cell"><span className="aip-chip aip-c-work">Test last week's build</span></div>
+                <div className="aip-cell"><span className="aip-chip aip-c-work">Test &amp; code review</span></div>
+                <div className="aip-cell"><span className="aip-chip aip-c-work">Code review (AI-assisted)</span></div>
+                <div className="aip-cell"><span className="aip-chip aip-c-work">Sign off for Monday release</span></div>
+                <div className="aip-cell"><span className="aip-chip aip-c-muted">Ready for next handoff</span></div>
+              </div>
+            </div>
+            <div className="aip-flow-note">
+              <b>Research drives the spec.</b> Monday–Tuesday blends quantitative signals (product usage, adoption data) with qualitative input (school calls, interviews) so requirements are grounded before anything is built.
+            </div>
+            <div className="aip-flow-note" style={{ borderLeftColor: F.pink }}>
+              <b>Two audiences, one prototype.</b> Wednesday we share the same prototype with schools <i>and</i> internal teams — sales, support, implementation. Light touch: prototype plus high-level requirements, nothing too detailed.
+            </div>
+            <div className="aip-flow-note" style={{ borderLeftColor: F.yellow }}>
+              <b>The handoff rule.</b> Wed feedback and Thursday's PMT review are pre-lock. Anything substantive after Friday's lock goes into the next cycle, not the current build.
+            </div>
+            <div className="aip-flow-note" style={{ borderLeftColor: F.plum }}>
+              <b>Ship a hypothesis, not just a feature.</b> Each cycle starts by reviewing how the previous release performed and stating a clear belief with a success metric. We build it, ship it with tracking on, and the next cycle's hypothesis is grounded in what we actually learned, not what we guessed.
+            </div>
+          </section>
+        )}
+
+        {/* PIPELINE */}
+        {tab === "pipeline" && (
+          <section className="aip-panel">
+            <h2>How the pipeline fills and flows</h2>
+            <p className="aip-lead">Week by week: developers build, QA tests last week's work, and features land in production every Monday.</p>
+
+            <div className="aip-timeline" style={{ marginBottom: 28 }}>
+              <div className="aip-tl-header">
+                <div className="aip-tl-empty" style={{ fontSize: 10 }}>Week</div>
+                <div style={{ gridColumn: "span 5", fontSize: 12 }}>Mon – Fri</div>
+                <div className="aip-tl-empty" style={{ fontSize: 10, textAlign: "center" }}>Release</div>
+              </div>
+              <div className="aip-tl-header">
+                <div className="aip-tl-empty"></div>
+                <div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div>
+                <div className="aip-tl-empty" style={{ textAlign: "center" }}>Next Mon</div>
+              </div>
+
+              {/* Week 2 */}
+              <div style={{ marginBottom: 16, paddingBottom: 16, borderBottom: "2px dashed rgba(55,2,60,0.1)" }}>
+                <div className="aip-tl-track">
+                  <div className="aip-lbl" style={{ fontSize: 12, fontWeight: 900, color: F.pink }}>Week 2 — Dev</div>
+                  <div className="aip-tl-cell feature">Feature B</div>
+                  <div className="aip-tl-cell feature">Feature B</div>
+                  <div className="aip-tl-cell feature">Feature B</div>
+                  <div className="aip-tl-cell feature">Feature B</div>
+                  <div className="aip-tl-cell feature">Feature B → branch</div>
+                  <div className="aip-tl-cell empty"></div>
+                </div>
+                <div className="aip-tl-track">
+                  <div className="aip-lbl" style={{ fontSize: 12, fontWeight: 900, color: F.orange }}>Week 2 — QA</div>
+                  <div className="aip-tl-cell qa">Feature A</div>
+                  <div className="aip-tl-cell qa">Feature A</div>
+                  <div className="aip-tl-cell qa">Feature A</div>
+                  <div className="aip-tl-cell qa">Feature A</div>
+                  <div className="aip-tl-cell qa">Feature A → sign-off</div>
+                  <div className="aip-tl-release-marker"><span className="aip-dot"></span>A</div>
+                </div>
+              </div>
+
+              {/* Week 3 */}
+              <div style={{ marginBottom: 16, paddingBottom: 16, borderBottom: "2px dashed rgba(55,2,60,0.1)" }}>
+                <div className="aip-tl-track">
+                  <div className="aip-lbl" style={{ fontSize: 12, fontWeight: 900, color: F.pink }}>Week 3 — Dev</div>
+                  <div className="aip-tl-cell feature">Feature C</div>
+                  <div className="aip-tl-cell feature">Feature C</div>
+                  <div className="aip-tl-cell feature">Feature C</div>
+                  <div className="aip-tl-cell feature">Feature C</div>
+                  <div className="aip-tl-cell feature">Feature C → branch</div>
+                  <div className="aip-tl-cell empty"></div>
+                </div>
+                <div className="aip-tl-track">
+                  <div className="aip-lbl" style={{ fontSize: 12, fontWeight: 900, color: F.orange }}>Week 3 — QA</div>
+                  <div className="aip-tl-cell qa">Feature B</div>
+                  <div className="aip-tl-cell qa">Feature B</div>
+                  <div className="aip-tl-cell qa">Feature B</div>
+                  <div className="aip-tl-cell qa">Feature B</div>
+                  <div className="aip-tl-cell qa">Feature B → sign-off</div>
+                  <div className="aip-tl-release-marker"><span className="aip-dot"></span>B</div>
+                </div>
+              </div>
+
+              {/* Week 4 */}
+              <div>
+                <div className="aip-tl-track">
+                  <div className="aip-lbl" style={{ fontSize: 12, fontWeight: 900, color: F.pink }}>Week 4 — Dev</div>
+                  <div className="aip-tl-cell feature">Feature D</div>
+                  <div className="aip-tl-cell feature">Feature D</div>
+                  <div className="aip-tl-cell feature">Feature D</div>
+                  <div className="aip-tl-cell feature">Feature D</div>
+                  <div className="aip-tl-cell feature">Feature D → branch</div>
+                  <div className="aip-tl-cell empty"></div>
+                </div>
+                <div className="aip-tl-track">
+                  <div className="aip-lbl" style={{ fontSize: 12, fontWeight: 900, color: F.orange }}>Week 4 — QA</div>
+                  <div className="aip-tl-cell qa">Feature C</div>
+                  <div className="aip-tl-cell qa">Feature C</div>
+                  <div className="aip-tl-cell qa">Feature C</div>
+                  <div className="aip-tl-cell qa">Feature C</div>
+                  <div className="aip-tl-cell qa">Feature C → sign-off</div>
+                  <div className="aip-tl-release-marker"><span className="aip-dot"></span>C</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="aip-flow-note">
+              <b>The rhythm once it's live.</b> Dev always works on this week's feature (Mon–Fri). QA tests last week's. On Monday morning, the week-before-last feature goes to production. Every single Monday: a new release.
+            </div>
+          </section>
+        )}
+
+        {/* TICKET SLICING */}
+        {tab === "slicing" && (
+          <section className="aip-panel">
+            <h2>Slicing large features into shippable chunks</h2>
+            <p className="aip-lead">A feature that feels like a 3–4 week effort doesn't live in development for 3–4 weeks. We slice it so we iterate multiple times per week and ship every few days. Schools see progress and feed back immediately.</p>
+
+            <div className="aip-slice-card">
+              <h4>Example: "Bulk operations" feature</h4>
+
+              {/* Week 1 */}
+              <div style={{ marginBottom: 24, paddingBottom: 24, borderBottom: "2px dashed rgba(55,2,60,0.1)" }}>
+                <div className="aip-slice-week-label" style={{ color: F.pink }}>Week 1</div>
+                <div className="aip-slice-grid">
+                  <div className="aip-slice" style={{ background: `linear-gradient(135deg, rgba(247,211,95,0.15), rgba(232,55,172,0.08))`, border: `1px solid rgba(232,55,172,0.2)` }}>
+                    <div className="aip-slice-tag" style={{ color: F.pink }}>MVP (Mon–Tue)</div>
+                    <p className="aip-slice-title">Select &amp; delete</p>
+                    <p className="aip-slice-body">Users can select multiple items and delete them. Basic validation. ✓ Ships Wed</p>
+                  </div>
+                  <div className="aip-slice" style={{ background: `linear-gradient(135deg, rgba(247,139,67,0.15), rgba(232,55,172,0.08))`, border: `1px solid rgba(247,139,67,0.2)` }}>
+                    <div className="aip-slice-tag" style={{ color: F.orange }}>v1.0 (Wed–Thu)</div>
+                    <p className="aip-slice-title">+ bulk edit</p>
+                    <p className="aip-slice-body">Users can select, delete, and edit status across items. Error handling. ✓ Ships Thu</p>
+                  </div>
+                  <div className="aip-slice" style={{ background: `linear-gradient(135deg, rgba(232,55,172,0.15), rgba(247,139,67,0.08))`, border: `1px solid rgba(232,55,172,0.2)` }}>
+                    <div className="aip-slice-tag" style={{ color: F.pink }}>v1.1 (Fri)</div>
+                    <p className="aip-slice-title">+ undo &amp; bulk assign</p>
+                    <p className="aip-slice-body">Full feature: select, edit, assign, undo. Schools get the whole flow. ✓ Ships Friday</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Week 2 */}
+              <div style={{ marginBottom: 24, paddingBottom: 24, borderBottom: "2px dashed rgba(55,2,60,0.1)" }}>
+                <div className="aip-slice-week-label" style={{ color: F.orange }}>Week 2</div>
+                <p style={{ fontSize: 13, fontWeight: 500, color: F.plum, opacity: 0.75, marginBottom: 12 }}>Based on school feedback from Week 1, we iterate:</p>
+                <div className="aip-slice-grid">
+                  <div className="aip-slice" style={{ background: `linear-gradient(135deg, rgba(247,139,67,0.15), rgba(247,211,95,0.08))`, border: `1px solid rgba(247,139,67,0.2)` }}>
+                    <div className="aip-slice-tag" style={{ color: F.orange }}>v1.2 (Mon–Tue)</div>
+                    <p className="aip-slice-title">UX refinement</p>
+                    <p className="aip-slice-body">Faster selection, better feedback. Schools asked for this. ✓ Ships Tue</p>
+                  </div>
+                  <div className="aip-slice" style={{ background: `linear-gradient(135deg, rgba(232,55,172,0.15), rgba(247,139,67,0.08))`, border: `1px solid rgba(232,55,172,0.2)` }}>
+                    <div className="aip-slice-tag" style={{ color: F.pink }}>v1.3 (Wed–Thu)</div>
+                    <p className="aip-slice-title">+ bulk import</p>
+                    <p className="aip-slice-body">Schools can now bulk-import &amp; assign in one go. Powerful. ✓ Ships Thu</p>
+                  </div>
+                  <div className="aip-slice" style={{ background: `linear-gradient(135deg, rgba(232,55,172,0.15), rgba(247,211,95,0.08))`, border: `1px solid rgba(232,55,172,0.2)` }}>
+                    <div className="aip-slice-tag" style={{ color: F.pink }}>v1.4 (Fri)</div>
+                    <p className="aip-slice-title">Polish &amp; API</p>
+                    <p className="aip-slice-body">Performance tuning, API for integrations ready. ✓ Ships Friday</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="aip-flow-note" style={{ marginTop: 0 }}>
+                <b>Speed, not sprawl.</b> Each slice ships, schools use it immediately, we learn, and iterate the next day. No big development cycles. No waiting weeks to ship. Feedback is built into the rhythm.
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* PODS */}
+        {tab === "pods" && (
+          <section className="aip-panel">
+            <h2>Five pods, five owners</h2>
+            <p className="aip-lead">Each pod is small, isolated, and works end to end. The owner has total ownership of everything that enters the pod — prioritise, spec, estimate, prototype.</p>
+            <div className="aip-pods">
+              <div className="aip-pod p1">
+                <div className="aip-pod-owner">PM-owned</div>
+                <h4>Pod 1</h4>
+                <p>Feature &amp; product development, end to end. ~2 developers.</p>
+                <span className="aip-pod-role">PM + Dev (×2) + QA</span>
+              </div>
+              <div className="aip-pod p2">
+                <div className="aip-pod-owner">PM-owned</div>
+                <h4>Pod 2</h4>
+                <p>Feature &amp; product development, end to end. ~2 developers.</p>
+                <span className="aip-pod-role">PM + Dev (×2) + QA</span>
+              </div>
+              <div className="aip-pod p3">
+                <div className="aip-pod-owner">PM-owned</div>
+                <h4>Pod 3</h4>
+                <p>Feature &amp; product development, end to end. ~2 developers.</p>
+                <span className="aip-pod-role">PM + Dev (×2) + QA</span>
+              </div>
+              <div className="aip-pod p4">
+                <div className="aip-pod-owner">Designer-owned</div>
+                <h4>Design Pod</h4>
+                <p>Design-led work, owned end to end by our designer. ~2 developers.</p>
+                <span className="aip-pod-role">Designer + Dev (×2) + QA</span>
+              </div>
+              <div className="aip-pod special">
+                <div className="aip-pod-owner">Scrum Master-owned</div>
+                <h4>The Shock Absorber</h4>
+                <p>Catches bugs, tasks, and incoming distractions so the other pods keep their focus. The buffer that protects everyone else's week. ~2 developers.</p>
+                <span className="aip-pod-role">Owner + Dev (×2) + QA</span>
+              </div>
+            </div>
+            <div className="aip-flow-note" style={{ marginTop: 18 }}>
+              <b>Rotation guards against burnout.</b> Developers can rotate across pods depending on the work, so no one stays on the same load or the distractions pod indefinitely.
+            </div>
+          </section>
+        )}
+
+        {/* COMPARE */}
+        {tab === "compare" && (
+          <section className="aip-panel">
+            <h2>What actually changes</h2>
+            <p className="aip-lead">Scrum optimised for predictability across a big team. AI Pods optimise for speed through small, autonomous units. Here's the trade.</p>
+            <table className="aip-cmp">
+              <thead>
+                <tr>
+                  <th className="h-dim">Dimension</th>
+                  <th className="h-scrum">Scrum (before)</th>
+                  <th className="h-pod">AI Pods (now)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  ["Team size", "Large and bulky", "Small and independent"],
+                  ["Ownership", "Shared and unclear", "One owner, total ownership"],
+                  ["Cadence", "Two-week sprints", "One-week dev cycles, one-week QA cycles, weekly releases"],
+                  ["Planning", "Backlog and ceremonies", "Owner prioritises, specs, estimates, prototypes with AI alongside stakeholders"],
+                  ["Carryover", "Tickets roll sprint to sprint", "None — fresh work each week, tickets sliced to fit"],
+                  ["QA", "Squeezed at sprint end", "Full clean week, one week behind dev"],
+                  ["Schools & stakeholders", "Brought in late, if at all", "In the loop Tuesday–Thursday before build, via prototype"],
+                  ["Distractions", "Hit the whole team", "Absorbed by a dedicated pod"],
+                ].map((row, i) => (
+                  <tr key={i}>
+                    <td className="dim">{row[0]}</td>
+                    <td>{row[1]}</td>
+                    <td>{row[2]}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
+        )}
+
+        {/* WATCH-LIST */}
+        {tab === "watch" && (
+          <section className="aip-panel">
+            <h2>What to watch for</h2>
+            <p className="aip-lead">The model works when a few disciplines hold. These are the failure modes to keep an eye on as we settle in.</p>
+            <div className="aip-risks">
+              <div className="aip-risk high">
+                <span className="aip-tag">High</span>
+                <h4>Breakdown debt</h4>
+                <p>If owners can't reliably slice tickets to under a week, carryover returns — just weekly instead of fortnightly. The single biggest risk.</p>
+              </div>
+              <div className="aip-risk">
+                <span className="aip-tag">Watch</span>
+                <h4>Handoff quality</h4>
+                <p>If specs and branches aren't truly QA-ready on Friday, QA's clean week gets eaten by back-and-forth. Hold a firm definition of done at handoff.</p>
+              </div>
+              <div className="aip-risk">
+                <span className="aip-tag">Watch</span>
+                <h4>Bug bounce-back</h4>
+                <p>When QA finds issues, the fix competes with the dev's new work. Decide explicitly: does it go to the original dev or the distractions pod?</p>
+              </div>
+              <div className="aip-risk">
+                <span className="aip-tag">Watch</span>
+                <h4>Cross-pod collision</h4>
+                <p>Independent pods touching the same codebase will clash. Need a story for shared dependencies and merge conflicts.</p>
+              </div>
+              <div className="aip-risk">
+                <span className="aip-tag">Watch</span>
+                <h4>Late school feedback</h4>
+                <p>Schools are now a week ahead of dev. Keep Wed–Thu feedback pre-lock; substantive changes after Friday go to the next cycle.</p>
+              </div>
+              <div className="aip-risk">
+                <span className="aip-tag">Watch</span>
+                <h4>Owner overload</h4>
+                <p>Prioritise, spec, estimate, prototype and manage is a lot for one person, even with AI. Watch for owner-as-single-point-of-failure.</p>
+              </div>
+            </div>
+          </section>
+        )}
+
+      </div>
+    </>
+  );
+}
+
 /* ── Main App ── */
 export default function App() {
   const [page, setPage] = useState("product");
@@ -3209,6 +3699,7 @@ export default function App() {
           {navBtn("ai", <><span className="lbl-full">AI Powered Features</span><span className="lbl-short">AI Features</span></>)}
           {navBtn("monz", "AI Monetization")}
           {navBtn("handoff", <><span className="lbl-full">Release Handoff</span><span className="lbl-short">Handoff</span></>)}
+          {navBtn("pods", <><span className="lbl-full">AI Pods</span><span className="lbl-short">Pods</span></>)}
         </div>
       </div>
       <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 28px" }}>
@@ -3219,6 +3710,7 @@ export default function App() {
         />}
         {page === "monz" && <AiMonetizationPage />}
         {page === "handoff" && <ReleaseHandoffPage />}
+        {page === "pods" && <AiPodsPage />}
       </div>
     </div>
   );

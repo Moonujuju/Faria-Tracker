@@ -913,7 +913,6 @@ function AiMonetizationPage() {
   const [expanded, setExpanded] = useState(new Set(MONZ_PRODUCTS)); // all expanded by default
   const [editFeat, setEditFeat] = useState(null); // feature id whose rationale is being edited
   const [editLimits, setEditLimits] = useState(null); // feature id whose limits are being edited
-  const [bundlePick, setBundlePick] = useState(new Set(MONZ_PRODUCTS));
   const aiSaveTimer = useRef(null);
   const mzSaveTimer = useRef(null);
 
@@ -935,13 +934,10 @@ function AiMonetizationPage() {
 
   // Mutators
   const setFeatField = (id, patch) => setAi(prev => ({ ...prev, inits: prev.inits.map(f => f.id === id ? { ...f, ...patch } : f) }));
-  const setProductField = (prod, patch) => setMz(prev => ({ ...prev, products: { ...prev.products, [prod]: { ...prev.products[prod], ...patch } } }));
-  const setDiscount = (idx, patch) => setMz(prev => ({ ...prev, bundleDiscounts: prev.bundleDiscounts.map((d, i) => i === idx ? { ...d, ...patch } : d) }));
   const setFilterBullet = (idx, val) => setMz(prev => ({ ...prev, framework: { ...prev.framework, proFilter: prev.framework.proFilter.map((b, i) => i === idx ? val : b) } }));
   const addFilterRule = () => setMz(prev => ({ ...prev, framework: { ...prev.framework, proFilter: [...prev.framework.proFilter, ""] } }));
   const removeFilterRule = (idx) => setMz(prev => ({ ...prev, framework: { ...prev.framework, proFilter: prev.framework.proFilter.filter((_, i) => i !== idx) } }));
   const toggleExpand = (p) => setExpanded(prev => { const n = new Set(prev); if (n.has(p)) n.delete(p); else n.add(p); return n; });
-  const toggleBundle = (p) => setBundlePick(prev => { const n = new Set(prev); if (n.has(p)) n.delete(p); else n.add(p); return n; });
 
   // Computed
   const featuresByProduct = (prod) => ai.inits.filter(f => f.product === prod);
@@ -960,13 +956,6 @@ function AiMonetizationPage() {
     const pros = featuresByProduct(prod).filter(f => effectiveTier(f) === "pro");
     return { done: pros.filter(f => f.status === "complete").length, total: pros.length };
   };
-
-  // Bundle calc
-  const bundleArr = [...bundlePick];
-  const bundleSubtotal = bundleArr.reduce((s, p) => s + (Number(mz.products[p]?.price) || 0), 0);
-  const bundleRule = mz.bundleDiscounts.find(d => d.products === bundleArr.length);
-  const bundleDisc = bundleSubtotal * ((bundleRule?.pct || 0) / 100);
-  const bundleTotal = bundleSubtotal - bundleDisc;
 
   // Tier badge
   const tierBadge = (tier) => {
@@ -989,11 +978,11 @@ function AiMonetizationPage() {
     <>
       {(() => {
         const titles = {
-          plan:        { t: "Current Monetization Plan (open discussion)", s: "Working framework for AI Essential vs AI Pro across Faria products. Edit anything inline — this is a living document." },
+          plan:        { t: "Monetization Framework (open discussion)", s: "Working framework for AI Essential vs AI Pro across Faria products. Edit anything inline — this is a living document." },
           usage:       { t: "Usage", s: "Three candidate usage-limit models — Model B (shared credits) is the leading option. Below, a state-by-state deep dive across all three." },
           competitive: { t: "Competitive Analysis", s: "Track how competitors are pricing and packaging AI. Use this to calibrate our Pro tier and bundle pricing." },
           market:      { t: "Market Validation", s: "Per-product school validation — pilots, willingness to pay, and which Pro outcomes schools have confirmed." },
-          finance:     { t: "Finance", s: "Finance team's cost model, breakeven analysis, uptake scenarios, and decision log for AI monetization." },
+          finance:     { t: "Finance", s: "SKUs & pricing, cost model, breakeven analysis, uptake scenarios, and decision log for AI monetization." },
         };
         const cur = titles[view] || titles.plan;
         return (
@@ -1004,10 +993,10 @@ function AiMonetizationPage() {
         );
       })()}
 
-      {/* Sub-tab strip: Plan · Usage · Competitive Analysis · Market Validation · Finance */}
+      {/* Sub-tab strip: Framework · Usage · Competitive Analysis · Market Validation · Finance */}
       <div style={{ display: "flex", gap: 8, marginBottom: 22, flexWrap: "wrap" }}>
         {[
-          { id: "plan",        label: "Plan" },
+          { id: "plan",        label: "Framework" },
           { id: "usage",       label: "Usage" },
           { id: "competitive", label: "Competitive Analysis" },
           { id: "market",      label: "Market Validation" },
@@ -1031,7 +1020,7 @@ function AiMonetizationPage() {
       {view === "usage"       && <FairUseExample monz={mz} setMonz={setMz} />}
       {view === "competitive" && <MonzCompetitivePage />}
       {view === "market"      && <MonzMarketPage />}
-      {view === "finance"     && <MonzFinancePage />}
+      {view === "finance"     && <MonzFinancePage monz={mz} setMonz={setMz} />}
 
       {view === "plan" && (<>
       {/* Framework card — visual side-by-side with demarcation rules in the middle */}
@@ -1088,68 +1077,6 @@ function AiMonetizationPage() {
               <li>Higher fair-use caps for real production workloads</li>
               <li>Each product validates 2–3 "wow" outcomes before paid go-live</li>
             </ul>
-          </div>
-        </div>
-      </div>
-
-      {/* SKUs & pricing */}
-      <div style={card}>
-        <div style={sectionTitle}>SKUs &amp; pricing</div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12 }}>
-          {MONZ_PRODUCTS.map(p => {
-            const pd = mz.products[p] || { sku: "", unit: "", price: 0 };
-            return (
-              <div key={p} style={{ background: F.bg, border: `1px solid ${F.border}`, borderRadius: 10, padding: "14px 16px" }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em" }}>{p}</div>
-                <input value={pd.sku} onChange={e => setProductField(p, { sku: e.target.value })} style={{ ...inp, width: "100%", marginTop: 6, fontWeight: 700 }} />
-                <div style={{ display: "flex", gap: 4, marginTop: 10, alignItems: "center", minWidth: 0 }}>
-                  <span style={{ fontSize: 15, fontWeight: 700, color: F.plum }}>$</span>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={pd.price ? pd.price : ""}
-                    placeholder="0"
-                    onChange={e => {
-                      const v = e.target.value;
-                      setProductField(p, { price: v === "" ? null : (parseFloat(v) || 0) });
-                    }}
-                    style={{ ...inp, flex: 1, minWidth: 0, width: "100%", fontWeight: 700, fontSize: 15, padding: "7px 9px" }}
-                  />
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        <div style={{ marginTop: 18 }}>
-          <div style={{ ...sectionTitle, marginBottom: 8 }}>Bundle discounts (stacked)</div>
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 14 }}>
-            {mz.bundleDiscounts.map((d, i) => (
-              <div key={i} style={{ background: F.bg, border: `1px solid ${F.border}`, borderRadius: 8, padding: "8px 12px", display: "flex", alignItems: "center", gap: 8 }}>
-                <input type="number" min="2" max="10" value={d.products} onChange={e => setDiscount(i, { products: parseInt(e.target.value) || 2 })} style={{ ...inp, width: 52, padding: "4px 8px", textAlign: "center" }} />
-                <span style={{ fontSize: 12, color: F.muted, fontWeight: 600 }}>products →</span>
-                <input type="number" min="0" max="100" value={d.pct} onChange={e => setDiscount(i, { pct: parseFloat(e.target.value) || 0 })} style={{ ...inp, width: 60, padding: "4px 8px", textAlign: "center" }} />
-                <span style={{ fontSize: 12, color: F.muted, fontWeight: 600 }}>% off</span>
-              </div>
-            ))}
-          </div>
-
-          <div style={{ background: F.bg, border: `1px solid ${F.border}`, borderRadius: 8, padding: "12px 14px" }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>Worked example</div>
-            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 10 }}>
-              {MONZ_PRODUCTS.map(p => (
-                <label key={p} style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", fontSize: 13, color: F.plum }}>
-                  <input type="checkbox" checked={bundlePick.has(p)} onChange={() => toggleBundle(p)} style={{ cursor: "pointer" }} />
-                  {p}
-                </label>
-              ))}
-            </div>
-            <div style={{ display: "flex", gap: 18, flexWrap: "wrap", fontSize: 13, alignItems: "baseline" }}>
-              <div><span style={{ color: F.muted, fontWeight: 600 }}>Subtotal</span> <strong style={{ color: F.plum }}>${bundleSubtotal.toFixed(2)}</strong></div>
-              <div><span style={{ color: F.muted, fontWeight: 600 }}>Bundle disc.</span> <strong style={{ color: F.pink }}>-${bundleDisc.toFixed(2)}</strong>{bundleRule && <span style={{ fontSize: 11, color: F.muted, marginLeft: 4 }}>({bundleRule.pct}% off, {bundleRule.products} products)</span>}</div>
-              <div style={{ marginLeft: "auto", fontSize: 16 }}><span style={{ color: F.muted, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", fontSize: 11 }}>Total</span> <strong style={{ color: F.plum, fontSize: 18 }}>${bundleTotal.toFixed(2)}</strong></div>
-            </div>
           </div>
         </div>
       </div>
@@ -1772,20 +1699,16 @@ function MonzMarketPage() {
 }
 
 /* ── Finance sub-page ───────────────────────────────────── */
-function MonzFinancePage() {
+function MonzFinancePage({ monz, setMonz }) {
   const [fin, setFin] = useState(DEFAULT_FINANCE);
-  const [monz, setMonz] = useState(DEFAULT_MONETIZATION);
   const [readyFin, setReadyFin] = useState(false);
+  const [bundlePick, setBundlePick] = useState(new Set(MONZ_PRODUCTS));
   const saveTimer = useRef(null);
 
   useEffect(() => { (async () => {
     const s = await loadState("faria-monz-finance-v1");
     setFin(mergeFinance(s));
     setReadyFin(true);
-  })(); }, []);
-  useEffect(() => { (async () => {
-    const s = await loadState("faria-ai-monetization-v1");
-    setMonz(mergeMonz(s));
   })(); }, []);
   useEffect(() => { if (!readyFin) return; clearTimeout(saveTimer.current); saveTimer.current = setTimeout(() => saveState("faria-monz-finance-v1", fin), 1000); return () => clearTimeout(saveTimer.current); }, [fin, readyFin]);
 
@@ -1797,6 +1720,18 @@ function MonzFinancePage() {
   const addDecision = () => setFin(prev => ({ ...prev, decisions: [DECISION_TEMPLATE(), ...prev.decisions] }));
   const updDecision = (id, patch) => setFin(prev => ({ ...prev, decisions: prev.decisions.map(d => d.id === id ? { ...d, ...patch } : d) }));
   const delDecision = (id) => setFin(prev => ({ ...prev, decisions: prev.decisions.filter(d => d.id !== id) }));
+
+  // SKU / pricing / bundle mutators (operate on the parent-owned monz)
+  const setProductField = (prod, patch) => setMonz(prev => ({ ...prev, products: { ...prev.products, [prod]: { ...prev.products[prod], ...patch } } }));
+  const setDiscount = (idx, patch) => setMonz(prev => ({ ...prev, bundleDiscounts: prev.bundleDiscounts.map((d, i) => i === idx ? { ...d, ...patch } : d) }));
+  const toggleBundle = (p) => setBundlePick(prev => { const n = new Set(prev); if (n.has(p)) n.delete(p); else n.add(p); return n; });
+
+  // Bundle calc (for the worked example)
+  const bundleArr = [...bundlePick];
+  const bundleSubtotal = bundleArr.reduce((s, p) => s + (Number(monz.products[p]?.price) || 0), 0);
+  const bundleRule = monz.bundleDiscounts.find(d => d.products === bundleArr.length);
+  const bundleDisc = bundleSubtotal * ((bundleRule?.pct || 0) / 100);
+  const bundleTotal = bundleSubtotal - bundleDisc;
 
   const card = { background: F.surface, border: `1px solid ${F.border}`, borderRadius: 12, padding: "18px 22px", marginBottom: 18, boxShadow: F.shadowSm };
   const sectionTitle = { fontSize: 11, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 };
@@ -1817,6 +1752,68 @@ function MonzFinancePage() {
 
   return (
     <>
+      {/* SKUs & pricing — moved from the Framework view; the source of truth for breakeven and uptake-scenario revenue */}
+      <div style={card}>
+        <div style={sectionTitle}>SKUs &amp; pricing</div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12 }}>
+          {MONZ_PRODUCTS.map(p => {
+            const pd = monz.products[p] || { sku: "", unit: "", price: 0 };
+            return (
+              <div key={p} style={{ background: F.bg, border: `1px solid ${F.border}`, borderRadius: 10, padding: "14px 16px" }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em" }}>{p}</div>
+                <input value={pd.sku} onChange={e => setProductField(p, { sku: e.target.value })} style={{ ...inp, width: "100%", marginTop: 6, fontWeight: 700 }} />
+                <div style={{ display: "flex", gap: 4, marginTop: 10, alignItems: "center", minWidth: 0 }}>
+                  <span style={{ fontSize: 15, fontWeight: 700, color: F.plum }}>$</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={pd.price ? pd.price : ""}
+                    placeholder="0"
+                    onChange={e => {
+                      const v = e.target.value;
+                      setProductField(p, { price: v === "" ? null : (parseFloat(v) || 0) });
+                    }}
+                    style={{ ...inp, flex: 1, minWidth: 0, width: "100%", fontWeight: 700, fontSize: 15, padding: "7px 9px" }}
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div style={{ marginTop: 18 }}>
+          <div style={{ ...sectionTitle, marginBottom: 8 }}>Bundle discounts (stacked)</div>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 14 }}>
+            {monz.bundleDiscounts.map((d, i) => (
+              <div key={i} style={{ background: F.bg, border: `1px solid ${F.border}`, borderRadius: 8, padding: "8px 12px", display: "flex", alignItems: "center", gap: 8 }}>
+                <input type="number" min="2" max="10" value={d.products} onChange={e => setDiscount(i, { products: parseInt(e.target.value) || 2 })} style={{ ...inp, width: 52, padding: "4px 8px", textAlign: "center" }} />
+                <span style={{ fontSize: 12, color: F.muted, fontWeight: 600 }}>products →</span>
+                <input type="number" min="0" max="100" value={d.pct} onChange={e => setDiscount(i, { pct: parseFloat(e.target.value) || 0 })} style={{ ...inp, width: 60, padding: "4px 8px", textAlign: "center" }} />
+                <span style={{ fontSize: 12, color: F.muted, fontWeight: 600 }}>% off</span>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ background: F.bg, border: `1px solid ${F.border}`, borderRadius: 8, padding: "12px 14px" }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>Worked example</div>
+            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 10 }}>
+              {MONZ_PRODUCTS.map(p => (
+                <label key={p} style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", fontSize: 13, color: F.plum }}>
+                  <input type="checkbox" checked={bundlePick.has(p)} onChange={() => toggleBundle(p)} style={{ cursor: "pointer" }} />
+                  {p}
+                </label>
+              ))}
+            </div>
+            <div style={{ display: "flex", gap: 18, flexWrap: "wrap", fontSize: 13, alignItems: "baseline" }}>
+              <div><span style={{ color: F.muted, fontWeight: 600 }}>Subtotal</span> <strong style={{ color: F.plum }}>${bundleSubtotal.toFixed(2)}</strong></div>
+              <div><span style={{ color: F.muted, fontWeight: 600 }}>Bundle disc.</span> <strong style={{ color: F.pink }}>-${bundleDisc.toFixed(2)}</strong>{bundleRule && <span style={{ fontSize: 11, color: F.muted, marginLeft: 4 }}>({bundleRule.pct}% off, {bundleRule.products} products)</span>}</div>
+              <div style={{ marginLeft: "auto", fontSize: 16 }}><span style={{ color: F.muted, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", fontSize: 11 }}>Total</span> <strong style={{ color: F.plum, fontSize: 18 }}>${bundleTotal.toFixed(2)}</strong></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div style={card}>
         <div style={sectionTitle}>Cost inputs</div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 14 }}>

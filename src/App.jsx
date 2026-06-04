@@ -1573,8 +1573,21 @@ function MonzCompetitivePage() {
     .map(m => ({ m, n: comp.competitors.filter(c => (c.aiModel || []).includes(m)).length }))
     .filter(x => x.n > 0);
 
+  const openAndScrollTo = (id) => {
+    if (!expanded.has(id)) setExpanded(prev => new Set(prev).add(id));
+    setTimeout(() => {
+      const el = document.getElementById(`comp-card-${id}`);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 60);
+  };
+
   return (
     <>
+      <style>{`
+        .comp-row { transition: background 0.12s ease; }
+        .comp-row:hover { background: ${F.lightYellow}55 !important; }
+      `}</style>
+
       <div style={card}>
         <div style={sectionTitle}>Snapshot</div>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
@@ -1592,6 +1605,55 @@ function MonzCompetitivePage() {
         </div>
       </div>
 
+      {/* Comparative table — at-a-glance scan of all competitors. Click any row to expand its card below. */}
+      {comp.competitors.length > 0 && (
+        <div style={card}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 10 }}>
+            <div style={sectionTitle}>Comparative table</div>
+            <span style={{ fontSize: 11, color: F.muted2, fontStyle: "italic" }}>Click a row to jump to that competitor's details below</span>
+          </div>
+          <div style={{ overflowX: "auto", border: `1px solid ${F.border}`, borderRadius: 8 }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+              <thead>
+                <tr style={{ background: F.bg }}>
+                  <th style={{ textAlign: "left", padding: "10px 14px", fontSize: 10.5, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em", borderBottom: `1px solid ${F.border}`, width: "26%" }}>Name</th>
+                  <th style={{ textAlign: "left", padding: "10px 14px", fontSize: 10.5, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em", borderBottom: `1px solid ${F.border}`, width: "34%" }}>AI model(s)</th>
+                  <th style={{ textAlign: "left", padding: "10px 14px", fontSize: 10.5, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em", borderBottom: `1px solid ${F.border}` }}>Pricing</th>
+                </tr>
+              </thead>
+              <tbody>
+                {comp.competitors.map((c, i) => (
+                  <tr
+                    key={c.id}
+                    className="comp-row"
+                    onClick={() => openAndScrollTo(c.id)}
+                    style={{
+                      borderBottom: i === comp.competitors.length - 1 ? "none" : `1px solid ${F.border}`,
+                      cursor: "pointer",
+                      background: i % 2 === 0 ? F.surface : F.bg,
+                    }}
+                  >
+                    <td style={{ padding: "12px 14px", color: F.plum, fontWeight: 700, verticalAlign: "top" }}>{c.name || <span style={{ color: F.muted2, fontStyle: "italic", fontWeight: 500 }}>(unnamed)</span>}</td>
+                    <td style={{ padding: "12px 14px", verticalAlign: "top" }}>
+                      {(c.aiModel || []).length === 0 ? (
+                        <span style={{ color: F.muted2 }}>—</span>
+                      ) : (
+                        <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+                          {(c.aiModel || []).map(m => (
+                            <span key={m} style={{ fontSize: 10.5, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: F.lightYellow, color: F.plum, whiteSpace: "nowrap" }}>{m}</span>
+                          ))}
+                        </div>
+                      )}
+                    </td>
+                    <td style={{ padding: "12px 14px", color: F.muted, verticalAlign: "top", lineHeight: 1.45 }}>{c.pricing || <span style={{ color: F.muted2 }}>—</span>}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
       <div style={{ marginBottom: 14, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
         <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: F.plum }}>Competitors ({total})</h2>
         <button onClick={addCompetitor} style={bt("primary")}>+ Add competitor</button>
@@ -1606,7 +1668,7 @@ function MonzCompetitivePage() {
       {comp.competitors.map(c => {
         const open = expanded.has(c.id);
         return (
-          <div key={c.id} style={card}>
+          <div key={c.id} id={`comp-card-${c.id}`} style={card}>
             <div onClick={() => toggle(c.id)} style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", userSelect: "none", flexWrap: "wrap" }}>
               <span style={{ color: F.plum, fontSize: 11, transform: open ? "rotate(90deg)" : "none", transition: "transform 0.15s" }}>▶</span>
               <div style={{ flex: 1, minWidth: 160, fontSize: 15, fontWeight: 700, color: F.plum }}>{c.name || <span style={{ color: F.muted2, fontStyle: "italic", fontWeight: 500 }}>(unnamed competitor)</span>}</div>
@@ -1695,32 +1757,6 @@ function MonzCompetitivePage() {
           </div>
         );
       })}
-
-      {comp.competitors.length > 0 && (
-        <div style={card}>
-          <div style={sectionTitle}>Comparative table</div>
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12.5 }}>
-              <thead>
-                <tr style={{ background: F.bg }}>
-                  {["Name", "AI model(s)", "Pricing"].map(h => (
-                    <th key={h} style={{ textAlign: "left", padding: "8px 10px", fontSize: 10.5, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em", borderBottom: `1px solid ${F.border}` }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {comp.competitors.map(c => (
-                  <tr key={c.id} style={{ borderBottom: `1px solid ${F.border}` }}>
-                    <td style={{ padding: "8px 10px", color: F.plum, fontWeight: 600 }}>{c.name || "—"}</td>
-                    <td style={{ padding: "8px 10px", color: F.muted }}>{(c.aiModel || []).join(", ") || "—"}</td>
-                    <td style={{ padding: "8px 10px", color: F.muted }}>{c.pricing || "—"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
 
       <div style={card}>
         <div style={sectionTitle}>Benchmark pricing notes</div>

@@ -414,6 +414,48 @@ const DEFAULT_COMPETITIVE = {
       sourceUrl: "",
       notes: "Standalone per-seat freemium (teacher tool); enterprise tier for districts. Common buyer critique is the \"standalone AI tax\" — districts pay for AI on top of their existing SIS/LMS/gradebook, disconnected from their core data.",
     },
+    {
+      id: "coursera-coach",
+      name: "Coursera (Coursera Coach)",
+      aiModel: ["Bundled (no extra charge)", "Tiered freemium"],
+      pricing: "Bundled into Coursera Plus (~$59/mo or $399/yr)",
+      pricingDetails: "Coursera Coach included in Coursera Plus: $59/month or $399/year (frequently discounted to ~$199–299/year)\nAlso included in Coursera for Teams/Enterprise (B2B) — custom / per-seat pricing\nEnterprise tier adds AI-assisted course building",
+      essentialFeatures: "Coursera Coach included in Coursera Plus — no separate AI charge",
+      proFeatures: "Enterprise tier adds AI-assisted course building",
+      strengths: "AI positioned as a value-add inside an existing subscription rather than a priced line item",
+      weaknesses: "",
+      lastReviewed: "2026-06-01",
+      sourceUrl: "",
+      notes: "AI tutor bundled into the existing content subscription (consumer) and into the B2B tiers; no separate AI charge. AI (conceptual Q&A, next-step suggestions, mock-interview role-play) is positioned as a value-add inside an existing subscription rather than a priced line item.",
+    },
+    {
+      id: "quizlet",
+      name: "Quizlet",
+      aiModel: ["Tiered freemium"],
+      pricing: "Quizlet Plus ~$7.99/mo or ~$36–45/yr",
+      pricingDetails: "Quizlet Plus: ~$7.99/month or ~$36–45/year (figures vary by source and promotion)\nFree tier exists but with stricter limits than in prior years",
+      essentialFeatures: "Free tier (stricter limits than prior years)",
+      proFeatures: "Q-Chat tutor, Magic Notes auto-generation (Plus-only)",
+      strengths: "AI features are explicitly the differentiator pushing more capability behind the paywall",
+      weaknesses: "Free tier deliberately tightened to drive upgrades — could create friction with cost-sensitive learners",
+      lastReviewed: "2026-06-01",
+      sourceUrl: "",
+      notes: "Consumer freemium; AI features gated behind the paid tier. AI features (Q-Chat tutor, Magic Notes auto-generation) are Plus-only. Free tier deliberately tightened to drive upgrades.",
+    },
+    {
+      id: "google-for-education-gemini",
+      name: "Google for Education (Gemini)",
+      aiModel: ["Per-seat", "Per-student/institution", "Tiered freemium"],
+      pricing: "~$24–36/user/month (educator add-on)",
+      pricingDetails: "Gemini Education: ~$24/month or $192/year per user\nGemini Education Premium: ~$36/month or $288/year per user\nStudents over 18: free access without either plan\nSeparate Gemini Education add-on still required for Workspace for Education customers as of 2026\n(Figures date from May 2024 launch — re-verify before quoting)",
+      essentialFeatures: "Free Gemini access for students over 18",
+      proFeatures: "Gemini Education / Gemini Education Premium add-ons for educators / staff",
+      strengths: "",
+      weaknesses: "Notable contrast with Google's commercial Workspace, where standalone Gemini was retired and bundled into the base plan — education kept it as a paid add-on. Tension with the \"standalone AI tax\" critique on the education side.",
+      lastReviewed: "2026-06-01",
+      sourceUrl: "",
+      notes: "Per-user add-on for institutions (unlike commercial Workspace, where Gemini was folded into the base price); free student access. Notable contrast: in education Google kept Gemini as a paid add-on while making student access free.",
+    },
 
     // ── Broader B2B SaaS ──
     {
@@ -513,6 +555,34 @@ const DEFAULT_COMPETITIVE = {
       lastReviewed: "2026-06-01",
       sourceUrl: "",
       notes: "Bundled at no extra charge into existing paid plans; standalone and premium add-on options exist separately. Stated rationale: \"we want all customers to use all our AI features, not just a selected few.\" Federated approach across own and third-party models.",
+    },
+    {
+      id: "notion-ai",
+      name: "Notion (Notion AI)",
+      aiModel: ["Bundled (no extra charge)", "Consumption/credits", "Tiered freemium"],
+      pricing: "Bundled into Business ($20/user/mo) + credits for agents",
+      pricingDetails: "Free and Plus ($10/user/month annual): limited trial AI responses only — full AI not purchasable as a separate add-on anymore\nBusiness ($20/user/month, ~$15 annual depending on source): full Notion AI bundled in (AI Agents, Ask Notion)\nEnterprise: custom\nCustom Agents: bill via credits at $10 per 1,000 Notion credits (from May 4, 2026), on top of Business/Enterprise",
+      essentialFeatures: "Free / Plus tiers — limited trial AI responses only",
+      proFeatures: "Business tier bundles full AI Agents + Ask Notion; Custom Agents priced via credits",
+      strengths: "Retired the standalone ~$8–10/user/mo AI add-on (May 2025) and moved full AI into the Business tier — clean line in the sand. Credits add a usage layer for advanced agents.",
+      weaknesses: "Solo users who only wanted AI were pushed from ~$18/seat (Plus + add-on) up to the Business plan",
+      lastReviewed: "2026-06-01",
+      sourceUrl: "",
+      notes: "Evolved from a flat per-user add-on to bundled-into-a-higher-tier, plus credits for advanced agents. The standalone ~$8–10/user/month AI add-on was retired in May 2025. Illustrates retiring a standalone AI line in favor of bundling into a higher-priced tier.",
+    },
+    {
+      id: "google-workspace-gemini",
+      name: "Google (Workspace / Gemini)",
+      aiModel: ["Bundled (no extra charge)"],
+      pricing: "Bundled into Workspace + ~16–22% base-plan price uplift",
+      pricingDetails: "Since January 2025: Gemini bundled into paid Workspace plans at no separate charge\nBase prices raised ~16–22% (e.g. Business Standard $12 → $14/user/month)\nFormer standalone Gemini Business ($20) and Gemini Enterprise ($30) add-ons discontinued for new purchases\nSome advanced pieces remain separate (e.g. NotebookLM Enterprise; automation execution allowances vary by tier)",
+      essentialFeatures: "Gemini bundled into all paid Workspace plans",
+      proFeatures: "NotebookLM Enterprise + tiered automation execution allowances (separate)",
+      strengths: "Same \"embed AI in the base price\" mechanic as Adobe and Zoom — avoids a visible AI surcharge. Existing add-on customers saw costs drop.",
+      weaknesses: "Buyers who never wanted AI now pay more for a capability they may not use — one cited analysis found fewer than half of seats used AI measurably, yet all were charged",
+      lastReviewed: "2026-06-01",
+      sourceUrl: "",
+      notes: "AI folded into the base subscription with a price uplift; standalone add-on discontinued. Same \"embed AI in the base price\" mechanic as Adobe and Zoom. Buyers who previously paid for the add-on saw costs drop; buyers who never wanted AI now pay more for a capability they may not use.",
     },
     {
       id: "zendesk",
@@ -3058,324 +3128,412 @@ function FairUseExample({ monz, setMonz }) {
   );
 }
 
-/* ── Release Handoff Page ─────────────────────────────────
-   Static framework / explainer page. Documents the AAA / AA / A
-   release tiering, the ProductBoard 2.0 hub, the monthly per-product
-   sync, and a worked example timeline + retro metrics for an AAA
-   release (AI Lead Scoring). No data persistence — pure content.
-   Styles live in a single <style> block so we can use media queries
-   for the retro grids and timeline. */
-function ReleaseHandoffPage() {
-  const styles = `
-    .rh-wrap { max-width: 940px; margin: 0 auto; }
-    .rh-hero { background: ${F.gradient}; border-radius: 16px; padding: 40px 32px; position: relative; overflow: hidden; margin-bottom: 28px; }
-    .rh-hero-t1 { position: absolute; height: 14px; border-radius: 9999px; background: rgba(250,229,159,0.55); width: 320px; top: 28px; right: -70px; }
-    .rh-hero-t2 { position: absolute; height: 14px; border-radius: 9999px; background: rgba(246,175,222,0.45); width: 200px; bottom: 32px; right: 40px; }
-    .rh-hero-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: ${F.plum}; opacity: 0.7; margin: 0 0 8px; position: relative; z-index: 2; }
-    .rh-hero h1 { font-size: 32px; font-weight: 700; line-height: 1.15; margin: 0; color: ${F.plum}; max-width: 520px; position: relative; z-index: 2; }
-    .rh-hero p { font-size: 15px; font-weight: 500; line-height: 1.3; margin: 10px 0 0; color: ${F.plum}; opacity: 0.85; max-width: 480px; position: relative; z-index: 2; }
+/* ── Prioritization (Product Lifecycle) Page ──────────────
+   Mirrors the AI-First Product Lifecycle deck — one continuous loop
+   with three phases (Prioritise → Build → Adopt) around Schools at
+   the core. Click a phase node to expand a full panel with stages,
+   activities, stakeholders, the old-way → AI-first shift, and the
+   schools-engagement model.
+   Source: ~/Desktop/faria-product-lifecycle2.html */
+function PrioritizationPage() {
+  const [open, setOpen] = useState(null); // null | "prioritise" | "build" | "adopt"
+  const panelRef = useRef(null);
+  const cycleRef = useRef(null);
 
-    .rh-section { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: ${F.lightPlum}; margin: 36px 0 16px; }
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === "Escape" && open) setOpen(null); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
 
-    .rh-tier-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
-    .rh-tier { border-radius: 12px; padding: 22px 20px; min-height: 170px; position: relative; }
-    .rh-tier-badge { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; padding: 4px 9px; border-radius: 4px; margin-bottom: 12px; }
-    .rh-tier-name { font-size: 20px; font-weight: 700; line-height: 1.15; margin: 0 0 8px; }
-    .rh-tier-desc { font-size: 12px; font-weight: 500; line-height: 1.35; opacity: 0.85; }
-    .rh-tier-flow { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; margin-top: 16px; color: ${F.plum}; }
-    .rh-dot { width: 28px; height: 28px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; background: ${F.plum}; color: ${F.yellow}; }
-    .rh-tier-aaa { background: ${F.yellow}; color: ${F.plum}; }
-    .rh-tier-aaa .rh-tier-badge { background: ${F.plum}; color: ${F.yellow}; }
-    .rh-tier-aa { background: ${F.orange}; color: ${F.plum}; }
-    .rh-tier-aa .rh-tier-badge { background: ${F.plum}; color: ${F.yellow}; }
-    .rh-tier-a { background: ${F.surface}; color: ${F.plum}; border: 0.5px solid rgba(55,2,60,0.15); }
-    .rh-tier-a .rh-tier-badge { background: ${F.lightPlum}; color: ${F.paper}; }
-    .rh-tier-a .rh-dot { background: ${F.lightPlum}; color: ${F.paper}; }
-
-    .rh-hub { background: ${F.surface}; border-radius: 16px; padding: 28px 32px; position: relative; overflow: hidden; border: 0.5px solid rgba(55,2,60,0.15); }
-    .rh-hub-t1 { position: absolute; right: -40px; top: 30px; width: 260px; height: 12px; background: ${F.yellow}; border-radius: 9999px; opacity: 0.3; }
-    .rh-hub h2 { font-size: 24px; font-weight: 700; line-height: 1.15; margin: 0 0 4px; color: ${F.plum}; position: relative; z-index: 2; }
-    .rh-hub .rh-hub-desc { font-size: 14px; font-weight: 500; margin: 0 0 22px; color: ${F.lightPlum}; position: relative; z-index: 2; }
-    .rh-hub-flow { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; position: relative; z-index: 2; margin-bottom: 24px; }
-    .rh-hub-pill { background: ${F.plum}; color: ${F.yellow}; padding: 11px 20px; border-radius: 9999px; font-size: 14px; font-weight: 700; }
-    .rh-hub-arrow { color: ${F.plum}; font-size: 22px; font-weight: 700; }
-    .rh-hub-receivers { display: flex; gap: 8px; flex-wrap: wrap; }
-    .rh-hub-receiver { background: ${F.paper}; border: 0.5px solid rgba(55,2,60,0.25); color: ${F.plum}; padding: 9px 16px; border-radius: 9999px; font-size: 13px; font-weight: 600; }
-
-    .rh-pkg-title { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: ${F.lightPlum}; margin: 0 0 12px; position: relative; z-index: 2; }
-    .rh-pkg-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; position: relative; z-index: 2; }
-    .rh-pkg-item { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; font-weight: 500; color: ${F.plum}; line-height: 1.35; padding: 4px 0; }
-    .rh-pkg-bullet { width: 6px; height: 6px; border-radius: 50%; background: ${F.pink}; flex-shrink: 0; margin-top: 7px; }
-    .rh-pkg-label { font-weight: 700; color: ${F.plum}; }
-    .rh-pkg-desc { color: ${F.lightPlum}; opacity: 0.85; }
-
-    .rh-prods { display: flex; gap: 12px; flex-wrap: wrap; }
-    .rh-pchip { display: flex; align-items: center; gap: 10px; background: ${F.surface}; border: 0.5px solid rgba(55,2,60,0.15); border-radius: 9999px; padding: 8px 18px 8px 8px; }
-    .rh-picon { width: 32px; height: 32px; border-radius: 50%; background: ${F.plum}; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-    .rh-pinit { font-size: 11px; font-weight: 800; background: ${F.gradientIcon}; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent; }
-    .rh-pname { font-size: 13px; font-weight: 700; color: ${F.plum}; }
-
-    .rh-divider { height: 0.5px; background: rgba(55,2,60,0.15); margin: 32px 0; }
-
-    .rh-subhero { background: ${F.gradient}; border-radius: 16px; padding: 26px 28px; position: relative; overflow: hidden; }
-    .rh-subhero-track { position: absolute; height: 12px; border-radius: 9999px; background: rgba(250,229,159,0.55); width: 260px; top: 26px; right: -55px; }
-    .rh-sh-header { display: flex; align-items: center; gap: 14px; position: relative; z-index: 2; }
-    .rh-sh-icon { width: 44px; height: 44px; border-radius: 50%; background: ${F.plum}; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-    .rh-sh-icon-text { font-size: 15px; font-weight: 800; background: ${F.gradientIcon}; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent; }
-    .rh-sh-eyebrow { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: ${F.plum}; opacity: 0.7; margin: 0 0 4px; }
-    .rh-subhero h2 { font-size: 24px; font-weight: 700; line-height: 1.15; margin: 0; color: ${F.plum}; }
-    .rh-sh-meta { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; position: relative; z-index: 2; }
-    .rh-chip-dark { background: ${F.plum}; color: ${F.yellow}; padding: 7px 13px; border-radius: 9999px; font-size: 12px; font-weight: 700; }
-    .rh-chip-light { background: rgba(55,2,60,0.15); color: ${F.plum}; padding: 7px 13px; border-radius: 9999px; font-size: 12px; font-weight: 600; }
-
-    .rh-phase { display: grid; grid-template-columns: 120px 1fr; gap: 18px; position: relative; padding-bottom: 18px; }
-    .rh-phase:last-child { padding-bottom: 0; }
-    .rh-phase-time { padding-top: 18px; text-align: right; padding-right: 4px; }
-    .rh-phase-when { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: ${F.lightPlum}; opacity: 0.7; }
-    .rh-phase-date { font-size: 14px; font-weight: 700; color: ${F.plum}; line-height: 1.15; margin-top: 3px; }
-    .rh-phase-card { border-radius: 12px; padding: 16px 18px; position: relative; background: ${F.surface}; border: 0.5px solid rgba(55,2,60,0.15); }
-    .rh-phase-card.rh-pink { background: rgba(246,175,222,0.5); border-color: rgba(231,55,172,0.35); }
-    .rh-phase-card.rh-orange { background: rgba(251,197,161,0.6); border-color: rgba(247,139,67,0.4); }
-    .rh-phase-card.rh-yellow { background: rgba(250,229,159,0.75); border-color: rgba(247,211,95,0.5); }
-    .rh-phase-card.rh-gradient { background: ${F.gradient}; border-color: transparent; }
-    .rh-phase-header { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
-    .rh-phase-marker { width: 28px; height: 28px; border-radius: 50%; background: ${F.plum}; color: ${F.yellow}; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; flex-shrink: 0; }
-    .rh-phase-title { font-size: 16px; font-weight: 700; line-height: 1.15; color: ${F.plum}; }
-    .rh-phase-body { font-size: 13px; font-weight: 500; line-height: 1.4; margin: 4px 0 12px; color: ${F.plum}; }
-    .rh-phase-tags { display: flex; gap: 6px; flex-wrap: wrap; }
-    .rh-tag { padding: 4px 10px; border-radius: 9999px; font-size: 11px; font-weight: 700; letter-spacing: 0.3px; background: ${F.plum}; color: ${F.yellow}; }
-    .rh-tag-mute { background: rgba(55,2,60,0.12); color: ${F.plum}; border: 0.5px solid rgba(55,2,60,0.2); }
-
-    .rh-retro-intervals { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
-    .rh-retro-interval { background: ${F.surface}; border: 0.5px solid rgba(55,2,60,0.15); border-radius: 10px; padding: 14px; text-align: center; }
-    .rh-ri-label { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: ${F.lightPlum}; opacity: 0.7; }
-    .rh-ri-value { font-size: 22px; font-weight: 800; color: ${F.plum}; margin-top: 4px; line-height: 1.1; }
-    .rh-ri-sub { font-size: 11px; font-weight: 500; color: ${F.lightPlum}; opacity: 0.8; margin-top: 4px; }
-
-    .rh-retro-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
-    .rh-retro { border-radius: 12px; padding: 20px; }
-    .rh-retro-mkt { background: ${F.yellow}; color: ${F.plum}; }
-    .rh-retro-sales { background: ${F.orange}; color: ${F.plum}; }
-    .rh-retro-product { background: ${F.lightPink}; color: ${F.plum}; }
-    .rh-retro-ic { width: 32px; height: 32px; border-radius: 50%; background: rgba(55,2,60,0.15); display: flex; align-items: center; justify-content: center; margin-bottom: 12px; font-size: 14px; font-weight: 800; color: ${F.plum}; }
-    .rh-retro h3 { font-size: 15px; font-weight: 700; margin: 0 0 14px; line-height: 1.15; color: ${F.plum}; }
-    .rh-rmetric { margin-bottom: 14px; padding-bottom: 14px; border-bottom: 0.5px solid rgba(55,2,60,0.18); }
-    .rh-rmetric:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
-    .rh-rm-label { font-size: 12px; font-weight: 700; color: ${F.plum}; line-height: 1.25; margin-bottom: 4px; }
-    .rh-rm-eg { font-size: 11px; font-weight: 500; color: ${F.plum}; opacity: 0.85; line-height: 1.4; }
-    .rh-rm-target { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px; background: ${F.plum}; color: ${F.yellow}; margin-top: 6px; letter-spacing: 0.3px; }
-
-    .rh-grule { height: 4px; border-radius: 2px; background: ${F.gradient}; margin: 36px 0 0; opacity: 0.6; }
-    .rh-footer { text-align: center; font-size: 11px; color: ${F.lightPlum}; opacity: 0.6; margin-top: 20px; font-weight: 500; letter-spacing: 0.5px; }
-
-    @media (max-width: 760px) {
-      .rh-tier-row, .rh-retro-row { grid-template-columns: 1fr; }
-      .rh-pkg-grid { grid-template-columns: 1fr; }
-      .rh-retro-intervals { grid-template-columns: 1fr 1fr; }
-      .rh-phase { grid-template-columns: 90px 1fr; gap: 12px; }
-      .rh-hero h1 { font-size: 24px; }
+  useEffect(() => {
+    if (open && panelRef.current) {
+      setTimeout(() => panelRef.current.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
+    } else if (!open && cycleRef.current) {
+      cycleRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
     }
+  }, [open]);
+
+  const DATA = {
+    prioritise: {
+      cls: "prioritise", accent: "#E2A800", soft: "rgba(247,211,95,0.28)",
+      eyebrow: "Phase 01 · Set the direction", title: "Prioritise",
+      lede: "Where leadership sets a revenue-driven vision. ExCo, SLT and Sales align on the few bets that will win the year, then sharpen them quarter by quarter from live signal.",
+      horizon: "Horizon: annual vision, re-cut quarterly, tracked monthly",
+      parallel: null,
+      stages: [
+        { n: "Vision & strategic themes", wk: "Annual · Quarterly · Monthly", p: "ExCo, SLT and Sales agree the 3–5 themes for the year, refine them each quarter, and check progress monthly. Big areas, not features yet.", tools: [] },
+        { n: "Revenue & sales-signal review", wk: "Quarterly", p: "We pressure-test each theme against pipeline, churn risk and expansion. If a bet doesn't move revenue, it doesn't make the cut.", tools: ["Salesforce", "Planhat"] },
+        { n: "AI-assisted opportunity scan", wk: "Always-on", p: "AI pulls from Salesforce (pipeline/win-loss), Pendo (product usage) and Planhat (health/expansion) and ranks opportunities — including by region — so the room starts from evidence, not opinion.", tools: ["Salesforce", "Pendo", "Planhat", "Regional growth"] },
+        { n: "Quarter re-cut & commit", wk: "Per quarter", p: "Themes move up or down as the market shifts. We commit the next quarter's focus and hand a clear brief to the build pods.", tools: [] },
+      ],
+      activities: [
+        { ic: "📊", nm: "Annual strategy offsite", cad: "Yearly", d: "ExCo + SLT set the year's themes and revenue targets." },
+        { ic: "💼", nm: "Quarterly Business Review", cad: "Quarterly", d: "Re-cut themes against revenue signal; commit the next quarter." },
+        { ic: "📞", nm: "Monthly product–revenue call", cad: "Monthly", d: "Product + Sales review pipeline and pull-through on committed bets." },
+        { ic: "🤖", nm: "AI opportunity digest", cad: "Continuous", d: "Auto-generated ranked opportunities from Salesforce, Pendo, Planhat." },
+        { ic: "🏫", nm: "School advisory panel", cad: "Quarterly", d: "Core user-group schools review the theme shortlist and rank what matters to them." },
+        { ic: "🔔", nm: "Top-request review", cad: "Monthly", d: "We sort the biggest school feature requests by segment and revenue impact." },
+      ],
+      build_tools: "Tools to build: an automated prioritisation dashboard that unifies Salesforce + Pendo + Planhat into one ranked, region-aware view, refreshed monthly and quarterly.",
+      stakeholders: [
+        { n: "ExCo", ic: "♙", t: "lead" }, { n: "SLT", ic: "🧝", t: "lead" }, { n: "VP Sales", ic: "📈", t: "lead" },
+        { n: "Product leadership", ic: "🧩", t: "" }, { n: "Finance / RevOps", ic: "💷", t: "" },
+        { n: "Core user groups (schools)", ic: "🏫", t: "school" },
+      ],
+      shift: [
+        { old: "Planning off gut feel and the loudest voice", new: "Evidence-ranked, region-aware opportunities before the room meets", ai: "AI SCAN" },
+        { old: "Weeks pulling data together for the strategy deck", new: "Live Salesforce + Pendo + Planhat synthesis on demand", ai: "AI SYNTH" },
+        { old: "Annual roadmap treated as fixed", new: "Rolling vision, re-cut every quarter against revenue signal", ai: "ROLLING" },
+      ],
+      school: "At Prioritise, schools tell us where to aim.",
+      schoolHow: "How we engage: standing advisory panels across our core user groups (not just lighthouse schools), plus segment-level usage and request data. How it shapes priorities: their goals and pain points feed the opportunity scan, so the themes we commit to are the ones our schools are asking for.",
+    },
+    build: {
+      cls: "build", accent: "#E06A2E", soft: "rgba(247,139,67,0.24)",
+      eyebrow: "Phase 02 · Make it real", title: "Build",
+      lede: "Our AI-first SDLC. Small pods turn a brief into shippable value, releasing something useful every week. Discovery, design and build run in parallel — not in sequence.",
+      horizon: "Horizon: 1–2 week sprints, weekly releases",
+      parallel: "These stages overlap and run continuously. While the pod is in a build sprint, the PM, design and research are already on next week's discovery. Each week several of these happen at once.",
+      stages: [
+        { n: "Discovery & user research", wk: "Wk 1 · ongoing", p: "The PM works with schools, support and design to validate the problem. AI clusters interviews and tickets so patterns surface in hours.", tools: ["School interviews", "Support tickets"] },
+        { n: "Spec & design with AI", wk: "Overlapping", p: "AI accelerates specs, edge-case mapping and prototype UI. The pod reviews and decides — judgement stays human, drafting gets automated.", tools: ["AI spec drafts", "Prototype UI"] },
+        { n: "Pod build sprint", wk: "1–2 wks", p: "A small cross-functional pod owns the slice end to end. AI in the SDLC handles boilerplate, tests and review assists. Two weeks only by exception.", tools: ["AI SDLC", "CI / tests"] },
+        { n: "Weekly release", wk: "Every wk", p: "Ship a usable increment weekly, designed so schools can adopt it with little hand-holding. Smaller surface, tighter feedback, value lands sooner.", tools: ["Release notes", "In-app guides"] },
+      ],
+      activities: [
+        { ic: "🔁", nm: "Pod stand-up", cad: "Daily", d: "Pod syncs on the slice; blockers cleared same day." },
+        { ic: "🚢", nm: "Weekly release & demo", cad: "Weekly", d: "Ship the increment and demo it, including to pilot schools." },
+        { ic: "🔬", nm: "Rolling discovery", cad: "Continuous", d: "PM + design + research run next week's discovery in parallel." },
+        { ic: "🗣", nm: "Pilot-school check-in", cad: "Weekly", d: "Walk pilots through what shipped; capture friction live." },
+        { ic: "📱", nm: "Prototype walkthrough", cad: "Per slice", d: "Show pilot schools the prototype before build and fold in their reactions." },
+        { ic: "✅", nm: "Pilot acceptance", cad: "At each release", d: "Pilot schools confirm the weekly increment works for them before wider rollout." },
+      ],
+      build_tools: "Tools to build: an AI-in-the-SDLC toolchain (spec/test/scaffold assists) plus a research-clustering tool that turns interviews and tickets into ranked themes in hours.",
+      stakeholders: [
+        { n: "Product Manager (pod)", ic: "🧩", t: "lead" }, { n: "Pod engineers", ic: "💻", t: "lead" }, { n: "QA", ic: "✅", t: "" },
+        { n: "Support team", ic: "🎧", t: "" }, { n: "Sales team", ic: "📈", t: "" }, { n: "Design & research", ic: "🎨", t: "" },
+        { n: "Pilot schools", ic: "🏫", t: "school" },
+      ],
+      shift: [
+        { old: "Large teams, big-bang releases every few months", new: "Small focused pods shipping a usable slice every week", ai: "PODS" },
+        { old: "Hand-written specs, tests and boilerplate", new: "AI drafts specs, tests and scaffolding; humans decide", ai: "AI SDLC" },
+        { old: "Research synthesised manually over weeks", new: "AI clusters school interviews & support tickets in hours", ai: "AI RESEARCH" },
+        { old: "Features need heavy onboarding to land", new: "Built so schools adopt with little hand-holding", ai: "EASY ADOPT" },
+      ],
+      school: "At Build, schools steer the slice in real time.",
+      schoolHow: "How we engage: a named set of pilot schools per pod, with weekly check-ins, shared prototypes and a direct feedback channel to the PM. How it shapes priorities: their reaction to each weekly increment decides what the pod builds next, so the backlog re-orders around real usage rather than assumptions.",
+    },
+    adopt: {
+      cls: "adopt", accent: "#C42b94", soft: "rgba(232,55,172,0.2)",
+      eyebrow: "Phase 03 · Land, expand, learn", title: "Adopt",
+      lede: "Where shipped value becomes school success and revenue. Product produces automated enablement; marketing focuses only on AAA campaigns; adoption signal feeds straight back into Prioritise.",
+      horizon: "Horizon: continuous, closes the loop",
+      parallel: null,
+      stages: [
+        { n: "Automated sales enablement", wk: "At release", p: "Each release auto-generates enablement — what shipped, who it's for, the pitch, the collateral — so Sales and Support are ready day one without waiting on a hand-off.", tools: ["Auto collateral"] },
+        { n: "Marketing — AAA campaigns only", wk: "Wk 1", p: "Marketing runs campaigns for the marquee AAA features. Everything else reaches Sales and Support directly through the automated collateral Product produces.", tools: ["AAA campaigns", "AI copy"] },
+        { n: "Enablement certifications", wk: "Per AAA feature", p: "For AAA features, we plan and auto-generate certification paths so the enablement team can certify Sales and Support quickly and consistently.", tools: ["Cert paths", "AI assessments"] },
+        { n: "Land & expand", wk: "Ongoing", p: "Schools onboard and adopt. We track activation and expansion and step in where adoption stalls.", tools: ["Pendo", "Salesforce"] },
+        { n: "Adoption signal → Prioritise", wk: "Continuous", p: "Activation, feature usage and expansion (Pendo) plus pipeline and win-loss (Salesforce) flow back as the freshest input to the next prioritisation cut. The loop closes.", tools: ["Pendo", "Salesforce"] },
+      ],
+      activities: [
+        { ic: "📦", nm: "Release enablement drop", cad: "At each release", d: "Auto-generated pitch + collateral pushed to Sales & Support." },
+        { ic: "📣", nm: "AAA campaign launch", cad: "Per AAA feature", d: "Marketing amplifies the marquee features only." },
+        { ic: "🎓", nm: "Enablement certification", cad: "Per AAA feature", d: "Sales/Support certified on AAA features via auto-built paths." },
+        { ic: "📡", nm: "Adoption signal review", cad: "Continuous", d: "Pendo + Salesforce signal reviewed and fed into Prioritise." },
+        { ic: "🏫", nm: "School onboarding & guidance", cad: "At each adoption", d: "In-product guidance and CS outreach walk schools into the new feature." },
+        { ic: "⭐", nm: "Reference & expansion calls", cad: "Ongoing", d: "Most-engaged schools join reference stories and expansion conversations." },
+      ],
+      build_tools: "Tools to build: an enablement generator (collateral + certification paths per AAA feature) and an adoption-signal pipeline that routes Pendo + Salesforce data into the prioritisation dashboard.",
+      stakeholders: [
+        { n: "VP Sales", ic: "📈", t: "lead" }, { n: "Marketing", ic: "📣", t: "lead" }, { n: "Sales enablement", ic: "🎓", t: "" },
+        { n: "Customer success", ic: "🤝", t: "" }, { n: "Support", ic: "🎧", t: "" }, { n: "Implementation", ic: "🔧", t: "" },
+        { n: "Product (owns deliverables)", ic: "🧩", t: "" }, { n: "Adopting schools", ic: "🏫", t: "school" },
+      ],
+      shift: [
+        { old: "Sales finds out about features after they ship", new: "Enablement auto-generated at release; Sales & Support ready day one", ai: "AUTO ENABLE" },
+        { old: "Marketing writes copy from scratch for everything", new: "Marketing runs AAA campaigns only; rest is automated collateral", ai: "AAA FOCUS" },
+        { old: "Certification is manual and inconsistent", new: "Auto-built certification paths per AAA feature", ai: "AUTO CERT" },
+        { old: "Adoption data sits in a dashboard nobody reads", new: "Pendo + Salesforce signal feeds the next prioritisation", ai: "CLOSED LOOP" },
+      ],
+      school: "At Adopt, schools become the signal for the next cycle.",
+      schoolHow: "How we engage: onboarding, in-product guidance and customer-success outreach, with the most engaged schools invited into reference and expansion conversations. How it shapes priorities: we read their activation and expansion behaviour in Pendo and Salesforce, and that evidence is the freshest input to the next Prioritise cut.",
+    },
+  };
+
+  const styles = `
+    .plc-stage { background: ${F.plum}; border-radius: 16px; position: relative; overflow: hidden; padding: 28px 24px 60px; color: ${F.paper}; font-family: 'Nunito Sans','Trebuchet MS',system-ui,sans-serif; }
+    .plc-stage::before { content: ""; position: absolute; width: 120%; height: 80%; right: -25%; bottom: -25%; background: ${F.gradient}; filter: blur(40px); opacity: 0.16; border-radius: 50%; pointer-events: none; }
+    .plc-stage::after { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at 20% 15%, rgba(247,211,95,0.06), transparent 40%); pointer-events: none; }
+    .plc-wrap { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; }
+    .plc-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 14px; flex-wrap: wrap; }
+    .plc-brand h1 { font-size: 23px; font-weight: 800; color: ${F.paper}; line-height: 1.1; margin: 0; }
+    .plc-brand h1 b { color: ${F.yellow}; font-weight: 800; }
+    .plc-legend { font-size: 12px; color: rgba(240,235,235,0.62); text-align: right; max-width: 300px; line-height: 1.45; }
+    .plc-legend b { color: ${F.paper}; }
+
+    .plc-cycle { position: relative; width: 100%; max-width: 720px; margin: 14px auto 4px; aspect-ratio: 1/0.96; }
+    .plc-connector { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; z-index: 1; }
+    .plc-node { position: absolute; width: 29%; aspect-ratio: 1/1; border-radius: 50%; cursor: pointer; z-index: 2; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: ${F.plum}; padding: 14px; transition: transform 0.4s cubic-bezier(.2,.8,.2,1), box-shadow 0.4s; box-shadow: 0 16px 40px -12px rgba(0,0,0,0.55); border: 2.5px solid rgba(55,2,60,0.12); font-family: 'Nunito Sans','Trebuchet MS',system-ui,sans-serif; }
+    .plc-node:hover { transform: translateY(-6px) scale(1.035); }
+    .plc-node .ph { font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; font-weight: 800; opacity: 0.62; }
+    .plc-node .nm { font-size: clamp(19px, 3vw, 27px); font-weight: 800; line-height: 1.05; margin: 3px 0 5px; }
+    .plc-node .sub { font-size: 11px; font-weight: 600; line-height: 1.25; opacity: 0.78; max-width: 90%; }
+    .plc-node .tl { margin-top: 8px; font-size: 10px; font-weight: 700; background: rgba(55,2,60,0.14); padding: 3px 9px; border-radius: 20px; }
+    .plc-n-prioritise { top: 0; left: 50%; transform: translateX(-50%); background: ${F.yellow}; }
+    .plc-n-prioritise:hover { transform: translateX(-50%) translateY(-6px) scale(1.035); }
+    .plc-n-build { bottom: 3%; left: 2%; background: ${F.orange}; }
+    .plc-n-adopt { bottom: 3%; right: 2%; background: ${F.pink}; color: #fff; border-color: rgba(255,255,255,0.18); }
+    .plc-n-adopt .ph, .plc-n-adopt .nm, .plc-n-adopt .sub { color: #fff; }
+    .plc-n-adopt .tl { background: rgba(255,255,255,0.2); }
+
+    .plc-core { position: absolute; top: 48%; left: 50%; transform: translate(-50%, -50%); width: 31%; aspect-ratio: 1/1; border-radius: 50%; background: ${F.paper}; z-index: 3; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 6%; box-shadow: 0 0 0 7px rgba(240,235,235,0.07), 0 0 0 15px rgba(240,235,235,0.035), 0 10px 30px rgba(0,0,0,0.4); }
+    .plc-core .ico { width: 46%; aspect-ratio: 1/1; line-height: 0; }
+    .plc-core .t { font-size: clamp(13px, 2vw, 18px); font-weight: 800; color: ${F.plum}; margin-top: 5px; }
+    .plc-core .s { font-size: clamp(8px, 1.1vw, 11px); font-weight: 700; color: ${F.lightPlum}; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 2px; }
+
+    .plc-cycle-cap { text-align: center; color: rgba(240,235,235,0.55); font-size: 12px; margin-top: 8px; font-weight: 600; }
+    .plc-cycle-cap b { color: ${F.lightPink}; }
+    .plc-hint { text-align: center; color: rgba(240,235,235,0.5); font-size: 12.5px; margin-top: 16px; font-weight: 600; }
+    .plc-hint b { color: ${F.yellow}; }
+
+    .plc-panel { margin-top: 28px; background: ${F.paper}; border-radius: 22px; overflow: hidden; box-shadow: 0 30px 70px -20px rgba(0,0,0,0.6); }
+    .plc-panel-top { padding: 26px 30px 22px; color: #fff; position: relative; }
+    .plc-panel-top.prioritise { background: linear-gradient(120deg, #F7D35F, #F7B53f); color: ${F.plum}; }
+    .plc-panel-top.build { background: linear-gradient(120deg, #F78B43, #F26C5a); }
+    .plc-panel-top.adopt { background: linear-gradient(120deg, ${F.pink}, #C42b94); }
+    .plc-panel-top .eyebrow { font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; font-weight: 800; opacity: 0.8; }
+    .plc-panel-top h2 { font-size: 30px; font-weight: 800; line-height: 1.08; margin: 4px 0 8px; font-family: 'Nunito Sans','Trebuchet MS',system-ui,sans-serif; }
+    .plc-lede { font-size: 14.5px; font-weight: 600; line-height: 1.45; max-width: 700px; opacity: 0.95; margin: 0; }
+    .plc-horizon { display: inline-block; margin-top: 14px; font-size: 12px; font-weight: 800; background: rgba(255,255,255,0.22); padding: 6px 13px; border-radius: 30px; }
+    .plc-panel-top.prioritise .plc-horizon { background: rgba(55,2,60,0.16); }
+    .plc-closeb { position: absolute; top: 18px; right: 20px; width: 34px; height: 34px; border-radius: 50%; border: none; background: rgba(255,255,255,0.22); color: inherit; font-size: 18px; cursor: pointer; font-weight: 700; line-height: 1; font-family: inherit; }
+    .plc-panel-top.prioritise .plc-closeb { background: rgba(55,2,60,0.14); }
+    .plc-closeb:hover { background: rgba(255,255,255,0.36); }
+
+    .plc-panel-body { padding: 24px 30px 32px; color: ${F.plum}; }
+    .plc-sec-title { font-size: 12px; letter-spacing: 0.13em; text-transform: uppercase; font-weight: 800; color: ${F.lightPlum}; margin: 0 0 13px; display: flex; align-items: center; gap: 9px; }
+    .plc-sec-title::after { content: ""; flex: 1; height: 1.5px; background: linear-gradient(90deg, rgba(85,40,89,0.3), transparent); }
+    .plc-sec-block { margin-bottom: 30px; }
+    .plc-parallel-note { background: rgba(247,139,67,0.12); border: 1.5px dashed var(--plc-accent); border-radius: 12px; padding: 11px 15px; font-size: 12.5px; font-weight: 700; color: ${F.plum}; margin-bottom: 16px; display: flex; gap: 9px; align-items: center; }
+    .plc-parallel-note .ic { font-size: 17px; flex: none; }
+
+    .plc-stages { display: grid; gap: 12px; }
+    .plc-stage-row { display: grid; grid-template-columns: 30px 1fr; gap: 14px; align-items: start; }
+    .plc-stage-row .dot { position: relative; display: flex; justify-content: center; padding-top: 4px; }
+    .plc-stage-row .dot i { width: 13px; height: 13px; border-radius: 50%; background: var(--plc-accent); box-shadow: 0 0 0 4px var(--plc-accent-soft); z-index: 2; }
+    .plc-stage-row .dot::before { content: ""; position: absolute; top: 10px; bottom: -16px; width: 2px; background: rgba(85,40,89,0.18); }
+    .plc-stage-row:last-child .dot::before { display: none; }
+    .plc-stage-row .card { background: #fff; border-radius: 13px; padding: 13px 16px; box-shadow: 0 3px 10px rgba(55,2,60,0.05); border-left: 3px solid var(--plc-accent); }
+    .plc-stage-row .card h4 { font-size: 15px; font-weight: 800; color: ${F.plum}; display: flex; justify-content: space-between; gap: 10px; align-items: baseline; margin: 0; font-family: 'Nunito Sans','Trebuchet MS',system-ui,sans-serif; }
+    .plc-stage-row .card h4 .wk { font-size: 10.5px; font-weight: 800; color: var(--plc-accent); background: var(--plc-accent-soft); padding: 3px 9px; border-radius: 20px; white-space: nowrap; }
+    .plc-stage-row .card p { font-size: 13px; color: #4a3a4c; line-height: 1.45; margin: 5px 0 0; font-weight: 500; }
+    .plc-stage-row .card .tools { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
+    .plc-stage-row .card .tools .t { font-size: 10.5px; font-weight: 800; padding: 3px 9px; border-radius: 7px; background: var(--plc-accent-soft); color: ${F.plum}; }
+
+    .plc-acts { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; }
+    @media (max-width: 680px) { .plc-acts { grid-template-columns: 1fr; } }
+    .plc-act { background: #fff; border-radius: 12px; padding: 12px 15px; box-shadow: 0 2px 8px rgba(55,2,60,0.05); border-top: 3px solid var(--plc-accent); display: flex; flex-direction: column; gap: 4px; }
+    .plc-act .h { display: flex; align-items: center; gap: 8px; }
+    .plc-act .h .ic { width: 28px; height: 28px; border-radius: 8px; background: var(--plc-accent-soft); display: grid; place-items: center; font-size: 15px; flex: none; }
+    .plc-act .h .nm { font-size: 13.5px; font-weight: 800; color: ${F.plum}; line-height: 1.15; }
+    .plc-act .cad { font-size: 10.5px; font-weight: 800; color: var(--plc-accent); text-transform: uppercase; letter-spacing: 0.06em; }
+    .plc-act .d { font-size: 12px; color: #5a4a5c; line-height: 1.4; font-weight: 500; }
+
+    .plc-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 26px; }
+    @media (max-width: 760px) { .plc-cols { grid-template-columns: 1fr; } }
+    .plc-personas { display: flex; flex-wrap: wrap; gap: 9px; }
+    .plc-persona { display: flex; align-items: center; gap: 9px; background: #fff; border-radius: 30px; padding: 6px 14px 6px 7px; box-shadow: 0 2px 7px rgba(55,2,60,0.06); }
+    .plc-persona .av { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-size: 15px; flex: none; background: var(--plc-accent-soft); }
+    .plc-persona .nm { font-size: 12.5px; font-weight: 700; color: ${F.plum}; }
+    .plc-persona.lead { background: ${F.plum}; }
+    .plc-persona.lead .nm { color: ${F.paper}; }
+    .plc-persona.lead .av { background: ${F.yellow}; }
+    .plc-persona.school { background: var(--plc-accent-soft); border: 1.5px dashed var(--plc-accent); }
+    .plc-persona.school .av { background: #fff; }
+    .plc-persona-key { margin-top: 12px; font-size: 11px; color: #7a6a7c; font-weight: 700; }
+    .plc-persona-key i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; vertical-align: middle; margin: 0 4px 0 8px; }
+
+    .plc-shift { display: grid; gap: 11px; }
+    .plc-shift .row { background: #fff; border-radius: 12px; padding: 13px 15px; box-shadow: 0 2px 8px rgba(55,2,60,0.05); }
+    .plc-shift .row .old { font-size: 12px; color: #9a8a9c; font-weight: 600; text-decoration: line-through; text-decoration-color: rgba(154,138,156,0.5); }
+    .plc-shift .row .new { font-size: 13px; color: ${F.plum}; font-weight: 700; margin-top: 3px; display: flex; gap: 8px; align-items: flex-start; }
+    .plc-shift .row .new .ai { flex: none; font-size: 9px; font-weight: 800; letter-spacing: 0.06em; background: var(--plc-accent); color: #fff; padding: 3px 7px; border-radius: 6px; margin-top: 1px; }
+    .plc-prioritise-acc .plc-shift .row .new .ai { color: ${F.plum}; }
+
+    .plc-school-banner { margin-top: 6px; background: ${F.plum}; color: ${F.paper}; border-radius: 14px; padding: 16px 20px; display: flex; gap: 14px; align-items: flex-start; }
+    .plc-school-banner .ic { font-size: 24px; flex: none; }
+    .plc-school-banner .tx h5 { font-size: 12px; font-weight: 800; color: ${F.yellow}; text-transform: uppercase; letter-spacing: 0.1em; margin: 0; }
+    .plc-school-banner .tx p { font-size: 13.5px; font-weight: 600; line-height: 1.45; margin: 4px 0 0; color: rgba(240,235,235,0.92); }
+    .plc-school-banner .tx .how { margin-top: 8px; font-size: 12px; font-weight: 700; color: ${F.lightPink}; }
+
+    .plc-footer { text-align: center; margin-top: 40px; color: rgba(240,235,235,0.4); font-size: 11.5px; font-weight: 600; }
   `;
 
-  const packageItems = [
-    { l: "Problem.", d: "What's being solved, for which schools." },
-    { l: "Solution.", d: "Plain language, no jargon." },
-    { l: "Goals + success metrics.", d: "What good looks like." },
-    { l: "Story angle.", d: "What's different, why now." },
-    { l: "Target audience.", d: "Buyer, user, school segment." },
-    { l: "Scope.", d: "What's in, what's out." },
-    { l: "Known limitations.", d: "Edge cases, things to avoid promising." },
-    { l: "Timeline.", d: "Beta date, GA date, rollout plan." },
-    { l: "Demo access.", d: "Live accounts, screenshots, walkthrough video." },
-    { l: "Product contact.", d: "Who to ask follow-up questions." },
-  ];
-
-  const products = [
-    { i: "OA", n: "OpenApply" },
-    { i: "MB", n: "ManageBac+" },
-    { i: "SB", n: "SchoolsBuddy" },
-    { i: "AT", n: "Atlas" },
-  ];
-
-  const phases = [
-    { w: "Week 1", date: "Mon 8 Jun", color: "", n: 1, t: "Product publishes the brief", body: "One-pager hits ProductBoard 2.0. Problem, solution, target schools, scope, GA date.", tags: [{ l: "Product" }] },
-    { w: "Week 3", date: "Mon 22 Jun", color: "rh-pink", n: 2, t: "Product Marketing locks positioning", body: '"Spot the schools most likely to enrol, automatically." Story angle, persona, campaign plan drafted.', tags: [{ l: "Product Marketing" }, { l: "Sales review", mute: true }] },
-    { w: "Week 5", date: "Mon 13 Jul", color: "rh-orange", n: 3, t: "Sales enablement builds the kit", body: "Pitch deck slide, demo script, objection handling, FAQ. Battle card against generic CRMs.", tags: [{ l: "Sales enablement" }] },
-    { w: "Week 7", date: "Mon 3 Aug", color: "rh-yellow", n: 4, t: "Rep certification + dry run", body: "Live demo training using the demo environment. Every rep certified to pitch and demo lead scoring before launch day.", tags: [{ l: "Sales enablement" }, { l: "Product", mute: true }] },
-    { w: "Week 8", date: "Mon 17 Aug", color: "rh-gradient", n: 5, t: "Launch day", body: "In-app announcement, campaign live, blog up, sales sequences activated, support articles published.", tags: [{ l: "All teams" }] },
-    { w: "Week 12", date: "Mon 14 Sep", color: "", n: 6, t: "Retro: did it land?", body: "Adoption, ARR impact, rep confidence, support volume. Feeds the next launch.", tags: [{ l: "All teams" }] },
-  ];
-
-  const intervals = [
-    { lbl: "Launch day", val: "D+0", sub: "Mon 17 Aug" },
-    { lbl: "Early signal", val: "+30 days", sub: "Wed 16 Sep" },
-    { lbl: "Momentum", val: "+60 days", sub: "Fri 16 Oct" },
-    { lbl: "Verdict", val: "+90 days", sub: "Sun 15 Nov" },
-  ];
-
-  const retro = [
-    { cls: "rh-retro-mkt", icon: "PM", title: "Product Marketing", metrics: [
-      { l: "Launch-day readiness", e: "Landing page live, GTM Playbook deck (Sales/CE enablement materials) finalised, and in-app assets (Pendo) published by 9:00 AM on GA day.", t: "D+0" },
-      { l: "GTM enablement", e: "Live GTM enablement sessions delivered to all relevant sales/CE teams (recordings shared). Attendees achieve an average quiz score of ≥85% on positioning, personas, differentiation, and key use cases. All priority enterprise opportunities supplied with tailored assets.", t: "D+7→30" },
-      { l: "Message consistency audit", e: "Audit 8–10 customer touchpoints (landing page, product webpage, blog post, Demand Gen campaign, demo script, Pendo guide, help-centre article, webinar synopsis + slides, discovery call). Zero contradictory positioning.", t: "D+60" },
-    ] },
-    { cls: "rh-retro-sales", icon: "S", title: "Sales", metrics: [
-      { l: "Rep certification", e: "100% of AEs pass demo certification before launch day.", t: "D−7" },
-      { l: "Time-to-first-pitch", e: "≥80% of AEs mention AI Lead Scoring in a customer call within 14 days.", t: "D+30" },
-      { l: "Demo accuracy", e: "Spot-check 5 random call recordings. At least 4 demo the feature correctly.", t: "D+60" },
-      { l: "Wins tied to feature", e: "≥8 closed-won deals cite AI Lead Scoring as a decision factor.", t: "D+90" },
-    ] },
-    { cls: "rh-retro-product", icon: "P", title: "Product", metrics: [
-      { l: "Adoption at 30 days", e: "≥25% of eligible OA schools have enabled the feature.", t: "D+30" },
-      { l: "Adoption at 60 days", e: "≥45% adoption, with ≥60% weekly active among adopters.", t: "D+60" },
-      { l: "ARR impact", e: "≥$120k new ARR attributable to AI Lead Scoring in closed deals.", t: "D+90" },
-      { l: "Support ticket volume", e: "<15 tickets per week, no recurring confusion themes after week 4.", t: "D+60" },
-    ] },
-  ];
+  const d = open ? DATA[open] : null;
+  const personaCls = (p) => p.t === "lead" ? "plc-persona lead" : p.t === "school" ? "plc-persona school" : "plc-persona";
 
   return (
     <>
       <style>{styles}</style>
-      <div className="rh-wrap">
-
-        <div className="rh-hero">
-          <div className="rh-hero-t1"></div>
-          <div className="rh-hero-t2"></div>
-          <p className="rh-hero-eyebrow">Faria Education Group</p>
-          <h1>Release handoff framework</h1>
-          <p>Product drives. Marketing scales. Sales lands.</p>
-        </div>
-
-        <div className="rh-section">01 — Tiering</div>
-        <div className="rh-tier-row">
-          <div className="rh-tier rh-tier-aaa">
-            <span className="rh-tier-badge">AAA</span>
-            <div className="rh-tier-name">Major</div>
-            <div className="rh-tier-desc">Full handoff with positioning, campaigns, training, and a launch moment.</div>
-            <div className="rh-tier-flow"><span className="rh-dot">P</span><span>→</span><span className="rh-dot">M</span><span>→</span><span className="rh-dot">S</span></div>
-          </div>
-          <div className="rh-tier rh-tier-aa">
-            <span className="rh-tier-badge">AA</span>
-            <div className="rh-tier-name">Moderate</div>
-            <div className="rh-tier-desc">Skip Marketing. Product artefacts handed to Sales and Support.</div>
-            <div className="rh-tier-flow"><span className="rh-dot">P</span><span>→</span><span className="rh-dot">S</span></div>
-          </div>
-          <div className="rh-tier rh-tier-a">
-            <span className="rh-tier-badge">A</span>
-            <div className="rh-tier-name">Minor</div>
-            <div className="rh-tier-desc">Release notes plus product artefacts. Lightweight, async only.</div>
-            <div className="rh-tier-flow"><span className="rh-dot">P</span><span>→</span><span className="rh-dot">S</span></div>
-          </div>
-        </div>
-
-        <div className="rh-section">02 — The hub</div>
-        <div className="rh-hub">
-          <div className="rh-hub-t1"></div>
-          <h2>ProductBoard 2.0</h2>
-          <p className="rh-hub-desc">Automated, async handoff. One source of truth.</p>
-          <div className="rh-hub-flow">
-            <div className="rh-hub-pill">Product</div>
-            <span className="rh-hub-arrow">→</span>
-            <div className="rh-hub-receivers">
-              <span className="rh-hub-receiver">Product Marketing</span>
-              <span className="rh-hub-receiver">Sales enablement</span>
-              <span className="rh-hub-receiver">Support</span>
+      <div className="plc-stage">
+        <div className="plc-wrap">
+          <header className="plc-header">
+            <div className="plc-brand">
+              <h1>The <b>AI-First</b> Product Lifecycle</h1>
             </div>
-          </div>
-          <p className="rh-pkg-title">What gets handed off</p>
-          <div className="rh-pkg-grid">
-            {packageItems.map((it, i) => (
-              <div key={i} className="rh-pkg-item">
-                <span className="rh-pkg-bullet"></span>
-                <div><span className="rh-pkg-label">{it.l}</span> <span className="rh-pkg-desc">{it.d}</span></div>
+            <div className="plc-legend">One loop, three phases, <b>schools at the core</b>. Adoption feeds straight back into what we prioritise next. Tap any phase to go deep.</div>
+          </header>
+
+          <div className="plc-cycle" ref={cycleRef}>
+            <svg className="plc-connector" viewBox="-6 -6 112 110" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+              <defs>
+                <marker id="plc-arrow" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+                  <path d="M0.5,0.5 L5.5,3 L0.5,5.5 Z" fill="rgba(240,235,235,0.7)" />
+                </marker>
+              </defs>
+              <path d="M 27 21 C 2 38, -2 64, 6 80" fill="none" stroke="rgba(240,235,235,0.55)" strokeWidth="1.1" strokeDasharray="2.6 2.4" markerEnd="url(#plc-arrow)" />
+              <path d="M 26 92 C 44 100, 56 100, 74 92" fill="none" stroke="rgba(240,235,235,0.55)" strokeWidth="1.1" strokeDasharray="2.6 2.4" markerEnd="url(#plc-arrow)" />
+              <path d="M 94 80 C 102 64, 98 38, 73 21" fill="none" stroke="rgba(240,235,235,0.55)" strokeWidth="1.1" strokeDasharray="2.6 2.4" markerEnd="url(#plc-arrow)" />
+            </svg>
+
+            <div className="plc-node plc-n-prioritise" tabIndex={0} role="button" aria-label="Open Prioritise phase" onClick={() => setOpen(open === "prioritise" ? null : "prioritise")} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setOpen(open === "prioritise" ? null : "prioritise"); } }}>
+              <div className="ph">Phase 01</div>
+              <div className="nm">Prioritise</div>
+              <div className="sub">High-level vision &amp; revenue-driven bets</div>
+              <div className="tl">⌅ Annual · Quarterly · Monthly</div>
+            </div>
+            <div className="plc-node plc-n-build" tabIndex={0} role="button" aria-label="Open Build phase" onClick={() => setOpen(open === "build" ? null : "build")} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setOpen(open === "build" ? null : "build"); } }}>
+              <div className="ph">Phase 02</div>
+              <div className="nm">Build</div>
+              <div className="sub">AI-first SDLC, pods, weekly releases</div>
+              <div className="tl">⌅ 1–2 week sprints</div>
+            </div>
+            <div className="plc-node plc-n-adopt" tabIndex={0} role="button" aria-label="Open Adopt phase" onClick={() => setOpen(open === "adopt" ? null : "adopt")} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setOpen(open === "adopt" ? null : "adopt"); } }}>
+              <div className="ph">Phase 03</div>
+              <div className="nm">Adopt</div>
+              <div className="sub">Enablement, marketing, land &amp; expand</div>
+              <div className="tl">⌅ Continuous</div>
+            </div>
+
+            <div className="plc-core">
+              <div className="ico" aria-hidden="true">
+                <svg viewBox="0 0 64 64" width="100%" height="100%" fill="none" stroke="url(#plc-coreGrad)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <defs>
+                    <linearGradient id="plc-coreGrad" x1="0" y1="64" x2="64" y2="0" gradientUnits="userSpaceOnUse">
+                      <stop offset="0" stopColor="#F5D160" />
+                      <stop offset=".5" stopColor="#F0A67E" />
+                      <stop offset="1" stopColor="#EC57AD" />
+                    </linearGradient>
+                  </defs>
+                  <path d="M32 8 L56 20 L8 20 Z" />
+                  <path d="M12 20 V52" /><path d="M52 20 V52" />
+                  <path d="M8 52 H56" />
+                  <rect x="27" y="38" width="10" height="14" />
+                  <path d="M19 28 h8 v8 h-8 Z" /><path d="M37 28 h8 v8 h-8 Z" />
+                  <path d="M32 8 V3" /><path d="M32 3 h7 v4 h-7" />
+                </svg>
               </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="rh-section">03 — Monthly sync, per product</div>
-        <div className="rh-prods">
-          {products.map((p, i) => (
-            <div key={i} className="rh-pchip">
-              <div className="rh-picon"><span className="rh-pinit">{p.i}</span></div>
-              <div className="rh-pname">{p.n}</div>
-            </div>
-          ))}
-        </div>
-
-        <div className="rh-divider"></div>
-
-        <div className="rh-subhero">
-          <div className="rh-subhero-track"></div>
-          <div className="rh-sh-header">
-            <div className="rh-sh-icon"><span className="rh-sh-icon-text">OA</span></div>
-            <div>
-              <p className="rh-sh-eyebrow">Worked example · OpenApply</p>
-              <h2>AI Lead Scoring</h2>
+              <div className="t">Schools</div>
+              <div className="s">Core users · every phase</div>
             </div>
           </div>
-          <div className="rh-sh-meta">
-            <span className="rh-chip-dark">AAA release</span>
-            <span className="rh-chip-light">~12 week handoff</span>
-            <span className="rh-chip-light">GA: Mon 17 Aug 2026</span>
-          </div>
-        </div>
 
-        <div className="rh-section">04 — Handoff timeline</div>
-        <div>
-          {phases.map((p, i) => (
-            <div key={i} className="rh-phase">
-              <div className="rh-phase-time">
-                <div className="rh-phase-when">{p.w}</div>
-                <div className="rh-phase-date">{p.date}</div>
+          <div className="plc-cycle-cap">A continuous loop: what schools <b>adopt</b> feeds straight back into what we <b>prioritise</b> next.</div>
+          <div className="plc-hint">↑ Tap <b>Prioritise</b>, <b>Build</b> or <b>Adopt</b> for stages, activities &amp; cadence, who's involved, tooling and the old-way → AI-first shift.</div>
+
+          {d && (
+            <div ref={panelRef} className={`plc-panel plc-${d.cls}-acc`} style={{ ["--plc-accent"]: d.accent, ["--plc-accent-soft"]: d.soft }}>
+              <div className={`plc-panel-top ${d.cls}`}>
+                <button className="plc-closeb" aria-label="Close" onClick={() => setOpen(null)}>×</button>
+                <div className="eyebrow">{d.eyebrow}</div>
+                <h2>{d.title}</h2>
+                <p className="plc-lede">{d.lede}</p>
+                <div className="plc-horizon">{d.horizon}</div>
               </div>
-              <div className={`rh-phase-card ${p.color}`}>
-                <div className="rh-phase-header">
-                  <span className="rh-phase-marker">{p.n}</span>
-                  <span className="rh-phase-title">{p.t}</span>
+
+              <div className="plc-panel-body">
+                <div className="plc-sec-block">
+                  <div className="plc-sec-title">Stages &amp; timeline</div>
+                  {d.parallel && (
+                    <div className="plc-parallel-note"><span className="ic">⚡</span>{d.parallel}</div>
+                  )}
+                  <div className="plc-stages">
+                    {d.stages.map((s, i) => (
+                      <div key={i} className="plc-stage-row">
+                        <div className="dot"><i></i></div>
+                        <div className="card">
+                          <h4>{s.n}<span className="wk">{s.wk}</span></h4>
+                          <p>{s.p}</p>
+                          {s.tools && s.tools.length > 0 && (
+                            <div className="tools">{s.tools.map((t, ti) => <span key={ti} className="t">{t}</span>)}</div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <div className="rh-phase-body">{p.body}</div>
-                <div className="rh-phase-tags">
-                  {p.tags.map((t, ti) => <span key={ti} className={`rh-tag ${t.mute ? "rh-tag-mute" : ""}`}>{t.l}</span>)}
+
+                <div className="plc-sec-block">
+                  <div className="plc-sec-title">Activities &amp; cadence</div>
+                  <div className="plc-acts">
+                    {d.activities.map((a, i) => (
+                      <div key={i} className="plc-act">
+                        <div className="h"><span className="ic">{a.ic}</span><span className="nm">{a.nm}</span></div>
+                        <div className="cad">{a.cad}</div>
+                        <div className="d">{a.d}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="plc-parallel-note" style={{ marginTop: 14, background: "rgba(55,2,60,0.05)", borderStyle: "solid", borderColor: d.accent }}>
+                    <span className="ic">🔧</span>{d.build_tools}
+                  </div>
+                </div>
+
+                <div className="plc-sec-block plc-cols">
+                  <div>
+                    <div className="plc-sec-title">Who's involved</div>
+                    <div className="plc-personas">
+                      {d.stakeholders.map((p, i) => (
+                        <span key={i} className={personaCls(p)}>
+                          <span className="av">{p.ic}</span>
+                          <span className="nm">{p.n}</span>
+                        </span>
+                      ))}
+                    </div>
+                    <div className="plc-persona-key">
+                      <i style={{ background: F.plum }}></i>Leads
+                      <i style={{ background: d.accent }}></i>Schools
+                    </div>
+                  </div>
+                  <div>
+                    <div className="plc-sec-title">Old way → AI-first</div>
+                    <div className="plc-shift">
+                      {d.shift.map((r, i) => (
+                        <div key={i} className="row">
+                          <div className="old">{r.old}</div>
+                          <div className="new"><span className="ai">{r.ai}</span>{r.new}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="plc-school-banner">
+                  <div className="ic">🏫</div>
+                  <div className="tx">
+                    <h5>Schools at this phase</h5>
+                    <p>{d.school}</p>
+                    <div className="how">{d.schoolHow}</div>
+                  </div>
                 </div>
               </div>
             </div>
-          ))}
+          )}
+
+          <div className="plc-footer">Product Lifecycle framework · draft for SLT review</div>
         </div>
-
-        <div className="rh-section">05 — Was it a success? Example targets for AI Lead Scoring</div>
-        <div className="rh-retro-intervals">
-          {intervals.map((it, i) => (
-            <div key={i} className="rh-retro-interval">
-              <div className="rh-ri-label">{it.lbl}</div>
-              <div className="rh-ri-value">{it.val}</div>
-              <div className="rh-ri-sub">{it.sub}</div>
-            </div>
-          ))}
-        </div>
-
-        <div className="rh-retro-row">
-          {retro.map((col, i) => (
-            <div key={i} className={`rh-retro ${col.cls}`}>
-              <div className="rh-retro-ic">{col.icon}</div>
-              <h3>{col.title}</h3>
-              {col.metrics.map((m, mi) => (
-                <div key={mi} className="rh-rmetric">
-                  <div className="rh-rm-label">{m.l}</div>
-                  <div className="rh-rm-eg">{m.e}</div>
-                  <span className="rh-rm-target">{m.t}</span>
-                </div>
-              ))}
-            </div>
-          ))}
-        </div>
-
-        <p style={{ margin: "16px auto 0", maxWidth: 720, fontSize: 12, color: F.muted, fontStyle: "italic", lineHeight: 1.55, textAlign: "center" }}>
-          Demand Generation reports operational campaign metrics (email open rate, CTR, demo requests) as <strong style={{ color: F.plum, fontStyle: "normal" }}>downstream indicators</strong> of PMM success — not core measures of it. PMM owns launch readiness, message quality, and GTM effectiveness; DG executes campaigns using PMM's messaging and assets.
-        </p>
-
-        <div className="rh-grule"></div>
-        <div className="rh-footer">Faria Education Group · Relentless pursuit of better</div>
       </div>
     </>
   );
@@ -3944,7 +4102,7 @@ export default function App() {
           {navBtn("product", <><span className="lbl-full">Product Transformation</span><span className="lbl-short">Product</span></>)}
           {navBtn("ai", <><span className="lbl-full">AI Powered Features</span><span className="lbl-short">AI Features</span></>)}
           {navBtn("monz", "AI Monetization")}
-          {navBtn("handoff", <><span className="lbl-full">Release Handoff</span><span className="lbl-short">Handoff</span></>)}
+          {navBtn("handoff", <><span className="lbl-full">Prioritization</span><span className="lbl-short">Prioritize</span></>)}
           {navBtn("pods", <><span className="lbl-full">AI Pods</span><span className="lbl-short">Pods</span></>)}
         </div>
       </div>
@@ -3955,7 +4113,7 @@ export default function App() {
           extraDetailFields={(init, setField) => (<><div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>{init.product && chip(init.product)}{init.type && chip(init.type)}{init.priority && <span style={{ fontSize: 11, padding: "3px 8px", borderRadius: 4, background: pC(init.priority), color: "#fff", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em" }}>{init.priority}</span>}</div><div style={{ display: "flex", gap: 12, marginBottom: 12 }}><div style={{ flex: 1 }}><div style={lb}>Effort</div><div style={{ fontSize: 13, color: F.plum, fontWeight: 700 }}>{(init.effort||"medium").charAt(0).toUpperCase()+(init.effort||"medium").slice(1)}</div></div><div style={{ flex: 1 }}><div style={lb}>Impact</div><div style={{ fontSize: 13, color: F.plum, fontWeight: 700 }}>{(init.impact||"medium").charAt(0).toUpperCase()+(init.impact||"medium").slice(1)}</div></div></div></>)}
         />}
         {page === "monz" && <AiMonetizationPage />}
-        {page === "handoff" && <ReleaseHandoffPage />}
+        {page === "handoff" && <PrioritizationPage />}
         {page === "pods" && <AiPodsPage />}
       </div>
     </div>

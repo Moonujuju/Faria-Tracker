@@ -433,7 +433,7 @@ const DEFAULT_COMPETITIVE = {
     {
       id: "salesforce-agentforce",
       name: "Salesforce (Agentforce)",
-      aiModel: ["Per-agent license", "Consumption/credits", "Per-conversation"],
+      aiModel: ["Per-agent license", "Consumption/credits", "Action"],
       pricing: "3 models — buyer self-selects",
       pricingDetails: "Foundations: free entry tier ($0), modest included credits\nFlex Credits (consumption): standard action = 20 credits (~$0.10); voice action = 30 credits (~$0.15); credits at $500 per 100,000\nConversations: ~$2 per 24-hour interaction session (flat usage)\nPer-user add-ons: $125–150/user/month; Agentforce 1 Editions $550+/user/month",
       essentialFeatures: "Foundations (free entry tier with modest included credits)",
@@ -550,9 +550,11 @@ function mergeCompetitive(saved) {
   if (!saved) return DEFAULT_COMPETITIVE;
   // Normalise: older blobs had aiModel as a string and category/threatLevel fields.
   // Coerce aiModel to an array; drop category & threatLevel by ignoring them on render.
+  // Also migrate the older "Per-conversation" label to "Action".
+  const renameModel = m => (m === "Per-conversation" ? "Action" : m);
   const savedCompetitors = (saved.competitors || []).map(c => ({
     ...c,
-    aiModel: Array.isArray(c.aiModel) ? c.aiModel : (c.aiModel ? [c.aiModel] : []),
+    aiModel: (Array.isArray(c.aiModel) ? c.aiModel : (c.aiModel ? [c.aiModel] : [])).map(renameModel),
   }));
   // Append any DEFAULT competitor whose stable string id isn't in the saved list.
   // Preserves user-added entries (which use Date.now() numeric ids) and any edits to
@@ -1525,7 +1527,7 @@ const COMP_AI_MODELS = [
   "Per-student/institution",
   "Consumption/credits",
   "Outcome-based",
-  "Per-conversation",
+  "Action",
   "Per-agent license",
   "Bundled (no extra charge)",
   "Tiered freemium",

@@ -332,7 +332,98 @@ const DEFAULT_MONETIZATION = {
       "Produces a measurable outcome (conversion lift, time-to-decision, retention)",
     ],
   },
+  leadingModelRationale: [
+    "One simple counter — minimal mental model for the user.",
+    "Flexible: schools concentrate AI budget where they need it most each month.",
+    "Pricing signal is honest — heavier features cost more credits.",
+    "Per-user cap (18 credits) prevents one power user from draining the pool.",
+  ],
 };
+
+/* ── Defaults for the new monetization sub-pages ───────── */
+const DEFAULT_COMPETITIVE = {
+  competitors: [],
+  feedSplitNotes: "",
+  benchmarkNotes: "",
+};
+const COMPETITOR_TEMPLATE = () => ({
+  id: Date.now() + Math.floor(Math.random() * 1000),
+  name: "",
+  category: "Admissions",
+  aiModel: "Tiered",
+  pricing: "",
+  pricingDetails: "",
+  essentialFeatures: "",
+  proFeatures: "",
+  strengths: "",
+  weaknesses: "",
+  threatLevel: "medium",
+  lastReviewed: "",
+  sourceUrl: "",
+  notes: "",
+});
+function mergeCompetitive(saved) {
+  if (!saved) return DEFAULT_COMPETITIVE;
+  return { ...DEFAULT_COMPETITIVE, ...saved, competitors: saved.competitors || [] };
+}
+
+const DEFAULT_MARKET = { validations: [] };
+const VALIDATION_TEMPLATE = (product = "OpenApply") => ({
+  id: Date.now() + Math.floor(Math.random() * 1000),
+  product,
+  schoolName: "",
+  region: "",
+  stage: "interested",
+  contactedDate: "",
+  pilotedDate: "",
+  feedback: "",
+  willingnessToPay: "",
+  contactName: "",
+  contactRole: "",
+  contactEmail: "",
+  wowOutcomesValidated: "",
+  notes: "",
+});
+function mergeMarket(saved) {
+  if (!saved) return DEFAULT_MARKET;
+  return { ...DEFAULT_MARKET, ...saved, validations: saved.validations || [] };
+}
+
+const DEFAULT_FINANCE = {
+  costInputs: {
+    tokenCostPer1k: 0.01,
+    monthlyInfraCost: 0,
+    supportCostPerCustomer: 0,
+  },
+  usageInputs: Object.fromEntries(MONZ_PRODUCTS.map(p => [p, { essActionsPerSchoolMonth: 0, proActionsPerSchoolMonth: 0, tokensPerAction: 0 }])),
+  uptakeScenarios: [],
+  decisions: [],
+  notes: "",
+};
+const SCENARIO_TEMPLATE = () => ({
+  id: Date.now() + Math.floor(Math.random() * 1000),
+  label: "",
+  totalSchools: 0,
+  ...Object.fromEntries(MONZ_PRODUCTS.map(p => [productPctKey(p), 0])),
+});
+const DECISION_TEMPLATE = () => ({
+  id: Date.now() + Math.floor(Math.random() * 1000),
+  date: new Date().toISOString().slice(0, 10),
+  decidedBy: "",
+  summary: "",
+});
+function productPctKey(p) { return p.replace(/[^a-zA-Z0-9]/g, "") + "Pct"; }
+function mergeFinance(saved) {
+  if (!saved) return DEFAULT_FINANCE;
+  return {
+    ...DEFAULT_FINANCE,
+    ...saved,
+    costInputs: { ...DEFAULT_FINANCE.costInputs, ...(saved.costInputs || {}) },
+    usageInputs: { ...DEFAULT_FINANCE.usageInputs, ...(saved.usageInputs || {}) },
+    uptakeScenarios: saved.uptakeScenarios || [],
+    decisions: saved.decisions || [],
+  };
+}
 
 // Returns user-assigned tier if set, otherwise infers a candidate tier
 // from impact. User overrides always win. "" = explicitly Unassigned.
@@ -352,6 +443,7 @@ function mergeMonz(saved) {
     products: { ...DEFAULT_MONETIZATION.products, ...(saved.products || {}) },
     bundleDiscounts: saved.bundleDiscounts || DEFAULT_MONETIZATION.bundleDiscounts,
     framework: { ...DEFAULT_MONETIZATION.framework, ...(saved.framework || {}) },
+    leadingModelRationale: saved.leadingModelRationale || DEFAULT_MONETIZATION.leadingModelRationale,
   };
 }
 
@@ -813,7 +905,7 @@ function TrackerPage({ title, subtitle, storageKey, defaults, ModalComponent, ex
    and writes them back; reads/writes monetization config to
    faria-ai-monetization-v1. */
 function AiMonetizationPage() {
-  const [view, setView] = useState("plan"); // "plan" | "fairuse" — sub-page toggle under the header
+  const [view, setView] = useState("plan"); // "plan" | "usage" | "competitive" | "market" | "finance"
   const [ai, setAi] = useState({ inits: [] });
   const [mz, setMz] = useState(DEFAULT_MONETIZATION);
   const [readyAi, setReadyAi] = useState(false);
@@ -895,16 +987,31 @@ function AiMonetizationPage() {
 
   return (
     <>
-      <div style={{ marginBottom: 14 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700, margin: 0, color: F.plum, lineHeight: 1.15 }}>{view === "fairuse" ? "Fair Use Example" : "Current Monetization Plan (open discussion)"}</h1>
-        <p style={{ margin: "4px 0 0", fontSize: 13.5, color: F.muted }}>{view === "fairuse" ? "What hitting a fair-use limit looks like inside the product — illustrated with AI Profile Review on AI Essential." : "Working framework for AI Essential vs AI Pro across Faria products. Edit anything inline — this is a living document."}</p>
-      </div>
+      {(() => {
+        const titles = {
+          plan:        { t: "Current Monetization Plan (open discussion)", s: "Working framework for AI Essential vs AI Pro across Faria products. Edit anything inline — this is a living document." },
+          usage:       { t: "Usage", s: "Three candidate usage-limit models — Model B (shared credits) is the leading option. Below, a state-by-state deep dive across all three." },
+          competitive: { t: "Competitive Analysis", s: "Track how competitors are pricing and packaging AI. Use this to calibrate our Pro tier and bundle pricing." },
+          market:      { t: "Market Validation", s: "Per-product school validation — pilots, willingness to pay, and which Pro outcomes schools have confirmed." },
+          finance:     { t: "Finance", s: "Finance team's cost model, breakeven analysis, uptake scenarios, and decision log for AI monetization." },
+        };
+        const cur = titles[view] || titles.plan;
+        return (
+          <div style={{ marginBottom: 14 }}>
+            <h1 style={{ fontSize: 24, fontWeight: 700, margin: 0, color: F.plum, lineHeight: 1.15 }}>{cur.t}</h1>
+            <p style={{ margin: "4px 0 0", fontSize: 13.5, color: F.muted }}>{cur.s}</p>
+          </div>
+        );
+      })()}
 
-      {/* Sub-tab strip: Plan / Fair Use Example */}
+      {/* Sub-tab strip: Plan · Usage · Competitive Analysis · Market Validation · Finance */}
       <div style={{ display: "flex", gap: 8, marginBottom: 22, flexWrap: "wrap" }}>
         {[
-          { id: "plan", label: "Plan" },
-          { id: "fairuse", label: "Fair Use Example" },
+          { id: "plan",        label: "Plan" },
+          { id: "usage",       label: "Usage" },
+          { id: "competitive", label: "Competitive Analysis" },
+          { id: "market",      label: "Market Validation" },
+          { id: "finance",     label: "Finance" },
         ].map(t => {
           const active = view === t.id;
           return (
@@ -921,7 +1028,10 @@ function AiMonetizationPage() {
         })}
       </div>
 
-      {view === "fairuse" && <FairUseExample />}
+      {view === "usage"       && <FairUseExample monz={mz} setMonz={setMz} />}
+      {view === "competitive" && <MonzCompetitivePage />}
+      {view === "market"      && <MonzMarketPage />}
+      {view === "finance"     && <MonzFinancePage />}
 
       {view === "plan" && (<>
       {/* Framework card — visual side-by-side with demarcation rules in the middle */}
@@ -1283,13 +1393,626 @@ function LimitsModal({ feat, feats, onPick, onChange, onClose }) {
   );
 }
 
+/* ── Shared utilities for the new monetization sub-pages ── */
+const COMP_CATEGORIES = ["Admissions", "SIS", "LMS", "Comms", "Curriculum", "Other"];
+const COMP_AI_MODELS = ["Tiered", "Per-seat", "Metered", "Bundled", "Free", "None"];
+const COMP_THREAT = ["low", "medium", "high"];
+const VALIDATION_STAGES = ["interested", "piloting", "live", "committed", "declined"];
+function threatColor(level) { return level === "high" ? F.pink : level === "medium" ? F.orange : F.muted2; }
+function stageColor(stage) {
+  return stage === "interested" ? F.muted2 :
+         stage === "piloting"   ? F.yellow :
+         stage === "live"       ? F.green :
+         stage === "committed"  ? F.green :
+         stage === "declined"   ? F.pink  : F.muted2;
+}
+
+/* ── Competitive Analysis sub-page ──────────────────────── */
+function MonzCompetitivePage() {
+  const [comp, setComp] = useState(DEFAULT_COMPETITIVE);
+  const [ready, setReady] = useState(false);
+  const [expanded, setExpanded] = useState(new Set());
+  const [confirmDel, setConfirmDel] = useState(null);
+  const saveTimer = useRef(null);
+
+  useEffect(() => { (async () => {
+    const s = await loadState("faria-monz-competitive-v1");
+    setComp(mergeCompetitive(s));
+    setReady(true);
+  })(); }, []);
+  useEffect(() => { if (!ready) return; clearTimeout(saveTimer.current); saveTimer.current = setTimeout(() => saveState("faria-monz-competitive-v1", comp), 1000); return () => clearTimeout(saveTimer.current); }, [comp, ready]);
+
+  const addCompetitor = () => {
+    const next = COMPETITOR_TEMPLATE();
+    setComp(prev => ({ ...prev, competitors: [next, ...prev.competitors] }));
+    setExpanded(prev => new Set(prev).add(next.id));
+  };
+  const updateCompetitor = (id, patch) => setComp(prev => ({ ...prev, competitors: prev.competitors.map(c => c.id === id ? { ...c, ...patch } : c) }));
+  const removeCompetitor = (id) => { setComp(prev => ({ ...prev, competitors: prev.competitors.filter(c => c.id !== id) })); setConfirmDel(null); };
+  const toggle = (id) => setExpanded(prev => { const n = new Set(prev); if (n.has(id)) n.delete(id); else n.add(id); return n; });
+
+  const card = { background: F.surface, border: `1px solid ${F.border}`, borderRadius: 12, padding: "18px 22px", marginBottom: 18, boxShadow: F.shadowSm };
+  const sectionTitle = { fontSize: 11, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 };
+  const tile = { flex: 1, minWidth: 130, padding: "12px 16px", background: F.bg, border: `1px solid ${F.border}`, borderRadius: 10 };
+
+  // Stats
+  const total = comp.competitors.length;
+  const high = comp.competitors.filter(c => c.threatLevel === "high").length;
+  const byModel = COMP_AI_MODELS.map(m => ({ m, n: comp.competitors.filter(c => c.aiModel === m).length })).filter(x => x.n > 0);
+
+  return (
+    <>
+      <div style={card}>
+        <div style={sectionTitle}>Snapshot</div>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          <div style={tile}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Tracked</div>
+            <div style={{ fontSize: 22, fontWeight: 700, color: F.plum }}>{total}</div>
+          </div>
+          <div style={tile}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>High threat</div>
+            <div style={{ fontSize: 22, fontWeight: 700, color: high > 0 ? F.pink : F.muted2 }}>{high}</div>
+          </div>
+          <div style={{ ...tile, flex: 2, minWidth: 220 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>By AI model</div>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              {byModel.length === 0 ? <span style={{ fontSize: 12, color: F.muted, fontStyle: "italic" }}>No competitors tracked yet</span> :
+                byModel.map(x => <span key={x.m} style={{ fontSize: 11, padding: "3px 8px", background: F.lightYellow, color: F.plum, borderRadius: 4, fontWeight: 700 }}>{x.m} · {x.n}</span>)}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ marginBottom: 14, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+        <h2 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: F.plum }}>Competitors ({total})</h2>
+        <button onClick={addCompetitor} style={bt("primary")}>+ Add competitor</button>
+      </div>
+
+      {comp.competitors.length === 0 && (
+        <div style={{ ...card, textAlign: "center", color: F.muted, fontStyle: "italic", fontSize: 13.5 }}>
+          No competitors tracked yet. Click <strong style={{ color: F.plum, fontStyle: "normal" }}>+ Add competitor</strong> to start logging benchmark pricing, packaging, and AI monetization observations.
+        </div>
+      )}
+
+      {comp.competitors.map(c => {
+        const open = expanded.has(c.id);
+        return (
+          <div key={c.id} style={card}>
+            <div onClick={() => toggle(c.id)} style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", userSelect: "none" }}>
+              <span style={{ color: F.plum, fontSize: 11, transform: open ? "rotate(90deg)" : "none", transition: "transform 0.15s" }}>▶</span>
+              <div style={{ flex: 1, fontSize: 15, fontWeight: 700, color: F.plum }}>{c.name || <span style={{ color: F.muted2, fontStyle: "italic", fontWeight: 500 }}>(unnamed competitor)</span>}</div>
+              <span style={{ fontSize: 10.5, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: F.bg, color: F.muted, textTransform: "uppercase", letterSpacing: "0.05em", border: `1px solid ${F.border}` }}>{c.category}</span>
+              <span style={{ fontSize: 10.5, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: threatColor(c.threatLevel), color: "#fff", textTransform: "uppercase", letterSpacing: "0.05em" }}>{c.threatLevel} threat</span>
+            </div>
+
+            {open && (
+              <div style={{ marginTop: 16, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 14 }}>
+                <div>
+                  <div style={lb}>Name</div>
+                  <input value={c.name} onChange={e => updateCompetitor(c.id, { name: e.target.value })} placeholder="e.g. Veracross" style={{ ...inp, width: "100%" }} />
+                </div>
+                <div>
+                  <div style={lb}>Category</div>
+                  <select value={c.category} onChange={e => updateCompetitor(c.id, { category: e.target.value })} style={{ ...inp, width: "100%", cursor: "pointer" }}>
+                    {COMP_CATEGORIES.map(x => <option key={x} value={x}>{x}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <div style={lb}>AI model</div>
+                  <select value={c.aiModel} onChange={e => updateCompetitor(c.id, { aiModel: e.target.value })} style={{ ...inp, width: "100%", cursor: "pointer" }}>
+                    {COMP_AI_MODELS.map(x => <option key={x} value={x}>{x}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <div style={lb}>Threat level</div>
+                  <select value={c.threatLevel} onChange={e => updateCompetitor(c.id, { threatLevel: e.target.value })} style={{ ...inp, width: "100%", cursor: "pointer" }}>
+                    {COMP_THREAT.map(x => <option key={x} value={x}>{x}</option>)}
+                  </select>
+                </div>
+                <div style={{ gridColumn: "1 / -1" }}>
+                  <div style={lb}>Pricing (headline)</div>
+                  <input value={c.pricing} onChange={e => updateCompetitor(c.id, { pricing: e.target.value })} placeholder="e.g. $5,000/yr per school" style={{ ...inp, width: "100%" }} />
+                </div>
+                <div style={{ gridColumn: "1 / -1" }}>
+                  <div style={lb}>Pricing details / packaging notes</div>
+                  <textarea value={c.pricingDetails} onChange={e => updateCompetitor(c.id, { pricingDetails: e.target.value })} rows={2} placeholder="Tiers, add-ons, volume discounts, contract length…" style={{ ...inp, width: "100%", resize: "vertical" }} />
+                </div>
+                <div>
+                  <div style={lb}>Free / Essential features</div>
+                  <textarea value={c.essentialFeatures} onChange={e => updateCompetitor(c.id, { essentialFeatures: e.target.value })} rows={3} placeholder="What's included at no extra cost…" style={{ ...inp, width: "100%", resize: "vertical" }} />
+                </div>
+                <div>
+                  <div style={lb}>Paid / Pro features</div>
+                  <textarea value={c.proFeatures} onChange={e => updateCompetitor(c.id, { proFeatures: e.target.value })} rows={3} placeholder="What's behind the paid tier…" style={{ ...inp, width: "100%", resize: "vertical" }} />
+                </div>
+                <div>
+                  <div style={lb}>Strengths</div>
+                  <textarea value={c.strengths} onChange={e => updateCompetitor(c.id, { strengths: e.target.value })} rows={2} style={{ ...inp, width: "100%", resize: "vertical" }} />
+                </div>
+                <div>
+                  <div style={lb}>Weaknesses</div>
+                  <textarea value={c.weaknesses} onChange={e => updateCompetitor(c.id, { weaknesses: e.target.value })} rows={2} style={{ ...inp, width: "100%", resize: "vertical" }} />
+                </div>
+                <div>
+                  <div style={lb}>Last reviewed</div>
+                  <input type="date" value={c.lastReviewed} onChange={e => updateCompetitor(c.id, { lastReviewed: e.target.value })} style={{ ...inp, width: "100%" }} />
+                </div>
+                <div>
+                  <div style={lb}>Source URL</div>
+                  <input value={c.sourceUrl} onChange={e => updateCompetitor(c.id, { sourceUrl: e.target.value })} placeholder="https://…" style={{ ...inp, width: "100%" }} />
+                </div>
+                <div style={{ gridColumn: "1 / -1" }}>
+                  <div style={lb}>Notes</div>
+                  <textarea value={c.notes} onChange={e => updateCompetitor(c.id, { notes: e.target.value })} rows={2} style={{ ...inp, width: "100%", resize: "vertical" }} />
+                </div>
+                <div style={{ gridColumn: "1 / -1", display: "flex", justifyContent: "flex-end" }}>
+                  <button onClick={() => setConfirmDel(c.id)} style={bt("danger")}>Delete competitor</button>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })}
+
+      {comp.competitors.length > 0 && (
+        <div style={card}>
+          <div style={sectionTitle}>Comparative table</div>
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12.5 }}>
+              <thead>
+                <tr style={{ background: F.bg }}>
+                  {["Name", "Category", "AI model", "Pricing", "Threat"].map(h => (
+                    <th key={h} style={{ textAlign: "left", padding: "8px 10px", fontSize: 10.5, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em", borderBottom: `1px solid ${F.border}` }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {comp.competitors.map(c => (
+                  <tr key={c.id} style={{ borderBottom: `1px solid ${F.border}` }}>
+                    <td style={{ padding: "8px 10px", color: F.plum, fontWeight: 600 }}>{c.name || "—"}</td>
+                    <td style={{ padding: "8px 10px", color: F.muted }}>{c.category}</td>
+                    <td style={{ padding: "8px 10px", color: F.muted }}>{c.aiModel}</td>
+                    <td style={{ padding: "8px 10px", color: F.muted }}>{c.pricing || "—"}</td>
+                    <td style={{ padding: "8px 10px" }}>
+                      <span style={{ fontSize: 10.5, fontWeight: 700, padding: "2px 7px", borderRadius: 3, background: threatColor(c.threatLevel), color: "#fff", textTransform: "uppercase", letterSpacing: "0.05em" }}>{c.threatLevel}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      <div style={card}>
+        <div style={sectionTitle}>Benchmark pricing notes</div>
+        <textarea value={comp.benchmarkNotes} onChange={e => setComp(prev => ({ ...prev, benchmarkNotes: e.target.value }))} rows={4} placeholder="Pricing benchmark observations across the competitor set — sweet spots, outliers, packaging trends…" style={{ ...inp, width: "100%", resize: "vertical" }} />
+      </div>
+
+      <div style={card}>
+        <div style={sectionTitle}>Feeds split + pricing observations</div>
+        <textarea value={comp.feedSplitNotes} onChange={e => setComp(prev => ({ ...prev, feedSplitNotes: e.target.value }))} rows={4} placeholder="How competitors split features between free and paid tiers, and how that informs our Pro line…" style={{ ...inp, width: "100%", resize: "vertical" }} />
+      </div>
+
+      {confirmDel != null && (
+        <Modal onClose={() => setConfirmDel(null)}>
+          <h3 style={{ margin: "0 0 10px", fontSize: 18, fontWeight: 700, color: F.plum }}>Delete this competitor?</h3>
+          <p style={{ margin: "0 0 16px", fontSize: 13, color: F.muted }}>This cannot be undone.</p>
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+            <button onClick={() => setConfirmDel(null)} style={bt()}>Cancel</button>
+            <button onClick={() => removeCompetitor(confirmDel)} style={bt("danger")}>Delete</button>
+          </div>
+        </Modal>
+      )}
+    </>
+  );
+}
+
+/* ── Market Validation sub-page ─────────────────────────── */
+function MonzMarketPage() {
+  const [mkt, setMkt] = useState(DEFAULT_MARKET);
+  const [ready, setReady] = useState(false);
+  const [expanded, setExpanded] = useState(new Set());
+  const [filter, setFilter] = useState("All");
+  const [confirmDel, setConfirmDel] = useState(null);
+  const saveTimer = useRef(null);
+
+  useEffect(() => { (async () => {
+    const s = await loadState("faria-monz-market-v1");
+    setMkt(mergeMarket(s));
+    setReady(true);
+  })(); }, []);
+  useEffect(() => { if (!ready) return; clearTimeout(saveTimer.current); saveTimer.current = setTimeout(() => saveState("faria-monz-market-v1", mkt), 1000); return () => clearTimeout(saveTimer.current); }, [mkt, ready]);
+
+  const add = () => {
+    const next = VALIDATION_TEMPLATE(filter !== "All" ? filter : "OpenApply");
+    setMkt(prev => ({ ...prev, validations: [next, ...prev.validations] }));
+    setExpanded(prev => new Set(prev).add(next.id));
+  };
+  const update = (id, patch) => setMkt(prev => ({ ...prev, validations: prev.validations.map(v => v.id === id ? { ...v, ...patch } : v) }));
+  const remove = (id) => { setMkt(prev => ({ ...prev, validations: prev.validations.filter(v => v.id !== id) })); setConfirmDel(null); };
+  const toggle = (id) => setExpanded(prev => { const n = new Set(prev); if (n.has(id)) n.delete(id); else n.add(id); return n; });
+
+  const card = { background: F.surface, border: `1px solid ${F.border}`, borderRadius: 12, padding: "18px 22px", marginBottom: 18, boxShadow: F.shadowSm };
+  const sectionTitle = { fontSize: 11, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 };
+
+  const counts = (prod) => {
+    const list = mkt.validations.filter(v => v.product === prod);
+    return { total: list.length, piloting: list.filter(v => v.stage === "piloting").length, committed: list.filter(v => v.stage === "committed" || v.stage === "live").length, declined: list.filter(v => v.stage === "declined").length };
+  };
+
+  const filtered = filter === "All" ? mkt.validations : mkt.validations.filter(v => v.product === filter);
+  const sorted = [...filtered].sort((a, b) => (b.contactedDate || "").localeCompare(a.contactedDate || ""));
+
+  return (
+    <>
+      <div style={card}>
+        <div style={sectionTitle}>Summary by product</div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10 }}>
+          {MONZ_PRODUCTS.map(p => {
+            const c = counts(p);
+            const active = filter === p;
+            return (
+              <div key={p} onClick={() => setFilter(active ? "All" : p)} style={{ padding: "12px 14px", background: active ? F.lightYellow : F.bg, border: `1px solid ${active ? F.yellow : F.border}`, borderRadius: 10, cursor: "pointer", transition: "all 0.15s" }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>{p}</div>
+                <div style={{ fontSize: 20, fontWeight: 700, color: F.plum, lineHeight: 1.1 }}>{c.total}</div>
+                <div style={{ fontSize: 11, color: F.muted, marginTop: 4 }}>{c.piloting} piloting · {c.committed} committed · {c.declined} declined</div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div style={{ marginBottom: 14, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          {["All", ...MONZ_PRODUCTS].map(p => (
+            <button key={p} onClick={() => setFilter(p)} style={{ padding: "5px 12px", borderRadius: 999, fontSize: 12, fontWeight: 700, cursor: "pointer", background: filter === p ? F.plum : F.surface, color: filter === p ? F.paper : F.plum, border: `1px solid ${filter === p ? F.plum : F.borderStrong}`, fontFamily: "inherit" }}>{p}</button>
+          ))}
+        </div>
+        <button onClick={add} style={bt("primary")}>+ Add validation</button>
+      </div>
+
+      {sorted.length === 0 && (
+        <div style={{ ...card, textAlign: "center", color: F.muted, fontStyle: "italic", fontSize: 13.5 }}>
+          No validations {filter !== "All" ? `for ${filter} ` : ""}yet. Click <strong style={{ color: F.plum, fontStyle: "normal" }}>+ Add validation</strong> to log a school conversation, pilot, or commitment.
+        </div>
+      )}
+
+      {sorted.map(v => {
+        const open = expanded.has(v.id);
+        return (
+          <div key={v.id} style={card}>
+            <div onClick={() => toggle(v.id)} style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", userSelect: "none", flexWrap: "wrap" }}>
+              <span style={{ color: F.plum, fontSize: 11, transform: open ? "rotate(90deg)" : "none", transition: "transform 0.15s" }}>▶</span>
+              <div style={{ flex: 1, minWidth: 200, fontSize: 15, fontWeight: 700, color: F.plum }}>{v.schoolName || <span style={{ color: F.muted2, fontStyle: "italic", fontWeight: 500 }}>(unnamed school)</span>}</div>
+              <span style={{ fontSize: 10.5, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: F.bg, color: F.muted, textTransform: "uppercase", letterSpacing: "0.05em", border: `1px solid ${F.border}` }}>{v.product}</span>
+              {v.region && <span style={{ fontSize: 11, color: F.muted }}>{v.region}</span>}
+              <span style={{ fontSize: 10.5, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: stageColor(v.stage), color: "#fff", textTransform: "uppercase", letterSpacing: "0.05em" }}>{v.stage}</span>
+            </div>
+
+            {open && (
+              <div style={{ marginTop: 16, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 14 }}>
+                <div>
+                  <div style={lb}>School name</div>
+                  <input value={v.schoolName} onChange={e => update(v.id, { schoolName: e.target.value })} placeholder="e.g. Singapore American School" style={{ ...inp, width: "100%" }} />
+                </div>
+                <div>
+                  <div style={lb}>Product</div>
+                  <select value={v.product} onChange={e => update(v.id, { product: e.target.value })} style={{ ...inp, width: "100%", cursor: "pointer" }}>
+                    {MONZ_PRODUCTS.map(p => <option key={p} value={p}>{p}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <div style={lb}>Region</div>
+                  <input value={v.region} onChange={e => update(v.id, { region: e.target.value })} placeholder="e.g. Asia-Pacific" style={{ ...inp, width: "100%" }} />
+                </div>
+                <div>
+                  <div style={lb}>Stage</div>
+                  <select value={v.stage} onChange={e => update(v.id, { stage: e.target.value })} style={{ ...inp, width: "100%", cursor: "pointer" }}>
+                    {VALIDATION_STAGES.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <div style={lb}>Contacted date</div>
+                  <input type="date" value={v.contactedDate} onChange={e => update(v.id, { contactedDate: e.target.value })} style={{ ...inp, width: "100%" }} />
+                </div>
+                <div>
+                  <div style={lb}>Piloted date</div>
+                  <input type="date" value={v.pilotedDate} onChange={e => update(v.id, { pilotedDate: e.target.value })} style={{ ...inp, width: "100%" }} />
+                </div>
+                <div>
+                  <div style={lb}>Willingness to pay</div>
+                  <input value={v.willingnessToPay} onChange={e => update(v.id, { willingnessToPay: e.target.value })} placeholder="e.g. $3–5k/yr per school" style={{ ...inp, width: "100%" }} />
+                </div>
+                <div>
+                  <div style={lb}>Contact name</div>
+                  <input value={v.contactName} onChange={e => update(v.id, { contactName: e.target.value })} style={{ ...inp, width: "100%" }} />
+                </div>
+                <div>
+                  <div style={lb}>Contact role</div>
+                  <input value={v.contactRole} onChange={e => update(v.id, { contactRole: e.target.value })} placeholder="e.g. Director of Admissions" style={{ ...inp, width: "100%" }} />
+                </div>
+                <div>
+                  <div style={lb}>Contact email</div>
+                  <input value={v.contactEmail} onChange={e => update(v.id, { contactEmail: e.target.value })} placeholder="name@school.edu" style={{ ...inp, width: "100%" }} />
+                </div>
+                <div style={{ gridColumn: "1 / -1" }}>
+                  <div style={lb}>Feedback summary</div>
+                  <textarea value={v.feedback} onChange={e => update(v.id, { feedback: e.target.value })} rows={3} placeholder="What did they say? Pain points, reactions, objections…" style={{ ...inp, width: "100%", resize: "vertical" }} />
+                </div>
+                <div style={{ gridColumn: "1 / -1" }}>
+                  <div style={lb}>Pro "wow" outcomes validated</div>
+                  <textarea value={v.wowOutcomesValidated} onChange={e => update(v.id, { wowOutcomesValidated: e.target.value })} rows={2} placeholder="Which Pro feature outcomes did this school confirm as valuable?" style={{ ...inp, width: "100%", resize: "vertical" }} />
+                </div>
+                <div style={{ gridColumn: "1 / -1" }}>
+                  <div style={lb}>Notes</div>
+                  <textarea value={v.notes} onChange={e => update(v.id, { notes: e.target.value })} rows={2} style={{ ...inp, width: "100%", resize: "vertical" }} />
+                </div>
+                <div style={{ gridColumn: "1 / -1", display: "flex", justifyContent: "flex-end" }}>
+                  <button onClick={() => setConfirmDel(v.id)} style={bt("danger")}>Delete validation</button>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })}
+
+      {confirmDel != null && (
+        <Modal onClose={() => setConfirmDel(null)}>
+          <h3 style={{ margin: "0 0 10px", fontSize: 18, fontWeight: 700, color: F.plum }}>Delete this validation?</h3>
+          <p style={{ margin: "0 0 16px", fontSize: 13, color: F.muted }}>This cannot be undone.</p>
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+            <button onClick={() => setConfirmDel(null)} style={bt()}>Cancel</button>
+            <button onClick={() => remove(confirmDel)} style={bt("danger")}>Delete</button>
+          </div>
+        </Modal>
+      )}
+    </>
+  );
+}
+
+/* ── Finance sub-page ───────────────────────────────────── */
+function MonzFinancePage() {
+  const [fin, setFin] = useState(DEFAULT_FINANCE);
+  const [monz, setMonz] = useState(DEFAULT_MONETIZATION);
+  const [readyFin, setReadyFin] = useState(false);
+  const saveTimer = useRef(null);
+
+  useEffect(() => { (async () => {
+    const s = await loadState("faria-monz-finance-v1");
+    setFin(mergeFinance(s));
+    setReadyFin(true);
+  })(); }, []);
+  useEffect(() => { (async () => {
+    const s = await loadState("faria-ai-monetization-v1");
+    setMonz(mergeMonz(s));
+  })(); }, []);
+  useEffect(() => { if (!readyFin) return; clearTimeout(saveTimer.current); saveTimer.current = setTimeout(() => saveState("faria-monz-finance-v1", fin), 1000); return () => clearTimeout(saveTimer.current); }, [fin, readyFin]);
+
+  const setCost = (k, v) => setFin(prev => ({ ...prev, costInputs: { ...prev.costInputs, [k]: v === "" ? 0 : (parseFloat(v) || 0) } }));
+  const setUsage = (p, k, v) => setFin(prev => ({ ...prev, usageInputs: { ...prev.usageInputs, [p]: { ...prev.usageInputs[p], [k]: v === "" ? 0 : (parseFloat(v) || 0) } } }));
+  const addScenario = () => setFin(prev => ({ ...prev, uptakeScenarios: [...prev.uptakeScenarios, SCENARIO_TEMPLATE()] }));
+  const updScenario = (id, patch) => setFin(prev => ({ ...prev, uptakeScenarios: prev.uptakeScenarios.map(s => s.id === id ? { ...s, ...patch } : s) }));
+  const delScenario = (id) => setFin(prev => ({ ...prev, uptakeScenarios: prev.uptakeScenarios.filter(s => s.id !== id) }));
+  const addDecision = () => setFin(prev => ({ ...prev, decisions: [DECISION_TEMPLATE(), ...prev.decisions] }));
+  const updDecision = (id, patch) => setFin(prev => ({ ...prev, decisions: prev.decisions.map(d => d.id === id ? { ...d, ...patch } : d) }));
+  const delDecision = (id) => setFin(prev => ({ ...prev, decisions: prev.decisions.filter(d => d.id !== id) }));
+
+  const card = { background: F.surface, border: `1px solid ${F.border}`, borderRadius: 12, padding: "18px 22px", marginBottom: 18, boxShadow: F.shadowSm };
+  const sectionTitle = { fontSize: 11, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 };
+  const numInp = { ...inp, width: "100%", textAlign: "right" };
+
+  // Computed: monthly cost per school
+  const costPerSchool = (prod, tier) => {
+    const u = fin.usageInputs[prod] || { essActionsPerSchoolMonth: 0, proActionsPerSchoolMonth: 0, tokensPerAction: 0 };
+    const actions = tier === "pro" ? u.proActionsPerSchoolMonth : u.essActionsPerSchoolMonth;
+    const tokenCost = (actions * u.tokensPerAction * fin.costInputs.tokenCostPer1k) / 1000;
+    // Spread infra evenly across all products as a rough proxy; support is per-customer per-year, so /12 per month
+    const infraShare = fin.costInputs.monthlyInfraCost / MONZ_PRODUCTS.length;
+    const support = (fin.costInputs.supportCostPerCustomer || 0) / 12;
+    return tokenCost + infraShare + support;
+  };
+  const fmtMoney = (n) => isFinite(n) ? `$${n.toFixed(2)}` : "—";
+  const fmtPct = (n) => isFinite(n) ? `${n.toFixed(0)}%` : "—";
+
+  return (
+    <>
+      <div style={card}>
+        <div style={sectionTitle}>Cost inputs</div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 14 }}>
+          <div>
+            <div style={lb}>Token cost · per 1k tokens (USD)</div>
+            <input type="number" min="0" step="0.001" value={fin.costInputs.tokenCostPer1k || ""} placeholder="0" onChange={e => setCost("tokenCostPer1k", e.target.value)} style={numInp} />
+          </div>
+          <div>
+            <div style={lb}>Monthly infra cost (USD)</div>
+            <input type="number" min="0" step="1" value={fin.costInputs.monthlyInfraCost || ""} placeholder="0" onChange={e => setCost("monthlyInfraCost", e.target.value)} style={numInp} />
+          </div>
+          <div>
+            <div style={lb}>Support · per customer / year (USD)</div>
+            <input type="number" min="0" step="1" value={fin.costInputs.supportCostPerCustomer || ""} placeholder="0" onChange={e => setCost("supportCostPerCustomer", e.target.value)} style={numInp} />
+          </div>
+        </div>
+      </div>
+
+      <div style={card}>
+        <div style={sectionTitle}>Usage inputs · per product, per school, per month</div>
+        <div style={{ overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12.5 }}>
+            <thead>
+              <tr style={{ background: F.bg }}>
+                <th style={{ textAlign: "left", padding: "8px 10px", fontSize: 10.5, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em" }}>Product</th>
+                <th style={{ textAlign: "right", padding: "8px 10px", fontSize: 10.5, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em" }}>Essential actions / school / mo</th>
+                <th style={{ textAlign: "right", padding: "8px 10px", fontSize: 10.5, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em" }}>Pro actions / school / mo</th>
+                <th style={{ textAlign: "right", padding: "8px 10px", fontSize: 10.5, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em" }}>Tokens / action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {MONZ_PRODUCTS.map(p => {
+                const u = fin.usageInputs[p] || {};
+                return (
+                  <tr key={p} style={{ borderBottom: `1px solid ${F.border}` }}>
+                    <td style={{ padding: "8px 10px", color: F.plum, fontWeight: 600 }}>{p}</td>
+                    <td style={{ padding: "6px 10px" }}><input type="number" min="0" value={u.essActionsPerSchoolMonth || ""} placeholder="0" onChange={e => setUsage(p, "essActionsPerSchoolMonth", e.target.value)} style={numInp} /></td>
+                    <td style={{ padding: "6px 10px" }}><input type="number" min="0" value={u.proActionsPerSchoolMonth || ""} placeholder="0" onChange={e => setUsage(p, "proActionsPerSchoolMonth", e.target.value)} style={numInp} /></td>
+                    <td style={{ padding: "6px 10px" }}><input type="number" min="0" value={u.tokensPerAction || ""} placeholder="0" onChange={e => setUsage(p, "tokensPerAction", e.target.value)} style={numInp} /></td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div style={card}>
+        <div style={sectionTitle}>Computed · monthly cost per school</div>
+        <p style={{ margin: "0 0 12px", fontSize: 11.5, color: F.muted, fontStyle: "italic" }}>(actions/mo × tokens/action × token cost ÷ 1000) + infra share + support / 12.</p>
+        <div style={{ overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12.5 }}>
+            <thead>
+              <tr style={{ background: F.bg }}>
+                <th style={{ textAlign: "left", padding: "8px 10px", fontSize: 10.5, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em" }}>Product</th>
+                <th style={{ textAlign: "right", padding: "8px 10px", fontSize: 10.5, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em" }}>Essential cost / school / mo</th>
+                <th style={{ textAlign: "right", padding: "8px 10px", fontSize: 10.5, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em" }}>Pro cost / school / mo</th>
+              </tr>
+            </thead>
+            <tbody>
+              {MONZ_PRODUCTS.map(p => (
+                <tr key={p} style={{ borderBottom: `1px solid ${F.border}` }}>
+                  <td style={{ padding: "8px 10px", color: F.plum, fontWeight: 600 }}>{p}</td>
+                  <td style={{ padding: "8px 10px", textAlign: "right", color: F.plum, fontWeight: 700 }}>{fmtMoney(costPerSchool(p, "essential"))}</td>
+                  <td style={{ padding: "8px 10px", textAlign: "right", color: F.plum, fontWeight: 700 }}>{fmtMoney(costPerSchool(p, "pro"))}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div style={card}>
+        <div style={sectionTitle}>Breakeven analysis · Pro SKU vs cost</div>
+        <p style={{ margin: "0 0 12px", fontSize: 11.5, color: F.muted, fontStyle: "italic" }}>Pulls Pro SKU price from the Plan view (per account / year ÷ 12). Margin % at current price.</p>
+        <div style={{ overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12.5 }}>
+            <thead>
+              <tr style={{ background: F.bg }}>
+                {["Product", "Pro SKU price / yr", "Cost / school / mo (Pro)", "Revenue / school / mo (Pro)", "Margin / school / mo", "Margin %"].map(h => (
+                  <th key={h} style={{ textAlign: "right", padding: "8px 10px", fontSize: 10.5, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em" }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {MONZ_PRODUCTS.map(p => {
+                const price = (monz.products[p]?.price || 0);
+                const monthlyRev = price / 12;
+                const monthlyCost = costPerSchool(p, "pro");
+                const margin = monthlyRev - monthlyCost;
+                const marginPct = monthlyRev > 0 ? (margin / monthlyRev) * 100 : NaN;
+                return (
+                  <tr key={p} style={{ borderBottom: `1px solid ${F.border}` }}>
+                    <td style={{ padding: "8px 10px", color: F.plum, fontWeight: 600, textAlign: "left" }}>{p}</td>
+                    <td style={{ padding: "8px 10px", textAlign: "right", color: F.muted }}>{fmtMoney(price)}</td>
+                    <td style={{ padding: "8px 10px", textAlign: "right", color: F.muted }}>{fmtMoney(monthlyCost)}</td>
+                    <td style={{ padding: "8px 10px", textAlign: "right", color: F.muted }}>{fmtMoney(monthlyRev)}</td>
+                    <td style={{ padding: "8px 10px", textAlign: "right", color: margin >= 0 ? F.green : F.pink, fontWeight: 700 }}>{fmtMoney(margin)}</td>
+                    <td style={{ padding: "8px 10px", textAlign: "right", color: marginPct >= 0 ? F.green : F.pink, fontWeight: 700 }}>{isFinite(marginPct) ? fmtPct(marginPct) : "—"}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div style={card}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+          <div style={sectionTitle}>Uptake scenarios</div>
+          <button onClick={addScenario} style={bt("primary")}>+ Add scenario</button>
+        </div>
+        {fin.uptakeScenarios.length === 0 && (
+          <p style={{ margin: 0, fontSize: 12.5, color: F.muted, fontStyle: "italic", textAlign: "center", padding: "12px 0" }}>No scenarios yet. Add one to model revenue at a given Pro-uptake assumption.</p>
+        )}
+        {fin.uptakeScenarios.map(s => {
+          const totalSchools = parseFloat(s.totalSchools) || 0;
+          let revenue = 0, cost = 0;
+          MONZ_PRODUCTS.forEach(p => {
+            const pct = parseFloat(s[productPctKey(p)]) || 0;
+            const proSchools = (totalSchools * pct) / 100;
+            const price = (monz.products[p]?.price || 0);
+            revenue += proSchools * price;
+            cost += proSchools * costPerSchool(p, "pro") * 12;
+          });
+          const profit = revenue - cost;
+          return (
+            <div key={s.id} style={{ marginTop: 12, padding: 12, background: F.bg, border: `1px solid ${F.border}`, borderRadius: 8 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 32px", gap: 8, alignItems: "center", marginBottom: 8 }}>
+                <div>
+                  <div style={lb}>Scenario</div>
+                  <input value={s.label} onChange={e => updScenario(s.id, { label: e.target.value })} placeholder="e.g. Q3 2026" style={{ ...inp, width: "100%" }} />
+                </div>
+                <div>
+                  <div style={lb}>Total schools</div>
+                  <input type="number" min="0" value={s.totalSchools || ""} placeholder="0" onChange={e => updScenario(s.id, { totalSchools: e.target.value })} style={numInp} />
+                </div>
+                {MONZ_PRODUCTS.map(p => (
+                  <div key={p}>
+                    <div style={lb}>{p.slice(0, 8)} %</div>
+                    <input type="number" min="0" max="100" value={s[productPctKey(p)] || ""} placeholder="0" onChange={e => updScenario(s.id, { [productPctKey(p)]: e.target.value })} style={numInp} />
+                  </div>
+                ))}
+                <div style={{ display: "flex", alignItems: "flex-end", height: "100%" }}>
+                  <button onClick={() => delScenario(s.id)} title="Remove" style={{ ...bt("ghost"), padding: "6px 8px", color: F.muted2 }}>×</button>
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: 18, flexWrap: "wrap", fontSize: 12.5, paddingTop: 8, borderTop: `1px solid ${F.border}` }}>
+                <div><span style={{ color: F.muted, fontWeight: 600 }}>Revenue / yr</span> <strong style={{ color: F.plum }}>{fmtMoney(revenue)}</strong></div>
+                <div><span style={{ color: F.muted, fontWeight: 600 }}>Cost / yr</span> <strong style={{ color: F.pink }}>{fmtMoney(cost)}</strong></div>
+                <div><span style={{ color: F.muted, fontWeight: 600 }}>Gross profit / yr</span> <strong style={{ color: profit >= 0 ? F.green : F.pink }}>{fmtMoney(profit)}</strong></div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div style={card}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+          <div style={sectionTitle}>Decisions log</div>
+          <button onClick={addDecision} style={bt("primary")}>+ Log decision</button>
+        </div>
+        {fin.decisions.length === 0 && (
+          <p style={{ margin: 0, fontSize: 12.5, color: F.muted, fontStyle: "italic", textAlign: "center", padding: "12px 0" }}>No decisions logged yet.</p>
+        )}
+        {fin.decisions.map(d => (
+          <div key={d.id} style={{ marginTop: 10, padding: 12, background: F.bg, border: `1px solid ${F.border}`, borderRadius: 8 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "140px 1fr 30px", gap: 10, marginBottom: 8 }}>
+              <input type="date" value={d.date} onChange={e => updDecision(d.id, { date: e.target.value })} style={{ ...inp }} />
+              <input value={d.decidedBy} onChange={e => updDecision(d.id, { decidedBy: e.target.value })} placeholder="Decided by (name / team)" style={{ ...inp }} />
+              <button onClick={() => delDecision(d.id)} title="Remove" style={{ ...bt("ghost"), padding: "6px 8px", color: F.muted2 }}>×</button>
+            </div>
+            <textarea value={d.summary} onChange={e => updDecision(d.id, { summary: e.target.value })} rows={2} placeholder="Decision summary…" style={{ ...inp, width: "100%", resize: "vertical" }} />
+          </div>
+        ))}
+      </div>
+
+      <div style={card}>
+        <div style={sectionTitle}>General notes</div>
+        <textarea value={fin.notes} onChange={e => setFin(prev => ({ ...prev, notes: e.target.value }))} rows={4} placeholder="Open questions, assumptions, caveats…" style={{ ...inp, width: "100%", resize: "vertical" }} />
+      </div>
+    </>
+  );
+}
+
 /* ── Fair Use Example (sub-page of AI Monetization) ───────
    Static mockup deck — what hitting a fair-use limit looks like
    inside the actual product. Deliberately styled with OpenApply
    neutrals (Open Sans, grayscale text, plum brand, amber warnings)
    so the panels feel authentic to the in-product UX rather than the
    bright Faria tracker chrome. */
-function FairUseExample() {
+function FairUseExample({ monz, setMonz }) {
+  const rationale = monz?.leadingModelRationale || DEFAULT_MONETIZATION.leadingModelRationale;
+  const setRationale = (idx, val) => setMonz(prev => ({ ...prev, leadingModelRationale: (prev.leadingModelRationale || DEFAULT_MONETIZATION.leadingModelRationale).map((r, i) => i === idx ? val : r) }));
+  const addRationale = () => setMonz(prev => ({ ...prev, leadingModelRationale: [...(prev.leadingModelRationale || DEFAULT_MONETIZATION.leadingModelRationale), ""] }));
+  const removeRationale = (idx) => setMonz(prev => ({ ...prev, leadingModelRationale: (prev.leadingModelRationale || DEFAULT_MONETIZATION.leadingModelRationale).filter((_, i) => i !== idx) }));
   const styles = `
     .fue-deck { font-family: 'Open Sans', system-ui, sans-serif; color: #101828; font-size: 14px; line-height: 1.45; }
     .fue-intro { margin: 0 0 28px; padding: 18px 20px; background: #ECE9EF; border: 1px solid #E0DAE6; border-radius: 10px; }
@@ -1393,6 +2116,25 @@ function FairUseExample() {
     .fue-cmp-banner-a .fue-cmp-tag { background: ${F.plum}; color: #fff; }
     .fue-cmp-banner-b .fue-cmp-tag { background: #6b4500; color: #FFF8E6; }
     .fue-cmp-banner-c .fue-cmp-tag { background: ${F.green}; color: #fff; }
+
+    /* Leading-option highlight on Model B */
+    .fue-cmp-col.fue-cmp-leading { border: 2px solid ${F.pink}; box-shadow: 0 6px 18px rgba(232, 55, 172, 0.18); }
+    .fue-leading-row { margin-bottom: 8px; }
+    .fue-leading-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 800; letter-spacing: 0.8px; padding: 3px 9px; border-radius: 4px; background: ${F.pink}; color: #fff; }
+
+    /* "Why Model B?" rationale card */
+    .fue-rationale-card { background: #fff; border: 2px solid ${F.pink}; border-radius: 12px; padding: 18px 22px; margin: 22px 0 8px; box-shadow: 0 4px 14px rgba(232, 55, 172, 0.10); display: grid; grid-template-columns: minmax(200px, 1fr) 2fr; gap: 22px; align-items: start; }
+    .fue-rationale-card .rat-left { display: flex; flex-direction: column; gap: 6px; }
+    .fue-rationale-card .rat-eyebrow { font-size: 10.5px; font-weight: 800; color: ${F.pink}; text-transform: uppercase; letter-spacing: 0.1em; }
+    .fue-rationale-card .rat-title { font-size: 17px; font-weight: 700; color: ${F.plum}; line-height: 1.25; margin: 0; font-family: 'Nunito Sans','Trebuchet MS',system-ui,sans-serif; }
+    .fue-rationale-card .rat-sub { font-size: 12.5px; color: #667085; margin: 0; line-height: 1.5; }
+    .fue-rationale-card .rat-list { display: flex; flex-direction: column; gap: 8px; }
+    .fue-rationale-card .rat-row { display: flex; align-items: center; gap: 8px; background: #FAFAFB; border: 1px solid #EAECF0; border-radius: 7px; padding: 7px 10px 7px 11px; }
+    .fue-rationale-card .rat-bullet { width: 7px; height: 7px; border-radius: 50%; background: ${F.pink}; flex-shrink: 0; }
+    .fue-rationale-card .rat-input { flex: 1; border: none; background: transparent; font-size: 13px; color: #344054; outline: none; font-family: inherit; min-width: 0; }
+    .fue-rationale-card .rat-remove { width: 20px; height: 20px; border-radius: 10px; background: transparent; border: none; color: #98a2b3; cursor: pointer; font-size: 14px; line-height: 1; padding: 0; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; font-family: inherit; }
+    .fue-rationale-card .rat-add { margin-top: 4px; padding: 6px 11px; border: 1px dashed ${F.borderStrong}; background: transparent; color: ${F.plum}; border-radius: 7px; font-size: 11.5px; font-weight: 700; cursor: pointer; font-family: inherit; align-self: flex-start; }
+    @media (max-width: 720px) { .fue-rationale-card { grid-template-columns: 1fr; } }
     .fue-cmp-title { font-size: 15px; font-weight: 700; color: #101828; margin: 0 0 3px 0; line-height: 1.25; }
     .fue-cmp-tagline { font-size: 12px; color: #667085; margin: 0; line-height: 1.4; }
     .fue-cmp-body { padding: 16px 18px 0; display: flex; flex-direction: column; gap: 14px; flex: 1; }
@@ -1879,9 +2621,10 @@ function FairUseExample() {
               <div style={{ height: 18 }}></div>
             </div>
 
-            {/* ─── Model B: shared credit pool (weighted) ─── */}
-            <div className="fue-cmp-col">
+            {/* ─── Model B: shared credit pool (weighted) — LEADING OPTION ─── */}
+            <div className="fue-cmp-col fue-cmp-leading">
               <div className="fue-cmp-banner fue-cmp-banner-b">
+                <div className="fue-leading-row"><span className="fue-leading-badge">★ Leading option</span></div>
                 <span className="fue-cmp-tag">MODEL B · CREDITS</span>
                 <h4 className="fue-cmp-title">Shared credits across features</h4>
                 <p className="fue-cmp-tagline">One monthly pool of AI credits, drawn from by every feature.</p>
@@ -1947,6 +2690,25 @@ function FairUseExample() {
               <div style={{ height: 18 }}></div>
             </div>
 
+          </div>
+        </div>
+
+        {/* ── Why Model B? — editable rationale strip ─── */}
+        <div className="fue-rationale-card">
+          <div className="rat-left">
+            <span className="rat-eyebrow">★ Leading option</span>
+            <h4 className="rat-title">Why Model B is our leading candidate</h4>
+            <p className="rat-sub">Editable rationale — refine the bullets as the team aligns.</p>
+          </div>
+          <div className="rat-list">
+            {rationale.map((r, i) => (
+              <div key={i} className="rat-row">
+                <span className="rat-bullet"></span>
+                <input className="rat-input" value={r} onChange={e => setRationale(i, e.target.value)} placeholder="New rationale…" />
+                <button className="rat-remove" onClick={() => removeRationale(i)} title="Remove">×</button>
+              </div>
+            ))}
+            <button className="rat-add" onClick={addRationale}>+ Add reason</button>
           </div>
         </div>
 

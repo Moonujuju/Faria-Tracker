@@ -342,9 +342,195 @@ const DEFAULT_MONETIZATION = {
 
 /* ── Defaults for the new monetization sub-pages ───────── */
 const DEFAULT_COMPETITIVE = {
-  competitors: [],
-  feedSplitNotes: "",
-  benchmarkNotes: "",
+  competitors: [
+    // ── Education ──
+    {
+      id: "duolingo-max",
+      name: "Duolingo (Duolingo Max)",
+      aiModel: ["Tiered freemium"],
+      pricing: "Max $29.99/month or $168/year",
+      pricingDetails: "Max: $29.99/month or $168/year\nFamily plan: ~$240/year\nSuper tier (below Max): ~$84–96/year",
+      essentialFeatures: "Super tier features + (since Jan 2026) Explain My Answer and Video Call moved into the free tier",
+      proFeatures: "Max — premium AI features above Super",
+      strengths: "",
+      weaknesses: "Individual AI features commoditize fast — moving flagship features down to free hollowed out Max's differentiation",
+      lastReviewed: "2026-06-01",
+      sourceUrl: "",
+      notes: "Premium consumer tier above an existing premium tier (Super). In January 2026 Duolingo moved its flagship AI features (Explain My Answer, Video Call) down into the free tier, hollowing out Max's differentiation. Cautionary case on how quickly individual AI features commoditize.",
+    },
+    {
+      id: "khanmigo",
+      name: "Khan Academy (Khanmigo)",
+      aiModel: ["Per-student/institution", "Tiered freemium"],
+      pricing: "$15/student/year (district)",
+      pricingDetails: "District base partnership: $5/student/year (reporting) or $10/student/year (enterprise starter)\nKhanmigo for students (district): $15/student/year\nIndividual: $4/month ($44/year)",
+      essentialFeatures: "Khan core platform — free",
+      proFeatures: "Khanmigo for students (district + individual)",
+      strengths: "Price fell from $60 → $35 → ~$15 over time, well below most peers",
+      weaknesses: "",
+      lastReviewed: "2026-06-01",
+      sourceUrl: "",
+      notes: "Free core platform + per-student institutional add-on; separate low-cost individual subscription. District Khanmigo price fell from $60 to $35 to ~$15 positioning over time. Bundled with College Board SAT Suite and NWEA MAP Growth.",
+    },
+    {
+      id: "instructure-igniteai",
+      name: "Instructure (IgniteAI, Canvas LMS)",
+      aiModel: ["Bundled (no extra charge)", "Consumption/credits"],
+      pricing: "Free through Jun 30, 2026 (US) / Sep 30, 2026 (global)",
+      pricingDetails: "Free for US Canvas customers through Jun 30, 2026\nFree globally through Sep 30, 2026\nFuture structure: access/equity features remain free long-term; compute-heavy capabilities may carry additional cost, priced after observing real usage",
+      essentialFeatures: "Access/equity features (free long-term)",
+      proFeatures: "Compute-heavy capabilities (future paid tier) + agentic features",
+      strengths: "Closest structural analog to an integrated education suite. Explicit three-bucket framing.",
+      weaknesses: "",
+      lastReviewed: "2026-06-01",
+      sourceUrl: "",
+      notes: "AI embedded in the LMS; free land-grab period, then tiered by compute cost. Three-bucket framing (free-forever access tier / paid compute-heavy tier / agentic). Built on AWS Bedrock.",
+    },
+    {
+      id: "powerschool-powerbuddy",
+      name: "PowerSchool (PowerBuddy)",
+      aiModel: ["Bundled (no extra charge)", "Tiered freemium"],
+      pricing: "Institutional / quote-based",
+      pricingDetails: "Quote-based, sold inside existing product workflows (e.g. Schoology). A set of PowerBuddy features made available at no cost.",
+      essentialFeatures: "Subset of PowerBuddy features included at no cost",
+      proFeatures: "Premium AI assistants embedded in existing suite (quoted)",
+      strengths: "Positions AI as suite differentiation and retention rather than a separate revenue line",
+      weaknesses: "",
+      lastReviewed: "2026-06-01",
+      sourceUrl: "",
+      notes: "Role-based AI assistants (students, teachers, families, administrators) embedded across the existing SIS/LMS suite. Mix of free and paid features. Sold inside existing product workflows rather than as standalone revenue.",
+    },
+    {
+      id: "magicschool",
+      name: "MagicSchool",
+      aiModel: ["Per-seat", "Tiered freemium"],
+      pricing: "Free / $8.33/user/mo / Enterprise",
+      pricingDetails: "Free: $0 for individual teachers\nPlus: $8.33/user/month billed annually ($99.96/year), or $12.99 billed monthly\nEnterprise: custom, volume-based",
+      essentialFeatures: "Free tier for individual teachers",
+      proFeatures: "Plus / Enterprise (district)",
+      strengths: "Strong individual-teacher adoption via free tier",
+      weaknesses: "Buyer critique — the \"standalone AI tax\". Districts pay for AI on top of existing SIS/LMS/gradebook, disconnected from their core data.",
+      lastReviewed: "2026-06-01",
+      sourceUrl: "",
+      notes: "Standalone per-seat freemium (teacher tool); enterprise tier for districts. Common buyer critique is the \"standalone AI tax\" — districts pay for AI on top of their existing SIS/LMS/gradebook, disconnected from their core data.",
+    },
+
+    // ── Broader B2B SaaS ──
+    {
+      id: "microsoft-copilot",
+      name: "Microsoft (365 Copilot)",
+      aiModel: ["Per-seat", "Tiered freemium"],
+      pricing: "$30/user/month enterprise",
+      pricingDetails: "Copilot Chat: free with eligible M365 subscriptions (public web data only, no org grounding)\nCopilot Business (SMB, up to 300 users): $18/user/month promo through Jun 30, 2026 → $21 after\nCopilot Enterprise: $30/user/month annual ($360/user/year), on top of E3/E5\nCopilot Studio (build custom agents): from ~$200/month per tenant",
+      essentialFeatures: "Copilot Chat (free with M365, public web only, no org grounding)",
+      proFeatures: "Copilot Business / Enterprise (org-grounded), Copilot Studio (agents)",
+      strengths: "Canonical predictable per-seat model — easy to budget",
+      weaknesses: "30–40% of enterprise licenses reported unused within 90 days when deployed to all users at once",
+      lastReviewed: "2026-06-01",
+      sourceUrl: "",
+      notes: "Per-seat add-on (flat) on top of a required base license; free chat tier underneath. Canonical predictable per-seat model. Reported 30–40% of enterprise licenses unused within 90 days when deployed to all users at once.",
+    },
+    {
+      id: "salesforce-agentforce",
+      name: "Salesforce (Agentforce)",
+      aiModel: ["Per-agent license", "Consumption/credits", "Per-conversation"],
+      pricing: "3 models — buyer self-selects",
+      pricingDetails: "Foundations: free entry tier ($0), modest included credits\nFlex Credits (consumption): standard action = 20 credits (~$0.10); voice action = 30 credits (~$0.15); credits at $500 per 100,000\nConversations: ~$2 per 24-hour interaction session (flat usage)\nPer-user add-ons: $125–150/user/month; Agentforce 1 Editions $550+/user/month",
+      essentialFeatures: "Foundations (free entry tier with modest included credits)",
+      proFeatures: "Flex Credits / Conversations / Per-user agent licenses",
+      strengths: "Multiple pricing models simultaneously — buyers self-select by purchasing preference",
+      weaknesses: "Pricing evolved through 3 models in ~18 months. The $2/conversation launch priced out SMBs (low conversion). Flex Credits and Conversations can't be used in the same org. Often requires Data Cloud, frequently a larger cost than Agentforce itself.",
+      lastReviewed: "2026-06-01",
+      sourceUrl: "",
+      notes: "Runs three models simultaneously and lets customers self-select. Pricing evolved through three models in ~18 months ($2/conversation at launch → Flex Credits May 2025 → per-user licenses late 2025). Often requires Data Cloud, frequently a larger cost than Agentforce itself.",
+    },
+    {
+      id: "intercom-fin",
+      name: "Intercom (Fin AI Agent)",
+      aiModel: ["Outcome-based", "Per-seat"],
+      pricing: "$0.99 per outcome",
+      pricingDetails: "Fin: $0.99 per outcome (resolution or procedure handoff); 50-outcome monthly minimum ($49.50) for standalone Fin with an existing helpdesk\nSeats (inside Intercom): $29–$132/seat/month annual\nCopilot for human agents: ~$35/seat/month add-on",
+      essentialFeatures: "",
+      proFeatures: "Fin (outcome-priced) + Copilot human-agent add-on",
+      strengths: "\"You only pay when it works\" framing resonates with buyers",
+      weaknesses: "Cost rises as the AI improves (more resolutions) — monthly spend hard to budget. Real-world resolution rates cited at 42–50%.",
+      lastReviewed: "2026-06-01",
+      sourceUrl: "",
+      notes: "Outcome-based (per resolution), on top of seat plans. Marketed as \"you only pay when it works.\" Known criticism: cost rises as the AI improves (more resolutions), making monthly spend hard to budget. Real-world resolution rates cited at 42–50%.",
+    },
+    {
+      id: "hubspot-breeze",
+      name: "HubSpot (Breeze)",
+      aiModel: ["Outcome-based", "Consumption/credits"],
+      pricing: "$0.50 per resolved conversation (Customer Agent)",
+      pricingDetails: "Credits: $10 per 1,000 (underlying unit)\nBreeze Customer Agent (from Apr 14, 2026): $0.50 per resolved conversation\nBreeze Prospecting Agent: $1 per recommended lead\nRequires Pro/Enterprise base subscription; included credits: 500 (Starter) / 3,000 (Pro) / 5,000 (Enterprise)",
+      essentialFeatures: "Standard enrichment free with core seats; included monthly credits per tier",
+      proFeatures: "Breeze Customer Agent (outcome-priced), Breeze Prospecting Agent",
+      strengths: "Stated philosophy: \"AI should be priced on the value it delivers, not the compute it consumes.\" Credits moved a layer down so customer-facing price is per-outcome.",
+      weaknesses: "No grandfathering on the April 2026 price change",
+      lastReviewed: "2026-06-01",
+      sourceUrl: "",
+      notes: "Moved from credits toward outcome-based, with credits retained as an internal compute layer. Credits did not disappear; they moved \"down a layer\" so the customer-facing price is per-outcome while compute is metered underneath. Standard enrichment made free with core seats to drive adoption.",
+    },
+    {
+      id: "github-copilot",
+      name: "GitHub Copilot",
+      aiModel: ["Per-seat", "Consumption/credits", "Tiered freemium"],
+      pricing: "$10–$39/user/month + premium-request metering",
+      pricingDetails: "Free: 50 premium requests/month, ~2,000 completions/month\nPro: $10/user/month (unlimited completions/chat; 300 premium requests)\nPro+: $39/user/month (1,500 premium requests; top-tier models)\nBusiness: $19/user/month (admin controls, audit logs, IP indemnity)\nEnterprise: $39/user/month, but requires GitHub Enterprise Cloud (+$21/user) — real cost ~$60/user/month\nOverage: $0.04 per premium request beyond the monthly allotment",
+      essentialFeatures: "Free tier (50 premium requests, ~2,000 completions/month)",
+      proFeatures: "Pro / Pro+ / Business / Enterprise with progressively higher premium-request allowances",
+      strengths: "Hybrid model — predictable seat fee + metered premium for heavier model usage",
+      weaknesses: "\"Premium requests\" are the real cost driver, not the sticker price. Heavier models (Claude, o-series) consume the allowance faster.",
+      lastReviewed: "2026-06-01",
+      sourceUrl: "",
+      notes: "Per-seat plus a metered \"premium request\" allowance (hybrid), with a free tier. Illustrates the shift from flat-completion pricing to metered model usage layered onto a seat price.",
+    },
+    {
+      id: "adobe-firefly",
+      name: "Adobe (Firefly / Creative Cloud)",
+      aiModel: ["Consumption/credits", "Bundled (no extra charge)"],
+      pricing: "Credits bundled into Creative Cloud subscriptions",
+      pricingDetails: "Free: 25 generative credits/month\nFirefly Standard: ~2,000 credits/month\nFirefly Pro: $19.99/month, 4,000 credits\nPremium tiers up to ~50,000 credits\nAdd-on credit packs available; API priced separately (~$0.02–0.10 per image, ~$1,000/month enterprise minimum)\nCredits consumed by feature, e.g. video at 20/50/100 credits per second for 540p/720p/1080p",
+      essentialFeatures: "Standard generations effectively unlimited; credits spent only on premium workloads",
+      proFeatures: "Premium features (video, etc.) consume credits at higher rates",
+      strengths: "One credit type for both standard and premium features — standard effectively unlimited. Adobe raised base Creative Cloud plan prices ~10% to fund AI rather than charging a separate AI fee — no visible \"AI surcharge.\"",
+      weaknesses: "",
+      lastReviewed: "2026-06-01",
+      sourceUrl: "",
+      notes: "Generative credits (consumption), included with subscriptions; standard generations unlimited, premium features consume credits. Adobe funded AI partly by raising base Creative Cloud plan prices ~10% when Firefly launched, rather than charging a separate AI fee.",
+    },
+    {
+      id: "zoom-ai-companion",
+      name: "Zoom (AI Companion)",
+      aiModel: ["Bundled (no extra charge)"],
+      pricing: "Included free with all paid Zoom Workplace plans",
+      pricingDetails: "AI Companion: included free with all paid Zoom Workplace plans (Pro ~$13.33/month, Business ~$18.33/month); not on the free Basic plan\nStandalone AI Companion (without a Zoom license): ~$10/user/month\nCustom AI add-on: +$12/user/month",
+      essentialFeatures: "AI Companion bundled at no extra charge with all paid plans",
+      proFeatures: "Standalone AI Companion (~$10/user/month); Custom AI add-on (+$12/user/month)",
+      strengths: "Deliberately positioned as the anti-\"AI tax\" play. Bundling removes the biggest barrier to enterprise adoption.",
+      weaknesses: "",
+      lastReviewed: "2026-06-01",
+      sourceUrl: "",
+      notes: "Bundled at no extra charge into existing paid plans; standalone and premium add-on options exist separately. Stated rationale: \"we want all customers to use all our AI features, not just a selected few.\" Federated approach across own and third-party models.",
+    },
+    {
+      id: "zendesk",
+      name: "Zendesk (for comparison)",
+      aiModel: ["Outcome-based"],
+      pricing: "~$1.50 per automated resolution",
+      pricingDetails: "~$1.50 per resolution (per third-party comparisons)",
+      essentialFeatures: "",
+      proFeatures: "AI automated resolution",
+      strengths: "",
+      weaknesses: "Higher per-unit rate than Intercom Fin's $0.99",
+      lastReviewed: "2026-06-01",
+      sourceUrl: "",
+      notes: "Same per-resolution category as Intercom Fin and HubSpot Customer Agent, at a higher per-unit rate than Fin's $0.99.",
+    },
+  ],
+  feedSplitNotes: "Universal free adoption tier beneath the paid models — observed at Copilot Chat, Instructure access features, HubSpot enrichment, Salesforce Foundations, and Khan core platform. The \"standalone AI tax\" grievance: buyers resent paying for AI on top of core software they already license, which structurally favors integrated suites over point solutions (MagicSchool is the cautionary case; PowerSchool and Instructure benefit). Some vendors embed AI cost into the base rather than charging separately — Zoom bundles AI at no extra charge as an adoption lever; Adobe raised base plan prices ~10% to fund AI instead of adding a line item. Both avoid a visible \"AI surcharge.\"",
+  benchmarkNotes: "No convergence — the market has not settled on one model. Salesforce deliberately offers three at once so buyers self-select. Strong pull toward outcome-based pricing in support and sales tooling (Intercom, HubSpot, Zendesk), framed around paying for value not compute. The outcome-pricing catch: bills rise as the AI improves and swing with usage, which finance teams dislike — keeps pulling vendors back toward per-seat / per-user wrappers that give a budgetable number. Credits as a hidden compute layer (HubSpot's current approach): customer-facing price is per-outcome, compute is metered underneath. For Faria's positioning as an integrated education suite, Instructure IgniteAI and PowerSchool PowerBuddy are the closest structural comparables — both bundle AI as suite differentiation rather than a separate revenue line, with future tiering on compute-heavy capabilities.",
 };
 const COMPETITOR_TEMPLATE = () => ({
   id: Date.now() + Math.floor(Math.random() * 1000),
@@ -364,11 +550,20 @@ function mergeCompetitive(saved) {
   if (!saved) return DEFAULT_COMPETITIVE;
   // Normalise: older blobs had aiModel as a string and category/threatLevel fields.
   // Coerce aiModel to an array; drop category & threatLevel by ignoring them on render.
-  const competitors = (saved.competitors || []).map(c => ({
+  const savedCompetitors = (saved.competitors || []).map(c => ({
     ...c,
     aiModel: Array.isArray(c.aiModel) ? c.aiModel : (c.aiModel ? [c.aiModel] : []),
   }));
-  return { ...DEFAULT_COMPETITIVE, ...saved, competitors };
+  // Append any DEFAULT competitor whose stable string id isn't in the saved list.
+  // Preserves user-added entries (which use Date.now() numeric ids) and any edits to
+  // existing default entries (saved blob takes precedence by id).
+  const savedIds = new Set(savedCompetitors.map(c => c.id));
+  const newDefaults = DEFAULT_COMPETITIVE.competitors.filter(d => !savedIds.has(d.id));
+  return {
+    ...DEFAULT_COMPETITIVE,
+    ...saved,
+    competitors: [...savedCompetitors, ...newDefaults],
+  };
 }
 
 const DEFAULT_MARKET = { validations: [] };
@@ -1325,7 +1520,16 @@ function LimitsModal({ feat, feats, onPick, onChange, onClose }) {
 }
 
 /* ── Shared utilities for the new monetization sub-pages ── */
-const COMP_AI_MODELS = ["Tiered", "Per-seat", "Metered", "Bundled", "Free", "None"];
+const COMP_AI_MODELS = [
+  "Per-seat",
+  "Per-student/institution",
+  "Consumption/credits",
+  "Outcome-based",
+  "Per-conversation",
+  "Per-agent license",
+  "Bundled (no extra charge)",
+  "Tiered freemium",
+];
 const VALIDATION_STAGES = ["interested", "piloting", "live", "committed", "declined"];
 function stageColor(stage) {
   return stage === "interested" ? F.muted2 :

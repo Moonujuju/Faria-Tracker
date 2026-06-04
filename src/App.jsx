@@ -349,22 +349,26 @@ const DEFAULT_COMPETITIVE = {
 const COMPETITOR_TEMPLATE = () => ({
   id: Date.now() + Math.floor(Math.random() * 1000),
   name: "",
-  category: "Admissions",
-  aiModel: "Tiered",
+  aiModel: [], // multi-select array
   pricing: "",
   pricingDetails: "",
   essentialFeatures: "",
   proFeatures: "",
   strengths: "",
   weaknesses: "",
-  threatLevel: "medium",
   lastReviewed: "",
   sourceUrl: "",
   notes: "",
 });
 function mergeCompetitive(saved) {
   if (!saved) return DEFAULT_COMPETITIVE;
-  return { ...DEFAULT_COMPETITIVE, ...saved, competitors: saved.competitors || [] };
+  // Normalise: older blobs had aiModel as a string and category/threatLevel fields.
+  // Coerce aiModel to an array; drop category & threatLevel by ignoring them on render.
+  const competitors = (saved.competitors || []).map(c => ({
+    ...c,
+    aiModel: Array.isArray(c.aiModel) ? c.aiModel : (c.aiModel ? [c.aiModel] : []),
+  }));
+  return { ...DEFAULT_COMPETITIVE, ...saved, competitors };
 }
 
 const DEFAULT_MARKET = { validations: [] };
@@ -1321,11 +1325,8 @@ function LimitsModal({ feat, feats, onPick, onChange, onClose }) {
 }
 
 /* ── Shared utilities for the new monetization sub-pages ── */
-const COMP_CATEGORIES = ["Admissions", "SIS", "LMS", "Comms", "Curriculum", "Other"];
 const COMP_AI_MODELS = ["Tiered", "Per-seat", "Metered", "Bundled", "Free", "None"];
-const COMP_THREAT = ["low", "medium", "high"];
 const VALIDATION_STAGES = ["interested", "piloting", "live", "committed", "declined"];
-function threatColor(level) { return level === "high" ? F.pink : level === "medium" ? F.orange : F.muted2; }
 function stageColor(stage) {
   return stage === "interested" ? F.muted2 :
          stage === "piloting"   ? F.yellow :
@@ -1364,8 +1365,9 @@ function MonzCompetitivePage() {
 
   // Stats
   const total = comp.competitors.length;
-  const high = comp.competitors.filter(c => c.threatLevel === "high").length;
-  const byModel = COMP_AI_MODELS.map(m => ({ m, n: comp.competitors.filter(c => c.aiModel === m).length })).filter(x => x.n > 0);
+  const byModel = COMP_AI_MODELS
+    .map(m => ({ m, n: comp.competitors.filter(c => (c.aiModel || []).includes(m)).length }))
+    .filter(x => x.n > 0);
 
   return (
     <>
@@ -1375,10 +1377,6 @@ function MonzCompetitivePage() {
           <div style={tile}>
             <div style={{ fontSize: 11, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Tracked</div>
             <div style={{ fontSize: 22, fontWeight: 700, color: F.plum }}>{total}</div>
-          </div>
-          <div style={tile}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>High threat</div>
-            <div style={{ fontSize: 22, fontWeight: 700, color: high > 0 ? F.pink : F.muted2 }}>{high}</div>
           </div>
           <div style={{ ...tile, flex: 2, minWidth: 220 }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>By AI model</div>
@@ -1405,11 +1403,12 @@ function MonzCompetitivePage() {
         const open = expanded.has(c.id);
         return (
           <div key={c.id} style={card}>
-            <div onClick={() => toggle(c.id)} style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", userSelect: "none" }}>
+            <div onClick={() => toggle(c.id)} style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", userSelect: "none", flexWrap: "wrap" }}>
               <span style={{ color: F.plum, fontSize: 11, transform: open ? "rotate(90deg)" : "none", transition: "transform 0.15s" }}>▶</span>
-              <div style={{ flex: 1, fontSize: 15, fontWeight: 700, color: F.plum }}>{c.name || <span style={{ color: F.muted2, fontStyle: "italic", fontWeight: 500 }}>(unnamed competitor)</span>}</div>
-              <span style={{ fontSize: 10.5, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: F.bg, color: F.muted, textTransform: "uppercase", letterSpacing: "0.05em", border: `1px solid ${F.border}` }}>{c.category}</span>
-              <span style={{ fontSize: 10.5, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: threatColor(c.threatLevel), color: "#fff", textTransform: "uppercase", letterSpacing: "0.05em" }}>{c.threatLevel} threat</span>
+              <div style={{ flex: 1, minWidth: 160, fontSize: 15, fontWeight: 700, color: F.plum }}>{c.name || <span style={{ color: F.muted2, fontStyle: "italic", fontWeight: 500 }}>(unnamed competitor)</span>}</div>
+              {(c.aiModel || []).map(m => (
+                <span key={m} style={{ fontSize: 10.5, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: F.lightYellow, color: F.plum, textTransform: "uppercase", letterSpacing: "0.05em" }}>{m}</span>
+              ))}
             </div>
 
             {open && (
@@ -1418,23 +1417,35 @@ function MonzCompetitivePage() {
                   <div style={lb}>Name</div>
                   <input value={c.name} onChange={e => updateCompetitor(c.id, { name: e.target.value })} placeholder="e.g. Veracross" style={{ ...inp, width: "100%" }} />
                 </div>
-                <div>
-                  <div style={lb}>Category</div>
-                  <select value={c.category} onChange={e => updateCompetitor(c.id, { category: e.target.value })} style={{ ...inp, width: "100%", cursor: "pointer" }}>
-                    {COMP_CATEGORIES.map(x => <option key={x} value={x}>{x}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <div style={lb}>AI model</div>
-                  <select value={c.aiModel} onChange={e => updateCompetitor(c.id, { aiModel: e.target.value })} style={{ ...inp, width: "100%", cursor: "pointer" }}>
-                    {COMP_AI_MODELS.map(x => <option key={x} value={x}>{x}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <div style={lb}>Threat level</div>
-                  <select value={c.threatLevel} onChange={e => updateCompetitor(c.id, { threatLevel: e.target.value })} style={{ ...inp, width: "100%", cursor: "pointer" }}>
-                    {COMP_THREAT.map(x => <option key={x} value={x}>{x}</option>)}
-                  </select>
+                <div style={{ gridColumn: "1 / -1" }}>
+                  <div style={lb}>AI model · select one or more</div>
+                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                    {COMP_AI_MODELS.map(m => {
+                      const active = (c.aiModel || []).includes(m);
+                      return (
+                        <button
+                          key={m}
+                          onClick={() => updateCompetitor(c.id, {
+                            aiModel: active
+                              ? (c.aiModel || []).filter(x => x !== m)
+                              : [...(c.aiModel || []), m]
+                          })}
+                          style={{
+                            padding: "6px 13px",
+                            borderRadius: 999,
+                            fontSize: 12,
+                            fontWeight: 700,
+                            cursor: "pointer",
+                            background: active ? F.plum : F.surface,
+                            color: active ? F.paper : F.plum,
+                            border: `1px solid ${active ? F.plum : F.borderStrong}`,
+                            fontFamily: "inherit",
+                            transition: "all 0.15s",
+                          }}
+                        >{m}</button>
+                      );
+                    })}
+                  </div>
                 </div>
                 <div style={{ gridColumn: "1 / -1" }}>
                   <div style={lb}>Pricing (headline)</div>
@@ -1488,7 +1499,7 @@ function MonzCompetitivePage() {
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12.5 }}>
               <thead>
                 <tr style={{ background: F.bg }}>
-                  {["Name", "Category", "AI model", "Pricing", "Threat"].map(h => (
+                  {["Name", "AI model(s)", "Pricing"].map(h => (
                     <th key={h} style={{ textAlign: "left", padding: "8px 10px", fontSize: 10.5, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em", borderBottom: `1px solid ${F.border}` }}>{h}</th>
                   ))}
                 </tr>
@@ -1497,12 +1508,8 @@ function MonzCompetitivePage() {
                 {comp.competitors.map(c => (
                   <tr key={c.id} style={{ borderBottom: `1px solid ${F.border}` }}>
                     <td style={{ padding: "8px 10px", color: F.plum, fontWeight: 600 }}>{c.name || "—"}</td>
-                    <td style={{ padding: "8px 10px", color: F.muted }}>{c.category}</td>
-                    <td style={{ padding: "8px 10px", color: F.muted }}>{c.aiModel}</td>
+                    <td style={{ padding: "8px 10px", color: F.muted }}>{(c.aiModel || []).join(", ") || "—"}</td>
                     <td style={{ padding: "8px 10px", color: F.muted }}>{c.pricing || "—"}</td>
-                    <td style={{ padding: "8px 10px" }}>
-                      <span style={{ fontSize: 10.5, fontWeight: 700, padding: "2px 7px", borderRadius: 3, background: threatColor(c.threatLevel), color: "#fff", textTransform: "uppercase", letterSpacing: "0.05em" }}>{c.threatLevel}</span>
-                    </td>
                   </tr>
                 ))}
               </tbody>

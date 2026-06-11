@@ -3522,6 +3522,8 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
   const setOpen = (p) => setSubRoute(p || "");
   // Hovered-phase drives the dynamic info panel below the cycle (and the spoke highlight in the SVG).
   const [hover, setHover] = useState(null);
+  // Which cadence beat is expanded in the stages plotline (reset to 0 per phase).
+  const [stageSel, setStageSel] = useState(0);
   const topRef = useRef(null);
   const didMount = useRef(false);
 
@@ -3534,6 +3536,7 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
   // Smooth scroll to the top of the page when switching between the cycle and a phase
   // (skip the very first render so a deep-linked phase doesn't yank the page).
   useEffect(() => {
+    setStageSel(0);
     if (!didMount.current) { didMount.current = true; return; }
     if (topRef.current) topRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [open]);
@@ -3562,9 +3565,9 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
       ],
       build_tools: "Tools to build: an automated prioritisation dashboard that unifies Salesforce + Pendo + Planhat into one ranked, region-aware view, refreshed monthly and quarterly.",
       stakeholders: [
-        { n: "ExCo", t: "lead" }, { n: "SLT", t: "lead" }, { n: "VP Sales", t: "lead" },
-        { n: "Product leadership", t: "" }, { n: "Finance / RevOps", t: "" },
-        { n: "Core user groups (schools)", t: "school" },
+        { n: "ExCo", t: "lead", ic: "👔" }, { n: "SLT", t: "lead", ic: "🧭" }, { n: "VP Sales", t: "lead", ic: "📈" },
+        { n: "Product leadership", t: "", ic: "🧩" }, { n: "Finance / RevOps", t: "", ic: "💰" },
+        { n: "Core user groups (schools)", t: "school", ic: "🏫" },
       ],
       shift: [
         { old: "Planning off gut feel and the loudest voice", new: "Evidence-ranked, region-aware opportunities before the room meets", ai: "AI SCAN" },
@@ -3597,9 +3600,9 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
       ],
       build_tools: "Tools to build: an AI-in-the-SDLC toolchain (spec / prototype / test / code-review assists) so a single owner can prioritise, spec, estimate and prototype; plus a research-clustering tool that turns school calls and usage data into a grounded spec in hours.",
       stakeholders: [
-        { n: "Pod owner (PM or Designer)", t: "lead" }, { n: "Pod devs (×2)", t: "lead" }, { n: "Pod QA", t: "" },
-        { n: "Shock-absorber pod", t: "" }, { n: "Sales / Support / Implementation", t: "" },
-        { n: "Schools (prototype loop)", t: "school" },
+        { n: "Pod owner (PM or Designer)", t: "lead", ic: "🎯" }, { n: "Pod devs (×2)", t: "lead", ic: "👩‍💻" }, { n: "Pod QA", t: "", ic: "🔍" },
+        { n: "Shock-absorber pod", t: "", ic: "🛟" }, { n: "Sales / Support / Implementation", t: "", ic: "🤝" },
+        { n: "Schools (prototype loop)", t: "school", ic: "🏫" },
       ],
       shift: [
         { old: "Large, bulky teams with shared, unclear ownership", new: "Small independent pods — one owner prioritises, specs, estimates & prototypes", ai: "PODS" },
@@ -3635,9 +3638,9 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
       ],
       build_tools: "Tools to build: an enablement generator (collateral + certification paths per AAA feature) and an adoption-signal pipeline that routes Pendo + Salesforce data into the prioritisation dashboard.",
       stakeholders: [
-        { n: "VP Sales", t: "lead" }, { n: "Marketing", t: "lead" }, { n: "Sales enablement", t: "" },
-        { n: "Customer success", t: "" }, { n: "Support", t: "" }, { n: "Implementation", t: "" },
-        { n: "Product (owns deliverables)", t: "" }, { n: "Adopting schools", t: "school" },
+        { n: "VP Sales", t: "lead", ic: "📈" }, { n: "Marketing", t: "lead", ic: "📣" }, { n: "Sales enablement", t: "", ic: "🎓" },
+        { n: "Customer success", t: "", ic: "💬" }, { n: "Support", t: "", ic: "🛠" }, { n: "Implementation", t: "", ic: "⚙️" },
+        { n: "Product (owns deliverables)", t: "", ic: "🧩" }, { n: "Adopting schools", t: "school", ic: "🏫" },
       ],
       shift: [
         { old: "Sales finds out about features after they ship", new: "Enablement auto-generated at release; Sales & Support ready day one", ai: "AUTO ENABLE" },
@@ -3805,133 +3808,214 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
   // ── Phase deep-view ────────────────────────────────────
   const PhaseView = ({ phase }) => {
     const d = DATA[phase];
+    const order = ["prioritise", "build", "adopt"];
+    const idx = order.indexOf(phase);
+    const nextP = order[(idx + 1) % 3];   // adopt loops back to prioritise
+    const prevP = order[(idx + 2) % 3];
+    const wrapNext = idx === 2, wrapPrev = idx === 0;
     // Staggered entrance for each content block below the header.
     const stg = (i) => ({ animation: "plc-stagger 0.5s cubic-bezier(0.22,1,0.36,1) both", animationDelay: `${0.1 + i * 0.08}s` });
-    const personaCls = (p) => p.t === "lead"   ? { bg: F.plum, fg: F.paper, av: F.yellow }
-                          :  p.t === "school" ? { bg: d.accentSoft, fg: F.plum, av: F.surface, dashed: true }
-                          :                     { bg: F.surface, fg: F.plum, av: d.accentSoft };
+    const sel = Math.min(stageSel, d.stages.length - 1);
+    const selStage = d.stages[sel];
+    // Group stakeholders into role lanes for the "Who's involved" map.
+    const lanes = [
+      { key: "lead",   label: "Leads",        sub: "own the outcome", dot: F.plum },
+      { key: "",       label: "Contributors", sub: "in the loop",     dot: F.muted2 },
+      { key: "school", label: "Schools",      sub: "the core",        dot: d.accent },
+    ].map(l => ({ ...l, items: d.stakeholders.filter(s => s.t === l.key) })).filter(l => l.items.length);
+
     return (
       <>
-        {/* Breadcrumb + back link */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
-          <button onClick={() => setOpen(null)} style={{ ...bt("ghost"), padding: "5px 10px", fontSize: 12 }}>← All phases</button>
-          <span style={{ color: F.muted2, fontSize: 12 }}>·</span>
-          {["prioritise", "build", "adopt"].map(p => (
-            <button key={p} onClick={() => setOpen(p)} style={{
-              padding: "5px 12px", borderRadius: 999, fontSize: 12, fontWeight: 700, cursor: "pointer",
-              background: phase === p ? DATA[p].accent : F.surface,
-              color: F.plum,
-              border: `1px solid ${phase === p ? DATA[p].accent : F.borderStrong}`,
-              fontFamily: "inherit",
-            }}>{DATA[p].title}</button>
-          ))}
+        {/* ── Phase switcher: prominent segmented control + clear exit ── */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18, flexWrap: "wrap" }}>
+          <button onClick={() => setOpen(null)} style={{
+            display: "inline-flex", alignItems: "center", gap: 7, padding: "10px 15px", borderRadius: 11,
+            border: `1px solid ${F.borderStrong}`, background: F.surface, color: F.plum,
+            fontSize: 12.5, fontWeight: 800, cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap",
+          }}>⊙ Full cycle</button>
+          <div style={{ display: "flex", gap: 4, background: F.bg, border: `1px solid ${F.border}`, borderRadius: 13, padding: 4, flex: 1, minWidth: 240 }}>
+            {order.map((p, i) => {
+              const pd = DATA[p];
+              const on = phase === p;
+              return (
+                <button key={p} onClick={() => setOpen(p)} title={pd.title} style={{
+                  flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
+                  padding: "9px 8px", borderRadius: 9, border: "none", cursor: "pointer", fontFamily: "inherit",
+                  background: on ? pd.accent : "transparent", color: F.plum,
+                  fontSize: 12.5, fontWeight: on ? 800 : 600, boxShadow: on ? F.shadowSm : "none", transition: "background 0.2s",
+                }}>
+                  <span style={{ width: 19, height: 19, borderRadius: "50%", flexShrink: 0, background: on ? "rgba(55,2,60,0.18)" : pd.accent, color: F.plum, fontSize: 9.5, fontWeight: 800, display: "inline-flex", alignItems: "center", justifyContent: "center" }}>{i + 1}</span>
+                  <span className="plc-tab-label">{pd.title}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Phase header */}
-        <div style={{ background: d.accent, borderRadius: 14, padding: "24px 28px 22px", marginBottom: 22, position: "relative", animation: "plc-header-pop 0.5s cubic-bezier(0.34,1.56,0.64,1) both" }}>
+        <div style={{ background: d.accent, borderRadius: 14, padding: "24px 28px 22px", marginBottom: 18, position: "relative", animation: "plc-header-pop 0.5s cubic-bezier(0.34,1.56,0.64,1) both" }}>
           <div style={{ fontSize: 10.5, fontWeight: 800, color: F.plum, opacity: 0.75, textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: 4 }}>{d.eyebrow}</div>
           <h1 style={{ fontSize: 32, fontWeight: 800, margin: "0 0 8px", color: F.plum, lineHeight: 1.1 }}>{d.title}</h1>
           <p style={{ fontSize: 14, fontWeight: 500, color: F.plum, opacity: 0.92, margin: 0, maxWidth: 760, lineHeight: 1.5 }}>{d.lede}</p>
-          <div style={{ display: "inline-block", marginTop: 14, fontSize: 11.5, fontWeight: 800, background: "rgba(55,2,60,0.16)", color: F.plum, padding: "5px 12px", borderRadius: 999 }}>{d.horizon}</div>
+          <div style={{ display: "inline-block", marginTop: 14, fontSize: 11.5, fontWeight: 800, background: "rgba(55,2,60,0.16)", color: F.plum, padding: "5px 12px", borderRadius: 999 }}>⏱ {d.horizon}</div>
         </div>
 
-        {/* Stages & timeline */}
-        <div style={{ ...card, ...stg(0) }}>
-          <div style={sectionTitle}>Stages &amp; timeline</div>
+        {/* ── Schools at this phase — elevated, this is the core of the loop ── */}
+        <div style={{ ...stg(0), position: "relative", overflow: "hidden", background: `linear-gradient(135deg, ${F.plum}, ${F.lightPlum})`, border: `1px solid ${F.lightPlum}`, borderRadius: 14, padding: "18px 22px", marginBottom: 18, display: "flex", gap: 16, alignItems: "center", boxShadow: F.shadowMd }}>
+          <div style={{ position: "absolute", inset: 0, background: `radial-gradient(circle at 10% 50%, ${F.yellow}26, transparent 46%)`, pointerEvents: "none" }} />
+          <div style={{ position: "relative", flexShrink: 0, width: 58, height: 58, borderRadius: "50%", background: F.paper, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, boxShadow: `0 0 0 4px ${F.yellow}66` }}>🏫</div>
+          <div style={{ position: "relative", flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 10, fontWeight: 800, color: F.yellow, textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 5 }}>★ Schools at this phase · the core of the loop</div>
+            <h3 style={{ fontSize: 17.5, fontWeight: 800, color: F.paper, margin: "0 0 6px", lineHeight: 1.3 }}>{d.school}</h3>
+            <p style={{ fontSize: 12.5, fontWeight: 500, color: F.paper, opacity: 0.82, margin: 0, lineHeight: 1.55 }}>{d.schoolHow}</p>
+          </div>
+        </div>
+
+        {/* Stages → interactive cadence plotline (light at a glance, click a beat for detail) */}
+        <div style={{ ...card, ...stg(1) }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: 8, marginBottom: 4 }}>
+            <div style={{ ...sectionTitle, marginBottom: 0 }}>The rhythm · {d.stages.length} beats</div>
+            <div style={{ fontSize: 11, color: F.muted2, fontWeight: 600 }}>Tap a beat for detail ↓</div>
+          </div>
           {d.parallel && (
-            <div style={{ background: d.accentSoft, border: `1.5px dashed ${d.accent}`, borderRadius: 10, padding: "10px 14px", fontSize: 12.5, fontWeight: 600, color: F.plum, marginBottom: 14, display: "flex", gap: 9, alignItems: "center" }}>
-              <span style={{ fontSize: 16 }}>⚡</span>{d.parallel}
+            <div style={{ background: d.accentSoft, border: `1.5px dashed ${d.accent}`, borderRadius: 10, padding: "9px 13px", fontSize: 12, fontWeight: 600, color: F.plum, margin: "10px 0 14px", display: "flex", gap: 9, alignItems: "center", lineHeight: 1.45 }}>
+              <span style={{ fontSize: 15, flexShrink: 0 }}>⚡</span>{d.parallel}
             </div>
           )}
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {d.stages.map((s, i) => (
-              <div key={i} style={{ display: "grid", gridTemplateColumns: "26px 1fr", gap: 12, alignItems: "start" }}>
-                <div style={{ position: "relative", paddingTop: 6, display: "flex", justifyContent: "center" }}>
-                  <span style={{ width: 12, height: 12, borderRadius: "50%", background: d.accent, boxShadow: `0 0 0 4px ${d.accentSoft}`, zIndex: 1 }}></span>
-                  {i < d.stages.length - 1 && <span style={{ position: "absolute", top: 14, bottom: -16, width: 2, background: F.border }}></span>}
-                </div>
-                <div style={{ background: F.bg, border: `1px solid ${F.border}`, borderLeft: `3px solid ${d.accent}`, borderRadius: 10, padding: "12px 14px" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12, marginBottom: 4, flexWrap: "wrap" }}>
-                    <h4 style={{ fontSize: 14.5, fontWeight: 700, color: F.plum, margin: 0 }}>{s.n}</h4>
-                    <span style={{ fontSize: 10.5, fontWeight: 800, color: d.accentDark, background: d.accentSoft, padding: "3px 9px", borderRadius: 999, whiteSpace: "nowrap" }}>{s.wk}</span>
-                  </div>
-                  <p style={{ fontSize: 13, color: F.muted, margin: "0 0 6px", lineHeight: 1.5 }}>{s.p}</p>
-                  {s.tools.length > 0 && (
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
-                      {s.tools.map((t, ti) => <span key={ti} style={{ fontSize: 10.5, fontWeight: 700, padding: "3px 9px", borderRadius: 6, background: d.accentSoft, color: F.plum }}>{t}</span>)}
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
 
-        {/* Activities */}
-        <div style={{ ...card, ...stg(1) }}>
-          <div style={sectionTitle}>Activities &amp; cadence</div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 10 }}>
-            {d.activities.map((a, i) => (
-              <div key={i} style={{ background: F.bg, border: `1px solid ${F.border}`, borderTop: `3px solid ${d.accent}`, borderRadius: 10, padding: "12px 14px" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                  <span style={{ width: 28, height: 28, borderRadius: 8, background: d.accentSoft, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 15, flexShrink: 0 }}>{a.ic}</span>
-                  <span style={{ fontSize: 13.5, fontWeight: 700, color: F.plum, lineHeight: 1.2 }}>{a.nm}</span>
-                </div>
-                <div style={{ fontSize: 10.5, fontWeight: 800, color: d.accentDark, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>{a.cad}</div>
-                <div style={{ fontSize: 12, color: F.muted, lineHeight: 1.4 }}>{a.d}</div>
-              </div>
-            ))}
-          </div>
-          <div style={{ marginTop: 14, background: F.bg, border: `1.5px solid ${d.accent}`, borderRadius: 10, padding: "10px 14px", fontSize: 12.5, fontWeight: 600, color: F.plum, display: "flex", gap: 9, alignItems: "center" }}>
-            <span style={{ fontSize: 16 }}>🔧</span>{d.build_tools}
-          </div>
-        </div>
-
-        {/* Who's involved + Shift */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 18, marginBottom: 18, ...stg(2) }}>
-          <div style={card}>
-            <div style={sectionTitle}>Who's involved</div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
-              {d.stakeholders.map((p, i) => {
-                const c = personaCls(p);
+          {/* Beat ribbon (horizontal, scrolls on narrow) */}
+          <div style={{ overflowX: "auto", padding: "6px 2px 12px", marginBottom: 4 }}>
+            <div style={{ display: "flex", alignItems: "stretch", minWidth: "min-content" }}>
+              {d.stages.map((s, i) => {
+                const on = sel === i;
                 return (
-                  <span key={i} style={{ display: "flex", alignItems: "center", gap: 7, background: c.bg, borderRadius: 999, padding: "5px 12px 5px 5px", fontSize: 12, fontWeight: 700, color: c.fg, border: c.dashed ? `1.5px dashed ${d.accent}` : "none" }}>
-                    <span style={{ width: 22, height: 22, borderRadius: "50%", background: c.av, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 11, color: F.plum }}>•</span>
-                    {p.n}
-                  </span>
+                  <div key={i} style={{ display: "flex", alignItems: "center" }}>
+                    {i > 0 && <span style={{ color: F.borderStrong, fontSize: 17, fontWeight: 800, padding: "0 4px", alignSelf: "center" }}>›</span>}
+                    <button className="plc-beat" onClick={() => setStageSel(i)} style={{
+                      width: 158, textAlign: "left", cursor: "pointer", fontFamily: "inherit",
+                      background: on ? d.accentSoft : F.bg,
+                      border: `1px solid ${on ? d.accent : F.border}`,
+                      borderRadius: 11, padding: "11px 12px", boxShadow: on ? F.shadowSm : "none",
+                    }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 7 }}>
+                        <span style={{ width: 20, height: 20, borderRadius: "50%", background: on ? d.accent : F.surface, border: `1.5px solid ${d.accent}`, color: F.plum, fontSize: 10, fontWeight: 800, display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{i + 1}</span>
+                        <span style={{ fontSize: 9, fontWeight: 800, color: d.accentDark, textTransform: "uppercase", letterSpacing: "0.04em", lineHeight: 1.2 }}>{s.wk}</span>
+                      </div>
+                      <div style={{ fontSize: 12.5, fontWeight: on ? 800 : 600, color: F.plum, lineHeight: 1.3 }}>{s.n}</div>
+                    </button>
+                  </div>
                 );
               })}
             </div>
-            <div style={{ marginTop: 12, fontSize: 11, color: F.muted, fontWeight: 600 }}>
-              <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: 4, background: F.plum, marginRight: 5, verticalAlign: "middle" }}></span>Leads
-              <span style={{ marginLeft: 12, display: "inline-block", width: 8, height: 8, borderRadius: 4, background: d.accent, marginRight: 5, verticalAlign: "middle" }}></span>Schools
-            </div>
           </div>
 
-          <div style={card}>
-            <div style={sectionTitle}>Old way → AI-first</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
-              {d.shift.map((r, i) => (
-                <div key={i} style={{ background: F.bg, border: `1px solid ${F.border}`, borderRadius: 10, padding: "10px 12px" }}>
-                  <div style={{ fontSize: 11.5, color: F.muted2, textDecoration: "line-through", fontWeight: 600 }}>{r.old}</div>
-                  <div style={{ marginTop: 4, fontSize: 12.5, color: F.plum, fontWeight: 700, display: "flex", gap: 8, alignItems: "flex-start" }}>
-                    <span style={{ flexShrink: 0, fontSize: 9, fontWeight: 800, letterSpacing: "0.06em", background: d.accent, color: F.plum, padding: "3px 7px", borderRadius: 5, marginTop: 1 }}>{r.ai}</span>
-                    <span style={{ lineHeight: 1.45 }}>{r.new}</span>
-                  </div>
-                </div>
-              ))}
+          {/* Selected beat detail */}
+          <div key={sel} className="plc-detailfade" style={{ background: F.bg, border: `1px solid ${F.border}`, borderLeft: `4px solid ${d.accent}`, borderRadius: 11, padding: "14px 16px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12, marginBottom: 6, flexWrap: "wrap" }}>
+              <h4 style={{ fontSize: 15, fontWeight: 800, color: F.plum, margin: 0 }}>{selStage.n}</h4>
+              <span style={{ fontSize: 10.5, fontWeight: 800, color: d.accentDark, background: d.accentSoft, padding: "3px 10px", borderRadius: 999, whiteSpace: "nowrap" }}>{selStage.wk}</span>
             </div>
+            <p style={{ fontSize: 13.5, color: F.muted, margin: "0 0 10px", lineHeight: 1.6 }}>{selStage.p}</p>
+            {selStage.tools.length > 0 && (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                {selStage.tools.map((t, ti) => <span key={ti} style={{ fontSize: 10.5, fontWeight: 700, padding: "4px 10px", borderRadius: 6, background: d.accentSoft, color: F.plum }}>{t}</span>)}
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Schools at this phase */}
-        <div style={{ ...card, background: F.plum, color: F.paper, border: "none", display: "flex", gap: 14, alignItems: "flex-start", ...stg(3) }}>
-          <div style={{ fontSize: 28, lineHeight: 1, flexShrink: 0 }}>🏫</div>
-          <div>
-            <div style={{ fontSize: 11, fontWeight: 800, color: F.yellow, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 4 }}>Schools at this phase</div>
-            <p style={{ fontSize: 14, fontWeight: 600, color: F.paper, opacity: 0.95, margin: "0 0 8px", lineHeight: 1.5 }}>{d.school}</p>
-            <p style={{ fontSize: 12.5, fontWeight: 600, color: F.lightPink, margin: 0, lineHeight: 1.55 }}>{d.schoolHow}</p>
+        {/* Activities — richer visual cards */}
+        <div style={{ ...card, ...stg(2) }}>
+          <div style={sectionTitle}>Activities &amp; cadence</div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(232px, 1fr))", gap: 12 }}>
+            {d.activities.map((a, i) => (
+              <div key={i} className="plc-act" style={{ background: F.surface, border: `1px solid ${F.border}`, borderRadius: 12, padding: "14px 15px", display: "flex", gap: 12, alignItems: "flex-start" }}>
+                <span style={{ width: 42, height: 42, borderRadius: 11, background: d.accentSoft, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 21, flexShrink: 0 }}>{a.ic}</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 3, flexWrap: "wrap" }}>
+                    <span style={{ fontSize: 13.5, fontWeight: 800, color: F.plum, lineHeight: 1.2 }}>{a.nm}</span>
+                    <span style={{ fontSize: 9, fontWeight: 800, color: d.accentDark, background: d.accentSoft, padding: "2px 7px", borderRadius: 999, textTransform: "uppercase", letterSpacing: "0.04em" }}>{a.cad}</span>
+                  </div>
+                  <div style={{ fontSize: 12, color: F.muted, lineHeight: 1.45 }}>{a.d}</div>
+                </div>
+              </div>
+            ))}
           </div>
+          <div style={{ marginTop: 14, background: d.accentSoft, border: `1px solid ${d.accent}`, borderRadius: 10, padding: "11px 14px", fontSize: 12.5, fontWeight: 600, color: F.plum, display: "flex", gap: 10, alignItems: "flex-start", lineHeight: 1.5 }}>
+            <span style={{ fontSize: 16, flexShrink: 0 }}>🔧</span><span>{d.build_tools}</span>
+          </div>
+        </div>
+
+        {/* Who's involved — mapped into role lanes with recurring icons */}
+        <div style={{ ...card, ...stg(3) }}>
+          <div style={sectionTitle}>Who's involved</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {lanes.map(lane => (
+              <div key={lane.key} className="plc-lane" style={{ display: "grid", gridTemplateColumns: "112px 1fr", gap: 12, alignItems: "center" }}>
+                <div style={{ borderLeft: `3px solid ${lane.dot}`, paddingLeft: 10 }}>
+                  <div style={{ fontSize: 12.5, fontWeight: 800, color: F.plum, lineHeight: 1.1 }}>{lane.label}</div>
+                  <div style={{ fontSize: 10, color: F.muted2, fontWeight: 600 }}>{lane.sub}</div>
+                </div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
+                  {lane.items.map((s, i) => {
+                    const isSchool = lane.key === "school";
+                    return (
+                      <span key={i} style={{
+                        display: "inline-flex", alignItems: "center", gap: 7, padding: "5px 13px 5px 5px", borderRadius: 999,
+                        fontSize: 12, fontWeight: 700, color: F.plum,
+                        background: isSchool ? d.accentSoft : F.bg,
+                        border: `1.5px ${isSchool ? "dashed" : "solid"} ${isSchool ? d.accent : F.border}`,
+                      }}>
+                        <span style={{ width: 24, height: 24, borderRadius: "50%", background: F.surface, border: `1px solid ${F.border}`, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 13, flexShrink: 0 }}>{s.ic}</span>
+                        {s.n}
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Old way → AI-first */}
+        <div style={{ ...card, ...stg(4) }}>
+          <div style={sectionTitle}>Old way → AI-first</div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 10 }}>
+            {d.shift.map((r, i) => (
+              <div key={i} style={{ background: F.bg, border: `1px solid ${F.border}`, borderRadius: 10, padding: "11px 13px" }}>
+                <div style={{ fontSize: 11.5, color: F.muted2, textDecoration: "line-through", fontWeight: 600, lineHeight: 1.4 }}>{r.old}</div>
+                <div style={{ marginTop: 5, fontSize: 12.5, color: F.plum, fontWeight: 700, display: "flex", gap: 8, alignItems: "flex-start" }}>
+                  <span style={{ flexShrink: 0, fontSize: 9, fontWeight: 800, letterSpacing: "0.06em", background: d.accent, color: F.plum, padding: "3px 7px", borderRadius: 5, marginTop: 1 }}>{r.ai}</span>
+                  <span style={{ lineHeight: 1.45 }}>{r.new}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Footer: loop nav between phases */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, marginTop: 4, flexWrap: "wrap", ...stg(5) }}>
+          <button onClick={() => setOpen(prevP)} style={{
+            display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 15px", borderRadius: 11, cursor: "pointer", fontFamily: "inherit",
+            background: F.surface, border: `1px solid ${F.borderStrong}`, color: F.plum, fontSize: 12.5, fontWeight: 700,
+          }}>
+            <span style={{ fontSize: 14 }}>←</span>
+            <span style={{ display: "flex", flexDirection: "column", lineHeight: 1.1, textAlign: "left" }}>
+              <span style={{ fontSize: 9, color: F.muted2, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>{wrapPrev ? "Loop back to" : "Previous"}</span>
+              <span>{wrapPrev ? "↻ " : ""}{DATA[prevP].title}</span>
+            </span>
+          </button>
+          <button onClick={() => setOpen(null)} style={{ ...bt("ghost"), padding: "8px 14px", fontSize: 12, fontWeight: 700, color: F.muted }}>⊙ Full cycle</button>
+          <button onClick={() => setOpen(nextP)} style={{
+            display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 15px", borderRadius: 11, cursor: "pointer", fontFamily: "inherit",
+            background: DATA[nextP].accent, border: "none", color: F.plum, fontSize: 12.5, fontWeight: 800,
+          }}>
+            <span style={{ display: "flex", flexDirection: "column", lineHeight: 1.1, textAlign: "right" }}>
+              <span style={{ fontSize: 9, opacity: 0.7, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>{wrapNext ? "Loop back to" : "Next"}</span>
+              <span>{DATA[nextP].title}{wrapNext ? " ↻" : ""}</span>
+            </span>
+            <span style={{ fontSize: 14 }}>→</span>
+          </button>
         </div>
       </>
     );
@@ -3944,6 +4028,13 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
         @keyframes plc-view-in   { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes plc-header-pop { from { opacity: 0; transform: scale(0.94) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
         @keyframes plc-stagger   { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+        .plc-act  { transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease; }
+        .plc-act:hover  { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(55,2,60,0.10); }
+        .plc-beat { transition: transform 0.15s ease, box-shadow 0.15s ease; }
+        .plc-beat:hover { transform: translateY(-2px); }
+        .plc-detailfade { animation: plc-view-in 0.3s ease both; }
+        @media (max-width: 620px) { .plc-tab-label { display: none; } }
+        @media (max-width: 560px) { .plc-lane { grid-template-columns: 1fr !important; gap: 6px !important; } }
       `}</style>
       {open
         ? <div key={"phase-" + open} style={{ animation: "plc-view-in 0.42s cubic-bezier(0.22,1,0.36,1) both" }}><PhaseView phase={open} /></div>

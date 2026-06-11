@@ -1175,8 +1175,12 @@ function TrackerPage({ title, subtitle, storageKey, defaults, ModalComponent, ex
    from faria-ai-v12 (same store as the AI Powered Features page)
    and writes them back; reads/writes monetization config to
    faria-ai-monetization-v1. */
-function AiMonetizationPage() {
-  const [view, setView] = useState("plan"); // "plan" | "usage" | "competitive" | "market" | "finance"
+function AiMonetizationPage({ subRoute, setSubRoute }) {
+  // view derived from URL sub-route. Valid: "plan" | "usage" | "competitive" | "market" | "finance".
+  // Empty / unknown subRoute → default "plan".
+  const VALID_VIEWS = ["plan", "usage", "competitive", "market", "finance"];
+  const view = VALID_VIEWS.includes(subRoute) ? subRoute : "plan";
+  const setView = (v) => setSubRoute(v);
   const [ai, setAi] = useState({ inits: [] });
   const [mz, setMz] = useState(DEFAULT_MONETIZATION);
   const [readyAi, setReadyAi] = useState(false);
@@ -3135,8 +3139,11 @@ function FairUseExample({ monz, setMonz }) {
    activities, stakeholders, the old-way → AI-first shift, and the
    schools-engagement model.
    Source: ~/Desktop/faria-product-lifecycle2.html */
-function PrioritizationPage() {
-  const [open, setOpen] = useState(null); // null | "prioritise" | "build" | "adopt"
+function PrioritizationPage({ subRoute, setSubRoute }) {
+  // open phase derived from URL sub-route. Valid: prioritise | build | adopt. Empty = no phase open (cycle view).
+  const VALID_PHASES = ["prioritise", "build", "adopt"];
+  const open = VALID_PHASES.includes(subRoute) ? subRoute : null;
+  const setOpen = (p) => setSubRoute(p || "");
   const panelRef = useRef(null);
   const cycleRef = useRef(null);
 
@@ -3543,8 +3550,11 @@ function PrioritizationPage() {
    Mirrors https://aipod-faria.netlify.app/ — Faria's transition
    from Scrum to AI Pods methodology. Static content with 6 sub-tabs.
    Source: ~/Downloads/faria-ai-pods_new.html */
-function AiPodsPage() {
-  const [tab, setTab] = useState("rhythm");
+function AiPodsPage({ subRoute, setSubRoute }) {
+  // tab derived from URL sub-route. Valid: rhythm | pipeline | slicing | pods | compare | watch.
+  const VALID_TABS = ["rhythm", "pipeline", "slicing", "pods", "compare", "watch"];
+  const tab = VALID_TABS.includes(subRoute) ? subRoute : "rhythm";
+  const setTab = (t) => setSubRoute(t);
   const styles = `
     .aip-wrap { font-family: 'Nunito Sans','Trebuchet MS',system-ui,sans-serif; color: ${F.plum}; line-height: 1.2; -webkit-font-smoothing: antialiased; }
 
@@ -4029,9 +4039,64 @@ function AiPodsPage() {
   );
 }
 
+/* ── URL routing (hash-based) ─────────────────────────────
+   Each page + sub-page gets a unique URL via window.location.hash.
+   Internal ids stay short ("monz", "handoff", "plan") to minimise
+   code churn; the URL exposes friendly slugs ("monetization",
+   "prioritization", "framework"). Browser back/forward Just Works
+   because we listen for the hashchange event. */
+const PAGE_SLUG = {
+  product:  "product",
+  ai:       "ai",
+  monz:     "monetization",
+  handoff:  "prioritization",
+  pods:     "pods",
+};
+const SLUG_PAGE = Object.fromEntries(Object.entries(PAGE_SLUG).map(([k, v]) => [v, k]));
+// Sub-route id ↔ URL slug map (per page). Pages not listed here use 1:1 id-as-slug.
+const SUB_SLUG = {
+  monz: { plan: "framework", usage: "usage", competitive: "competitive", market: "market", finance: "finance" },
+};
+const SLUG_SUB = Object.fromEntries(
+  Object.entries(SUB_SLUG).map(([p, m]) => [p, Object.fromEntries(Object.entries(m).map(([k, v]) => [v, k]))])
+);
+function parseHash() {
+  const h = (typeof window === "undefined" ? "" : window.location.hash).replace(/^#\/?/, "");
+  const [pageSlug = "", subSlug = ""] = h.split("/").map(s => s.trim());
+  const page = SLUG_PAGE[pageSlug] || "product";
+  let sub = subSlug;
+  if (SLUG_SUB[page]) sub = SLUG_SUB[page][subSlug] || "";
+  return { page, sub };
+}
+function buildHash(page, sub) {
+  const pageSlug = PAGE_SLUG[page] || "product";
+  let subSlug = sub || "";
+  if (subSlug && SUB_SLUG[page]) subSlug = SUB_SLUG[page][sub] || sub;
+  return subSlug ? `#/${pageSlug}/${subSlug}` : `#/${pageSlug}`;
+}
+function useHashRoute() {
+  const [route, setRouteState] = useState(parseHash);
+  useEffect(() => {
+    const onHash = () => setRouteState(parseHash());
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, []);
+  const navigate = (page, sub = "") => {
+    const target = buildHash(page, sub);
+    if (window.location.hash !== target) {
+      window.history.pushState(null, "", target);
+    }
+    setRouteState({ page, sub });
+  };
+  return [route, navigate];
+}
+
 /* ── Main App ── */
 export default function App() {
-  const [page, setPage] = useState("product");
+  const [route, navigate] = useHashRoute();
+  const { page, sub } = route;
+  const setPage = (p) => navigate(p);
+  const setSub = (s) => navigate(page, s);
   const [celName, setCelName] = useState(null);
   const [hovNav, setHovNav] = useState(null);
   const navBtn = (id, label) => {
@@ -4112,9 +4177,9 @@ export default function App() {
           extraRowInfo={(init) => (<>{init.product && chip(init.product)}{init.priority && <span style={{ fontSize: 10, padding: "2px 7px", borderRadius: 4, background: pC(init.priority), color: "#fff", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em" }}>{init.priority}</span>}</>)}
           extraDetailFields={(init, setField) => (<><div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>{init.product && chip(init.product)}{init.type && chip(init.type)}{init.priority && <span style={{ fontSize: 11, padding: "3px 8px", borderRadius: 4, background: pC(init.priority), color: "#fff", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em" }}>{init.priority}</span>}</div><div style={{ display: "flex", gap: 12, marginBottom: 12 }}><div style={{ flex: 1 }}><div style={lb}>Effort</div><div style={{ fontSize: 13, color: F.plum, fontWeight: 700 }}>{(init.effort||"medium").charAt(0).toUpperCase()+(init.effort||"medium").slice(1)}</div></div><div style={{ flex: 1 }}><div style={lb}>Impact</div><div style={{ fontSize: 13, color: F.plum, fontWeight: 700 }}>{(init.impact||"medium").charAt(0).toUpperCase()+(init.impact||"medium").slice(1)}</div></div></div></>)}
         />}
-        {page === "monz" && <AiMonetizationPage />}
-        {page === "handoff" && <PrioritizationPage />}
-        {page === "pods" && <AiPodsPage />}
+        {page === "monz" && <AiMonetizationPage subRoute={sub} setSubRoute={setSub} />}
+        {page === "handoff" && <PrioritizationPage subRoute={sub} setSubRoute={setSub} />}
+        {page === "pods" && <AiPodsPage subRoute={sub} setSubRoute={setSub} />}
       </div>
     </div>
   );

@@ -287,6 +287,27 @@ const DEFAULT_AI = [
     "Director answers ad-hoc 'how many X' questions in plain English — replaces 30+ minutes of manual spreadsheet work per query",
     "Custom-dashboard usage doubles within 60 days of launch in pilot schools",
   ] },
+  { id: 210, name: "AI Document Verification", description: "AI-assisted verification of uploaded documents — transcripts, IDs, recommendation letters — flagging forgeries, inconsistencies and missing items.", deadline: "2026-09-30", owner: "", product: "OpenApply", type: "feature", priority: "high", effort: "high", impact: "high", milestones: [
+    { label: "Define document types and verification signals", target: "2026-07-15", done: false },{ label: "Design verification UX + override workflow", target: "2026-08-15", done: false },{ label: "Build OCR + integrity pipeline", target: "2026-09-15", done: false },{ label: "Pilot with 3 schools", target: "2026-09-30", done: false },
+  ], status: "not-started", valueRationale: "Unlocks fraud detection schools cannot reliably do by eye today, and saves admissions teams hours of manual cross-referencing per applicant. Direct trust-and-throughput win — clean fit for Pro.", wowOutcomes: [
+    "Admissions staff manual document review time drops by 80%",
+    "Catches 95%+ of forged/altered documents before the admissions decision",
+    "Applicant time-to-complete drops from 12 days to under 5 by surfacing missing or invalid docs immediately",
+  ] },
+  { id: 211, name: "MCP", description: "Model Context Protocol server — exposes OpenApply data securely to schools' own AI agents (Claude, ChatGPT, Cursor) so they can query and act on admissions data from external tools.", deadline: "2026-12-31", owner: "", product: "OpenApply", type: "integration", priority: "high", effort: "high", impact: "high", milestones: [
+    { label: "Scope auth model + access scopes", target: "2026-10-15", done: false },{ label: "Design tool set (read + write actions)", target: "2026-11-15", done: false },{ label: "Build MCP server + auth flow", target: "2026-12-15", done: false },{ label: "Launch to early adopters", target: "2026-12-31", done: false },
+  ], status: "not-started", valueRationale: "Unlocks something schools literally cannot do today — securely exposing their OpenApply data to their own AI assistants via the Model Context Protocol. Future-proofs OA against schools that increasingly build their own AI workflows.", wowOutcomes: [
+    "Schools query their admissions pipeline from their own AI assistants (Claude, ChatGPT, Cursor) without copy/paste or CSV exports",
+    "Director asks 'show me applicants from Singapore with English ≥ 7 who haven't responded in 5 days' in plain English and gets a live answer",
+    "Ad-hoc reporting requests to OpenApply support team reduced by 50%",
+  ] },
+  { id: 212, name: "AI Analyst", description: "Always-on natural-language analyst over admissions data — answers ad-hoc questions, drafts board-ready reports, and surfaces trends the team would otherwise miss.", deadline: "2026-12-31", owner: "", product: "OpenApply", type: "feature", priority: "high", effort: "high", impact: "high", milestones: [
+    { label: "Scope analyst use cases and question taxonomy", target: "2026-10-15", done: false },{ label: "Design conversational analyst UX", target: "2026-11-15", done: false },{ label: "Build NL → query → narrative pipeline", target: "2026-12-15", done: false },{ label: "Pilot with admissions directors at 5 schools", target: "2026-12-31", done: false },
+  ], status: "not-started", valueRationale: "Saves admissions leadership 5+ hours/week of manual analysis and unlocks always-on intelligence over the pipeline. The decision-support headline of AI Pro — the feature directors will actually open the laptop for.", wowOutcomes: [
+    "Director answers 80% of ad-hoc admissions questions in seconds without opening a spreadsheet",
+    "Quarterly admissions board reports auto-drafted in under 30 minutes vs 8+ hours of manual data pull",
+    "Surfaces 3+ actionable trend insights per month the team would otherwise have missed",
+  ] },
   { id: 301, name: "AI Notification Summaries", description: "AI-generated digests of recent ManageBac+ notifications for teachers and parents.", deadline: "2026-06-30", owner: "", product: "ManageBac+", type: "feature", priority: "medium", effort: "medium", impact: "medium", milestones: [
     { label: "Define digest scope and frequency", target: "2026-05-15", done: false },{ label: "Design summary UX", target: "2026-05-30", done: false },{ label: "Build summarization pipeline", target: "2026-06-15", done: false },{ label: "Launch to early adopters", target: "2026-06-30", done: false },
   ], status: "not-started" },
@@ -943,8 +964,22 @@ function TrackerPage({ title, subtitle, storageKey, defaults, ModalComponent, ex
       // Forward-fill: for each saved entry, if it lacks wowOutcomes / valueRationale,
       // borrow from the matching default (when one exists). Also migrate legacy
       // singular wowOutcome (string) to wowOutcomes (array). User edits always win.
+      // Default match: by id first; if no id match (e.g. user added the feature via
+      // the UI, which uses random timestamp ids), fall back to a name+product match
+      // (case- and whitespace-tolerant) so seeded defaults still attach.
+      const matchDefault = (saved) => {
+        const byId = defaults.find(d => d.id === saved.id);
+        if (byId) return byId;
+        if (!saved.name) return null;
+        const nm = String(saved.name).trim().toLowerCase();
+        const pr = saved.product || "";
+        return defaults.find(d =>
+          d.name && String(d.name).trim().toLowerCase() === nm &&
+          (d.product || "") === pr
+        );
+      };
       const enriched = s.inits.map(saved => {
-        const def = defaults.find(d => d.id === saved.id);
+        const def = matchDefault(saved);
         const filled = { ...saved };
         // Migrate legacy field
         if (filled.wowOutcome && (!filled.wowOutcomes || filled.wowOutcomes.length === 0)) {

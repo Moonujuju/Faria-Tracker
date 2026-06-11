@@ -3522,11 +3522,20 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
   const setOpen = (p) => setSubRoute(p || "");
   // Hovered-phase drives the dynamic info panel below the cycle (and the spoke highlight in the SVG).
   const [hover, setHover] = useState(null);
+  const topRef = useRef(null);
+  const didMount = useRef(false);
 
   useEffect(() => {
     const onKey = (e) => { if (e.key === "Escape" && open) setOpen(null); };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
+
+  // Smooth scroll to the top of the page when switching between the cycle and a phase
+  // (skip the very first render so a deep-linked phase doesn't yank the page).
+  useEffect(() => {
+    if (!didMount.current) { didMount.current = true; return; }
+    if (topRef.current) topRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [open]);
 
   // Phase data — content faithful to the source HTML, no diagram math.
@@ -3568,37 +3577,40 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
     build: {
       accent: F.orange, accentDark: "#E06A2E", accentSoft: "rgba(247,139,67,0.24)",
       eyebrow: "Phase 02 · Make it real", title: "Build",
-      lede: "Our AI-first SDLC. Small pods turn a brief into shippable value, releasing something useful every week. Discovery, design and build run in parallel — not in sequence.",
-      horizon: "1–2 week sprints · weekly releases",
-      parallel: "These stages overlap and run continuously. While the pod is in a build sprint, the PM, design and research are already on next week's discovery. Each week several of these happen at once.",
+      lede: "Our AI Pods model. Small, single-owner pods run a staggered weekly rhythm — the owner shapes next week's slice while dev and QA stay heads-down on the current one. A release every Monday.",
+      horizon: "1-week dev cycles · 1 week of QA behind · release every Monday",
+      parallel: "The rhythm is staggered, not sequential. While devs build this week's slice and QA tests last week's, the pod owner is already researching and shaping next week's. Three cycles run at once — and a feature that looks like 3–4 weeks of work is sliced so something ships every few days, not at the end.",
       stages: [
-        { n: "Discovery & user research", wk: "Wk 1 · ongoing", p: "The PM works with schools, support and design to validate the problem. AI clusters interviews and tickets so patterns surface in hours.", tools: ["School interviews", "Support tickets"] },
-        { n: "Spec & design with AI", wk: "Overlapping", p: "AI accelerates specs, edge-case mapping and prototype UI. The pod reviews and decides — judgement stays human, drafting gets automated.", tools: ["AI spec drafts", "Prototype UI"] },
-        { n: "Pod build sprint", wk: "1–2 wks", p: "A small cross-functional pod owns the slice end to end. AI in the SDLC handles boilerplate, tests and review assists. Two weeks only by exception.", tools: ["AI SDLC", "CI / tests"] },
-        { n: "Weekly release", wk: "Every wk", p: "Ship a usable increment weekly, designed so schools can adopt it with little hand-holding. Smaller surface, tighter feedback, value lands sooner.", tools: ["Release notes", "In-app guides"] },
+        { n: "Mon–Tue · Research & shape (owner)", wk: "Pre-build", p: "The owner reviews how the last release performed, forms a hypothesis with a success metric, then grounds it in quant (usage / adoption data) and qual (school calls & interviews). Spec and prototype are drafted with AI alongside.", tools: ["Usage data", "School calls", "AI spec + prototype"] },
+        { n: "Wed · Prototype to two audiences", wk: "Pre-build", p: "Same prototype shared with schools (WhatsApp + key contacts) and internal teams (sales, support, implementation). Light touch — prototype plus high-level requirements, nothing too detailed.", tools: ["🏫 Schools", "Sales / Support / Impl."] },
+        { n: "Thu–Fri · Fold in, review, lock", wk: "Pre-build", p: "Feedback folded in; PMT review aligns on scope Thursday; scope locks Friday and hands off to dev. Anything substantive raised after the lock goes to the next cycle, not this build.", tools: ["PMT review", "Scope lock", "Dev handoff"] },
+        { n: "Build week (dev) · QA week (behind)", wk: "Each week", p: "Devs build this week's slice Mon–Fri toward a branch. QA spends a full clean week testing last week's slice — AI-assisted code review — and signs off for the Monday release.", tools: ["AI SDLC", "AI code review"] },
+        { n: "Every Monday · Release", wk: "Weekly", p: "The week-before-last's signed-off slice ships to production. Sliced small (MVP → v1.0 → v1.1) so schools see progress and feed back within days, not weeks.", tools: ["Ticket slicing", "Monday release"] },
       ],
       activities: [
-        { ic: "🔁", nm: "Pod stand-up", cad: "Daily", d: "Pod syncs on the slice; blockers cleared same day." },
-        { ic: "🚢", nm: "Weekly release & demo", cad: "Weekly", d: "Ship the increment and demo it, including to pilot schools." },
-        { ic: "🔬", nm: "Rolling discovery", cad: "Continuous", d: "PM + design + research run next week's discovery in parallel." },
-        { ic: "🗣", nm: "Pilot-school check-in", cad: "Weekly", d: "Walk pilots through what shipped; capture friction live." },
-        { ic: "📱", nm: "Prototype walkthrough", cad: "Per slice", d: "Show pilot schools the prototype before build and fold in their reactions." },
-        { ic: "✅", nm: "Pilot acceptance", cad: "At each release", d: "Pilot schools confirm the weekly increment works for them before wider rollout." },
+        { ic: "🚢", nm: "Monday release", cad: "Weekly", d: "Every single Monday a signed-off slice goes to production." },
+        { ic: "🎯", nm: "Hypothesis review", cad: "Per cycle", d: "Owner reviews the last release's outcome and states the next belief + success metric." },
+        { ic: "📱", nm: "Prototype share (two audiences)", cad: "Wed", d: "Schools + internal teams react to the same prototype before build." },
+        { ic: "👥", nm: "PMT review & scope lock", cad: "Thu–Fri", d: "Align scope, lock Friday, hand off a QA-ready spec to dev." },
+        { ic: "✂️", nm: "Ticket slicing", cad: "Continuous", d: "Large features cut into <1-week slices so something ships every few days." },
+        { ic: "🛟", nm: "Shock-absorber triage", cad: "Continuous", d: "A dedicated pod catches bugs & interruptions so the others keep focus." },
       ],
-      build_tools: "Tools to build: an AI-in-the-SDLC toolchain (spec/test/scaffold assists) plus a research-clustering tool that turns interviews and tickets into ranked themes in hours.",
+      build_tools: "Tools to build: an AI-in-the-SDLC toolchain (spec / prototype / test / code-review assists) so a single owner can prioritise, spec, estimate and prototype; plus a research-clustering tool that turns school calls and usage data into a grounded spec in hours.",
       stakeholders: [
-        { n: "Product Manager (pod)", t: "lead" }, { n: "Pod engineers", t: "lead" }, { n: "QA", t: "" },
-        { n: "Support team", t: "" }, { n: "Sales team", t: "" }, { n: "Design & research", t: "" },
-        { n: "Pilot schools", t: "school" },
+        { n: "Pod owner (PM or Designer)", t: "lead" }, { n: "Pod devs (×2)", t: "lead" }, { n: "Pod QA", t: "" },
+        { n: "Shock-absorber pod", t: "" }, { n: "Sales / Support / Implementation", t: "" },
+        { n: "Schools (prototype loop)", t: "school" },
       ],
       shift: [
-        { old: "Large teams, big-bang releases every few months", new: "Small focused pods shipping a usable slice every week", ai: "PODS" },
-        { old: "Hand-written specs, tests and boilerplate", new: "AI drafts specs, tests and scaffolding; humans decide", ai: "AI SDLC" },
-        { old: "Research synthesised manually over weeks", new: "AI clusters school interviews & support tickets in hours", ai: "AI RESEARCH" },
-        { old: "Features need heavy onboarding to land", new: "Built so schools adopt with little hand-holding", ai: "EASY ADOPT" },
+        { old: "Large, bulky teams with shared, unclear ownership", new: "Small independent pods — one owner prioritises, specs, estimates & prototypes", ai: "PODS" },
+        { old: "Two-week sprints with QA squeezed at the end", new: "1-week dev cycles, a full QA week behind, a release every Monday", ai: "WEEKLY" },
+        { old: "Hand-written specs, tests and boilerplate", new: "AI drafts the spec, prototype, tests and code review; humans decide", ai: "AI SDLC" },
+        { old: "Tickets roll sprint to sprint as carryover", new: "Work sliced under a week — fresh slice each cycle, ships in days", ai: "SLICED" },
+        { old: "Schools & stakeholders brought in late, if at all", new: "In the loop Tue–Thu via prototype, before a line is built", ai: "EARLY" },
+        { old: "Distractions hit and derail the whole team", new: "A dedicated shock-absorber pod soaks up bugs & interruptions", ai: "BUFFER" },
       ],
-      school: "At Build, schools steer the slice in real time.",
-      schoolHow: "How we engage: a named set of pilot schools per pod, with weekly check-ins, shared prototypes and a direct feedback channel to the PM. How it shapes priorities: their reaction to each weekly increment decides what the pod builds next, so the backlog re-orders around real usage rather than assumptions.",
+      school: "At Build, schools shape the slice before a line is written.",
+      schoolHow: "How we engage: every Wednesday the owner shares the working prototype with schools (WhatsApp + key contacts) a full week ahead of dev. Feedback is folded in Thursday, pre-lock. How it shapes priorities: schools react to a real prototype rather than a shipped feature, so we course-correct cheaply — substantive changes after Friday's lock simply ride the next weekly cycle.",
     },
     adopt: {
       accent: F.pink, accentDark: "#C42B94", accentSoft: "rgba(232,55,172,0.2)",
@@ -3682,9 +3694,8 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
       }}>
         <div style={{ position: "absolute", height: 14, width: "60%", left: "30%", bottom: -7, background: F.lightYellow, opacity: 0.55, borderRadius: 9999, transform: "rotate(-1deg)", pointerEvents: "none" }} />
         <div style={{ position: "relative", zIndex: 2 }}>
-          <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase", color: F.plum, opacity: 0.7, marginBottom: 8 }}>Faria · Product Development · Ways of Working</div>
           <h1 style={{ fontSize: 32, fontWeight: 800, color: F.plum, margin: 0, lineHeight: 1.15, maxWidth: 720 }}>The AI-First Product Lifecycle</h1>
-          <p style={{ fontSize: 15, fontWeight: 500, color: F.plum, opacity: 0.85, margin: "10px 0 0", maxWidth: 620 }}>Smaller teams. Single ownership. A weekly rhythm built for speed, with schools and stakeholders in the loop before we build.</p>
+          <p style={{ fontSize: 15, fontWeight: 500, color: F.plum, opacity: 0.85, margin: "10px 0 0", maxWidth: 680 }}>A continuous loop from strategy to shipped value: leadership sets the revenue-driven direction, small AI-augmented pods build and release weekly, and what schools adopt feeds straight back into what we prioritise next.</p>
         </div>
       </div>
 
@@ -3778,30 +3789,7 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
         </p>
       </div>
 
-      {/* Quick-jump phase cards (mobile-friendly fallback + redundancy for keyboard users) */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
-        {PHASES.map(p => {
-          const d = DATA[p.id];
-          return (
-            <button key={p.id} onClick={() => setOpen(p.id)}
-              onMouseEnter={() => setHover(p.id)}
-              onMouseLeave={() => setHover(null)}
-              style={{
-                background: F.surface, border: `1px solid ${F.border}`, borderTop: `3px solid ${d.accent}`, borderRadius: 10, padding: "14px 16px",
-                boxShadow: F.shadowSm, cursor: "pointer", textAlign: "left", fontFamily: "inherit", color: F.plum,
-                transition: "transform 0.15s, box-shadow 0.15s",
-              }}
-              onMouseDown={e => e.currentTarget.style.transform = "scale(0.985)"}
-              onMouseUp={e => e.currentTarget.style.transform = "translateY(0)"}>
-              <div style={{ fontSize: 10, fontWeight: 800, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.1em" }}>{p.num} · {d.title}</div>
-              <div style={{ fontSize: 12.5, color: F.muted, marginTop: 4, lineHeight: 1.4 }}>{d.horizon}</div>
-              <div style={{ fontSize: 11.5, fontWeight: 700, color: F.pink, marginTop: 8 }}>Open phase →</div>
-            </button>
-          );
-        })}
-      </div>
-
-      <div style={{ marginTop: 24, textAlign: "center", fontSize: 11, color: F.muted2, fontStyle: "italic" }}>
+      <div style={{ marginTop: 22, textAlign: "center", fontSize: 11, color: F.muted2, fontStyle: "italic" }}>
         Product Lifecycle framework · draft for SLT review
       </div>
 
@@ -3817,6 +3805,8 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
   // ── Phase deep-view ────────────────────────────────────
   const PhaseView = ({ phase }) => {
     const d = DATA[phase];
+    // Staggered entrance for each content block below the header.
+    const stg = (i) => ({ animation: "plc-stagger 0.5s cubic-bezier(0.22,1,0.36,1) both", animationDelay: `${0.1 + i * 0.08}s` });
     const personaCls = (p) => p.t === "lead"   ? { bg: F.plum, fg: F.paper, av: F.yellow }
                           :  p.t === "school" ? { bg: d.accentSoft, fg: F.plum, av: F.surface, dashed: true }
                           :                     { bg: F.surface, fg: F.plum, av: d.accentSoft };
@@ -3838,7 +3828,7 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
         </div>
 
         {/* Phase header */}
-        <div style={{ background: d.accent, borderRadius: 14, padding: "24px 28px 22px", marginBottom: 22, position: "relative" }}>
+        <div style={{ background: d.accent, borderRadius: 14, padding: "24px 28px 22px", marginBottom: 22, position: "relative", animation: "plc-header-pop 0.5s cubic-bezier(0.34,1.56,0.64,1) both" }}>
           <div style={{ fontSize: 10.5, fontWeight: 800, color: F.plum, opacity: 0.75, textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: 4 }}>{d.eyebrow}</div>
           <h1 style={{ fontSize: 32, fontWeight: 800, margin: "0 0 8px", color: F.plum, lineHeight: 1.1 }}>{d.title}</h1>
           <p style={{ fontSize: 14, fontWeight: 500, color: F.plum, opacity: 0.92, margin: 0, maxWidth: 760, lineHeight: 1.5 }}>{d.lede}</p>
@@ -3846,7 +3836,7 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
         </div>
 
         {/* Stages & timeline */}
-        <div style={card}>
+        <div style={{ ...card, ...stg(0) }}>
           <div style={sectionTitle}>Stages &amp; timeline</div>
           {d.parallel && (
             <div style={{ background: d.accentSoft, border: `1.5px dashed ${d.accent}`, borderRadius: 10, padding: "10px 14px", fontSize: 12.5, fontWeight: 600, color: F.plum, marginBottom: 14, display: "flex", gap: 9, alignItems: "center" }}>
@@ -3878,7 +3868,7 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
         </div>
 
         {/* Activities */}
-        <div style={card}>
+        <div style={{ ...card, ...stg(1) }}>
           <div style={sectionTitle}>Activities &amp; cadence</div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 10 }}>
             {d.activities.map((a, i) => (
@@ -3898,7 +3888,7 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
         </div>
 
         {/* Who's involved + Shift */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 18, marginBottom: 18 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 18, marginBottom: 18, ...stg(2) }}>
           <div style={card}>
             <div style={sectionTitle}>Who's involved</div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
@@ -3935,7 +3925,7 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
         </div>
 
         {/* Schools at this phase */}
-        <div style={{ ...card, background: F.plum, color: F.paper, border: "none", display: "flex", gap: 14, alignItems: "flex-start" }}>
+        <div style={{ ...card, background: F.plum, color: F.paper, border: "none", display: "flex", gap: 14, alignItems: "flex-start", ...stg(3) }}>
           <div style={{ fontSize: 28, lineHeight: 1, flexShrink: 0 }}>🏫</div>
           <div>
             <div style={{ fontSize: 11, fontWeight: 800, color: F.yellow, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 4 }}>Schools at this phase</div>
@@ -3947,7 +3937,19 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
     );
   };
 
-  return open ? <PhaseView phase={open} /> : <Overview />;
+  return (
+    <div ref={topRef}>
+      {/* View-transition keyframes — kept here so they're available to both views */}
+      <style>{`
+        @keyframes plc-view-in   { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes plc-header-pop { from { opacity: 0; transform: scale(0.94) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        @keyframes plc-stagger   { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+      `}</style>
+      {open
+        ? <div key={"phase-" + open} style={{ animation: "plc-view-in 0.42s cubic-bezier(0.22,1,0.36,1) both" }}><PhaseView phase={open} /></div>
+        : <div key="overview" style={{ animation: "plc-view-in 0.42s cubic-bezier(0.22,1,0.36,1) both" }}><Overview /></div>}
+    </div>
+  );
 }
 
 /* ── AI Pods Page (top-level) ─────────────────────────────

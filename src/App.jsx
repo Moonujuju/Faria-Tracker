@@ -758,6 +758,49 @@ function effectiveTier(f) {
   return f.impact === "high" ? "pro" : "essential";
 }
 
+// Enrich a saved initiative list with default fields (wowOutcomes,
+// valueRationale) — preserving every user edit. Match each saved entry to a
+// default by id first, then by name+product (so features added via the UI,
+// which have random timestamp ids, still attach to seeded defaults).
+// Also dedupes appended new defaults by name+product so seeding a default
+// that the user already added in the UI doesn't create a duplicate row.
+// Migration: coerces legacy singular wowOutcome (string) to wowOutcomes ([]).
+function enrichInitsWithDefaults(savedInits, defaults) {
+  if (!Array.isArray(savedInits)) return savedInits;
+  const norm = (s) => String(s || "").trim().toLowerCase();
+  const matchDefault = (saved) => {
+    const byId = defaults.find(d => d.id === saved.id);
+    if (byId) return byId;
+    if (!saved.name) return null;
+    const nm = norm(saved.name);
+    const pr = saved.product || "";
+    return defaults.find(d => norm(d.name) === nm && (d.product || "") === pr);
+  };
+  const enriched = savedInits.map(saved => {
+    const def = matchDefault(saved);
+    const filled = { ...saved };
+    if (filled.wowOutcome && (!filled.wowOutcomes || filled.wowOutcomes.length === 0)) {
+      filled.wowOutcomes = [filled.wowOutcome];
+    }
+    delete filled.wowOutcome;
+    if (def?.wowOutcomes && (!filled.wowOutcomes || filled.wowOutcomes.length === 0)) {
+      filled.wowOutcomes = [...def.wowOutcomes];
+    }
+    if (def?.valueRationale && !filled.valueRationale) {
+      filled.valueRationale = def.valueRationale;
+    }
+    return filled;
+  });
+  // Append only defaults that aren't already present (id miss AND name+product miss)
+  const savedIds = new Set(savedInits.map(i => i.id));
+  const savedKeys = new Set(savedInits.map(i => `${i.product || ""}::${norm(i.name)}`));
+  const newOnes = defaults.filter(d => {
+    if (savedIds.has(d.id)) return false;
+    return !savedKeys.has(`${d.product || ""}::${norm(d.name)}`);
+  });
+  return [...enriched, ...newOnes];
+}
+
 // Merge a fresh monetization config with saved one (deep-merge products
 // so adding a new product later doesn't wipe existing pricing).
 function mergeMonz(saved) {
@@ -955,47 +998,13 @@ function TrackerPage({ title, subtitle, storageKey, defaults, ModalComponent, ex
   // Selecting a group in the analytics chip auto-expands that group's row in the list below
   useEffect(() => { if (selGroup) setExpandedGroups(prev => prev.has(selGroup) ? prev : new Set(prev).add(selGroup)); }, [selGroup]);
 
-  // Load saved state and merge in any new default initiatives (preserves user edits — never overwrites saved milestones/status/etc.)
+  // Load saved state and merge in defaults (preserves user edits, forward-fills
+  // missing wowOutcomes/valueRationale, dedupes new defaults that match by
+  // name+product so the same feature doesn't appear twice).
   useEffect(() => { (async () => {
     const s = await loadState(storageKey);
     if (s?.inits) {
-      const savedIds = new Set(s.inits.map(i => i.id));
-      const newOnes = defaults.filter(d => !savedIds.has(d.id));
-      // Forward-fill: for each saved entry, if it lacks wowOutcomes / valueRationale,
-      // borrow from the matching default (when one exists). Also migrate legacy
-      // singular wowOutcome (string) to wowOutcomes (array). User edits always win.
-      // Default match: by id first; if no id match (e.g. user added the feature via
-      // the UI, which uses random timestamp ids), fall back to a name+product match
-      // (case- and whitespace-tolerant) so seeded defaults still attach.
-      const matchDefault = (saved) => {
-        const byId = defaults.find(d => d.id === saved.id);
-        if (byId) return byId;
-        if (!saved.name) return null;
-        const nm = String(saved.name).trim().toLowerCase();
-        const pr = saved.product || "";
-        return defaults.find(d =>
-          d.name && String(d.name).trim().toLowerCase() === nm &&
-          (d.product || "") === pr
-        );
-      };
-      const enriched = s.inits.map(saved => {
-        const def = matchDefault(saved);
-        const filled = { ...saved };
-        // Migrate legacy field
-        if (filled.wowOutcome && (!filled.wowOutcomes || filled.wowOutcomes.length === 0)) {
-          filled.wowOutcomes = [filled.wowOutcome];
-        }
-        delete filled.wowOutcome;
-        // Forward-fill from defaults
-        if (def?.wowOutcomes && (!filled.wowOutcomes || filled.wowOutcomes.length === 0)) {
-          filled.wowOutcomes = [...def.wowOutcomes];
-        }
-        if (def?.valueRationale && !filled.valueRationale) {
-          filled.valueRationale = def.valueRationale;
-        }
-        return filled;
-      });
-      setInits([...enriched, ...newOnes]);
+      setInits(enrichInitsWithDefaults(s.inits, defaults));
     }
     setReady(true);
   })(); }, []);
@@ -1290,7 +1299,7 @@ function AiMonetizationPage({ subRoute, setSubRoute }) {
   // Load both stores
   useEffect(() => { (async () => {
     const s = await loadState("faria-ai-v12");
-    if (s?.inits) setAi({ inits: s.inits });
+    if (s?.inits) setAi({ inits: enrichInitsWithDefaults(s.inits, DEFAULT_AI) });
     setReadyAi(true);
   })(); }, []);
   useEffect(() => { (async () => {

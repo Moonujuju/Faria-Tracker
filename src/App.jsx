@@ -655,6 +655,22 @@ const DEFAULT_COMPETITIVE = {
   ],
   feedSplitNotes: "Universal free adoption tier beneath the paid models — observed at Copilot Chat, Instructure access features, HubSpot enrichment, Salesforce Foundations, and Khan core platform. The \"standalone AI tax\" grievance: buyers resent paying for AI on top of core software they already license, which structurally favors integrated suites over point solutions (MagicSchool is the cautionary case; PowerSchool and Instructure benefit). Some vendors embed AI cost into the base rather than charging separately — Zoom bundles AI at no extra charge as an adoption lever; Adobe raised base plan prices ~10% to fund AI instead of adding a line item. Both avoid a visible \"AI surcharge.\"",
   benchmarkNotes: "No convergence — the market has not settled on one model. Salesforce deliberately offers three at once so buyers self-select. Strong pull toward outcome-based pricing in support and sales tooling (Intercom, HubSpot, Zendesk), framed around paying for value not compute. The outcome-pricing catch: bills rise as the AI improves and swing with usage, which finance teams dislike — keeps pulling vendors back toward per-seat / per-user wrappers that give a budgetable number. Credits as a hidden compute layer (HubSpot's current approach): customer-facing price is per-outcome, compute is metered underneath. For Faria's positioning as an integrated education suite, Instructure IgniteAI and PowerSchool PowerBuddy are the closest structural comparables — both bundle AI as suite differentiation rather than a separate revenue line, with future tiering on compute-heavy capabilities.",
+  summary: {
+    headline: "Bundle AI into per-account/year SKUs. Credits operate underneath — not as the headline price. AI Essential stays genuinely useful; the multi-product bundle discount is the commercial weapon.",
+    patterns: [
+      "Education buyers reject a standalone \"AI tax\" — MagicSchool's documented critique. PowerSchool, Coursera and Instructure bundle AI into the existing suite subscription.",
+      "Pricing falls fast in education — Khanmigo went from $60 → $35 → $15 per student/year in under two years. Plan to defend the number down.",
+      "Outcome-based pricing creates budget swings that school finance teams reject — Intercom Fin's explicit critique is \"cost rises as the AI improves.\"",
+      "Bundling-without-a-separate-line is the late-cycle move — Adobe, Zoom, Notion and Google Workspace all retired standalone AI add-ons in 2024–25.",
+    ],
+    implications: [
+      "Keep per-account / year as the SKU unit. Per-student is under heavy downward pressure; per-seat is for productivity tools.",
+      "Credits live under the SKU, not as the headline. Mirror HubSpot — customer-facing price is per-SKU; credits govern inference spend.",
+      "AI Essential must be genuinely useful, not a trial. Every successful benchmark runs a real free tier alongside paid.",
+      "Lean into the multi-product bundle discount — that's how integrated-suite vendors (PowerSchool, Instructure) actually sell against MagicSchool-style point solutions.",
+    ],
+    watchout: "The next-cycle move the data suggests is dropping the AI Pro SKU entirely and rolling AI into the base product subscription (Adobe / Zoom / Notion / Google Workspace pattern). Faria isn't there yet — schools are still evaluating AI as a differentiated feature — but the 18–36 month trajectory points that way as features commoditize.",
+  },
 };
 const COMPETITOR_TEMPLATE = () => ({
   id: Date.now() + Math.floor(Math.random() * 1000),
@@ -689,6 +705,14 @@ function mergeCompetitive(saved) {
     ...DEFAULT_COMPETITIVE,
     ...saved,
     competitors: [...savedCompetitors, ...newDefaults],
+    // Deep-merge the executive summary so old blobs without it inherit the seed,
+    // and saved field-level edits win.
+    summary: {
+      ...DEFAULT_COMPETITIVE.summary,
+      ...(saved.summary || {}),
+      patterns: (saved.summary && Array.isArray(saved.summary.patterns)) ? saved.summary.patterns : DEFAULT_COMPETITIVE.summary.patterns,
+      implications: (saved.summary && Array.isArray(saved.summary.implications)) ? saved.summary.implications : DEFAULT_COMPETITIVE.summary.implications,
+    },
   };
 }
 
@@ -1926,6 +1950,13 @@ function MonzCompetitivePage() {
   const removeCompetitor = (id) => { setComp(prev => ({ ...prev, competitors: prev.competitors.filter(c => c.id !== id) })); setConfirmDel(null); };
   const toggle = (id) => setExpanded(prev => { const n = new Set(prev); if (n.has(id)) n.delete(id); else n.add(id); return n; });
 
+  // Executive summary mutators ("What this tells us" card at the top)
+  const setSummary = (patch) => setComp(prev => ({ ...prev, summary: { ...prev.summary, ...patch } }));
+  const setSummaryRow = (key, idx, val) => setComp(prev => ({ ...prev, summary: { ...prev.summary, [key]: (prev.summary[key] || []).map((r, i) => i === idx ? val : r) } }));
+  const addSummaryRow = (key) => setComp(prev => ({ ...prev, summary: { ...prev.summary, [key]: [...(prev.summary[key] || []), ""] } }));
+  const removeSummaryRow = (key, idx) => setComp(prev => ({ ...prev, summary: { ...prev.summary, [key]: (prev.summary[key] || []).filter((_, i) => i !== idx) } }));
+  const summary = comp.summary || DEFAULT_COMPETITIVE.summary;
+
   const card = { background: F.surface, border: `1px solid ${F.border}`, borderRadius: 12, padding: "18px 22px", marginBottom: 18, boxShadow: F.shadowSm };
   const sectionTitle = { fontSize: 11, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 };
   const tile = { flex: 1, minWidth: 130, padding: "12px 16px", background: F.bg, border: `1px solid ${F.border}`, borderRadius: 10 };
@@ -1949,7 +1980,65 @@ function MonzCompetitivePage() {
       <style>{`
         .comp-row { transition: background 0.12s ease; }
         .comp-row:hover { background: ${F.lightYellow}55 !important; }
+        .ws-col-card { background: ${F.surface}; border: 1px solid ${F.border}; border-radius: 10px; padding: 14px 16px; }
+        .ws-bullet-row { display: flex; align-items: flex-start; gap: 8px; padding: 6px 0; border-bottom: 1px solid ${F.border}; }
+        .ws-bullet-row:last-of-type { border-bottom: none; }
+        @media (max-width: 720px) { .ws-grid { grid-template-columns: 1fr !important; } }
       `}</style>
+
+      {/* ── Executive summary: "What this tells us" — landing card pinned to the top ── */}
+      <div style={{ ...card, borderLeft: `4px solid ${F.pink}`, padding: "20px 24px", marginBottom: 22 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+          <span style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: "0.12em", padding: "3px 10px", borderRadius: 4, background: F.yellow, color: F.plum, textTransform: "uppercase" }}>★ What this tells us</span>
+          <span style={{ fontSize: 11, color: F.muted2, fontStyle: "italic" }}>Synthesis of the {total} competitors below — editable</span>
+        </div>
+        <textarea
+          value={summary.headline || ""}
+          onChange={e => setSummary({ headline: e.target.value })}
+          rows={2}
+          placeholder="One-line takeaway…"
+          style={{ width: "100%", border: "none", background: "transparent", color: F.plum, fontSize: 17, fontWeight: 700, lineHeight: 1.4, fontFamily: "inherit", outline: "none", resize: "vertical", padding: "0 0 14px", borderBottom: `1px solid ${F.border}`, marginBottom: 16 }}
+        />
+
+        <div className="ws-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+          {[
+            { key: "patterns", title: "What the data shows", placeholder: "Pattern observed across the competitors below…" },
+            { key: "implications", title: "What we should do", placeholder: "Implication for Faria's monetization model…" },
+          ].map(col => (
+            <div key={col.key} className="ws-col-card">
+              <div style={{ ...sectionTitle, marginBottom: 8 }}>{col.title}</div>
+              {(summary[col.key] || []).map((row, i) => (
+                <div key={i} className="ws-bullet-row">
+                  <span style={{ color: F.pink, fontSize: 13, lineHeight: 1.5, paddingTop: 2, flexShrink: 0 }}>◆</span>
+                  <textarea
+                    value={row}
+                    onChange={e => setSummaryRow(col.key, i, e.target.value)}
+                    placeholder={col.placeholder}
+                    rows={2}
+                    style={{ flex: 1, border: "none", background: "transparent", color: F.plum, fontSize: 12.5, lineHeight: 1.5, fontFamily: "inherit", outline: "none", resize: "vertical", padding: "2px 0", minWidth: 0 }}
+                  />
+                  <button onClick={() => removeSummaryRow(col.key, i)} title="Remove" style={{ width: 20, height: 20, borderRadius: 10, border: "none", background: "transparent", color: F.muted2, cursor: "pointer", fontSize: 14, lineHeight: 1, padding: 0, flexShrink: 0, fontFamily: "inherit" }}>×</button>
+                </div>
+              ))}
+              <button onClick={() => addSummaryRow(col.key)} style={{ marginTop: 8, padding: "5px 11px", borderRadius: 7, border: `1px dashed ${F.borderStrong}`, background: "transparent", color: F.plum, fontSize: 11.5, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>+ Add row</button>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ marginTop: 14, background: `${F.lightYellow}66`, border: `1px solid ${F.lightYellow}`, borderRadius: 8, padding: "10px 14px", display: "flex", gap: 10, alignItems: "flex-start" }}>
+          <span style={{ fontSize: 14, lineHeight: 1.4, flexShrink: 0 }}>⚠</span>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 10.5, fontWeight: 800, color: F.plum, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>Watch out</div>
+            <textarea
+              value={summary.watchout || ""}
+              onChange={e => setSummary({ watchout: e.target.value })}
+              rows={2}
+              placeholder="Counter-trend, blind spot, or the next-cycle move worth flagging…"
+              style={{ width: "100%", border: "none", background: "transparent", color: F.plum, fontSize: 12.5, lineHeight: 1.55, fontFamily: "inherit", outline: "none", resize: "vertical", padding: 0 }}
+            />
+          </div>
+        </div>
+      </div>
 
       <div style={card}>
         <div style={sectionTitle}>Snapshot</div>

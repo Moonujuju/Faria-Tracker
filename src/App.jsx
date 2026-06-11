@@ -3508,20 +3508,18 @@ function FairUseExample({ monz, setMonz }) {
   );
 }
 
-/* ── Prioritization (Product Lifecycle) Page ──────────────
-   Mirrors the AI-First Product Lifecycle deck — one continuous loop
-   with three phases (Prioritise → Build → Adopt) around Schools at
-   the core. Click a phase node to expand a full panel with stages,
-   activities, stakeholders, the old-way → AI-first shift, and the
-   schools-engagement model.
-   Source: ~/Desktop/faria-product-lifecycle2.html */
+/* ── Product Lifecycle Page (top-level) ───────────────────
+   The AI-first product-development loop: Prioritise → Build → Adopt,
+   with schools at the core feeding adoption signal back into
+   prioritisation. Overview shows a flow strip + 3 phase cards;
+   selecting a phase via the URL slug (#/lifecycle/prioritise etc.)
+   drops into that phase's full content (stages, activities,
+   stakeholders, old-way → AI-first shift, schools-engagement model).
+   Source content: ~/Desktop/faria-product-lifecycle2.html */
 function PrioritizationPage({ subRoute, setSubRoute }) {
-  // open phase derived from URL sub-route. Valid: prioritise | build | adopt. Empty = no phase open (cycle view).
   const VALID_PHASES = ["prioritise", "build", "adopt"];
   const open = VALID_PHASES.includes(subRoute) ? subRoute : null;
   const setOpen = (p) => setSubRoute(p || "");
-  const panelRef = useRef(null);
-  const cycleRef = useRef(null);
 
   useEffect(() => {
     const onKey = (e) => { if (e.key === "Escape" && open) setOpen(null); };
@@ -3529,26 +3527,19 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
-  useEffect(() => {
-    if (open && panelRef.current) {
-      setTimeout(() => panelRef.current.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
-    } else if (!open && cycleRef.current) {
-      cycleRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
-    }
-  }, [open]);
-
+  // Phase data — content faithful to the source HTML, no diagram math.
   const DATA = {
     prioritise: {
-      cls: "prioritise", accent: "#E2A800", soft: "rgba(247,211,95,0.28)",
+      accent: F.yellow, accentDark: "#E2A800", accentSoft: "rgba(247,211,95,0.28)",
       eyebrow: "Phase 01 · Set the direction", title: "Prioritise",
       lede: "Where leadership sets a revenue-driven vision. ExCo, SLT and Sales align on the few bets that will win the year, then sharpen them quarter by quarter from live signal.",
-      horizon: "Horizon: annual vision, re-cut quarterly, tracked monthly",
+      horizon: "Annual vision · re-cut quarterly · tracked monthly",
       parallel: null,
       stages: [
         { n: "Vision & strategic themes", wk: "Annual · Quarterly · Monthly", p: "ExCo, SLT and Sales agree the 3–5 themes for the year, refine them each quarter, and check progress monthly. Big areas, not features yet.", tools: [] },
-        { n: "Revenue & sales-signal review", wk: "Quarterly", p: "We pressure-test each theme against pipeline, churn risk and expansion. If a bet doesn't move revenue, it doesn't make the cut.", tools: ["Salesforce", "Planhat"] },
-        { n: "AI-assisted opportunity scan", wk: "Always-on", p: "AI pulls from Salesforce (pipeline/win-loss), Pendo (product usage) and Planhat (health/expansion) and ranks opportunities — including by region — so the room starts from evidence, not opinion.", tools: ["Salesforce", "Pendo", "Planhat", "Regional growth"] },
-        { n: "Quarter re-cut & commit", wk: "Per quarter", p: "Themes move up or down as the market shifts. We commit the next quarter's focus and hand a clear brief to the build pods.", tools: [] },
+        { n: "Revenue & sales-signal review", wk: "Quarterly", p: "Pressure-test each theme against pipeline, churn risk and expansion. If a bet doesn't move revenue, it doesn't make the cut.", tools: ["Salesforce", "Planhat"] },
+        { n: "AI-assisted opportunity scan", wk: "Always-on", p: "AI pulls from Salesforce (pipeline / win-loss), Pendo (product usage) and Planhat (health / expansion) and ranks opportunities — including by region — so the room starts from evidence, not opinion.", tools: ["Salesforce", "Pendo", "Planhat", "Regional growth"] },
+        { n: "Quarter re-cut & commit", wk: "Per quarter", p: "Themes move up or down as the market shifts. Commit the next quarter's focus and hand a clear brief to the build pods.", tools: [] },
       ],
       activities: [
         { ic: "📊", nm: "Annual strategy offsite", cad: "Yearly", d: "ExCo + SLT set the year's themes and revenue targets." },
@@ -3556,13 +3547,13 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
         { ic: "📞", nm: "Monthly product–revenue call", cad: "Monthly", d: "Product + Sales review pipeline and pull-through on committed bets." },
         { ic: "🤖", nm: "AI opportunity digest", cad: "Continuous", d: "Auto-generated ranked opportunities from Salesforce, Pendo, Planhat." },
         { ic: "🏫", nm: "School advisory panel", cad: "Quarterly", d: "Core user-group schools review the theme shortlist and rank what matters to them." },
-        { ic: "🔔", nm: "Top-request review", cad: "Monthly", d: "We sort the biggest school feature requests by segment and revenue impact." },
+        { ic: "🔔", nm: "Top-request review", cad: "Monthly", d: "Sort the biggest school feature requests by segment and revenue impact." },
       ],
       build_tools: "Tools to build: an automated prioritisation dashboard that unifies Salesforce + Pendo + Planhat into one ranked, region-aware view, refreshed monthly and quarterly.",
       stakeholders: [
-        { n: "ExCo", ic: "♙", t: "lead" }, { n: "SLT", ic: "🧝", t: "lead" }, { n: "VP Sales", ic: "📈", t: "lead" },
-        { n: "Product leadership", ic: "🧩", t: "" }, { n: "Finance / RevOps", ic: "💷", t: "" },
-        { n: "Core user groups (schools)", ic: "🏫", t: "school" },
+        { n: "ExCo", t: "lead" }, { n: "SLT", t: "lead" }, { n: "VP Sales", t: "lead" },
+        { n: "Product leadership", t: "" }, { n: "Finance / RevOps", t: "" },
+        { n: "Core user groups (schools)", t: "school" },
       ],
       shift: [
         { old: "Planning off gut feel and the loudest voice", new: "Evidence-ranked, region-aware opportunities before the room meets", ai: "AI SCAN" },
@@ -3573,10 +3564,10 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
       schoolHow: "How we engage: standing advisory panels across our core user groups (not just lighthouse schools), plus segment-level usage and request data. How it shapes priorities: their goals and pain points feed the opportunity scan, so the themes we commit to are the ones our schools are asking for.",
     },
     build: {
-      cls: "build", accent: "#E06A2E", soft: "rgba(247,139,67,0.24)",
+      accent: F.orange, accentDark: "#E06A2E", accentSoft: "rgba(247,139,67,0.24)",
       eyebrow: "Phase 02 · Make it real", title: "Build",
       lede: "Our AI-first SDLC. Small pods turn a brief into shippable value, releasing something useful every week. Discovery, design and build run in parallel — not in sequence.",
-      horizon: "Horizon: 1–2 week sprints, weekly releases",
+      horizon: "1–2 week sprints · weekly releases",
       parallel: "These stages overlap and run continuously. While the pod is in a build sprint, the PM, design and research are already on next week's discovery. Each week several of these happen at once.",
       stages: [
         { n: "Discovery & user research", wk: "Wk 1 · ongoing", p: "The PM works with schools, support and design to validate the problem. AI clusters interviews and tickets so patterns surface in hours.", tools: ["School interviews", "Support tickets"] },
@@ -3594,9 +3585,9 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
       ],
       build_tools: "Tools to build: an AI-in-the-SDLC toolchain (spec/test/scaffold assists) plus a research-clustering tool that turns interviews and tickets into ranked themes in hours.",
       stakeholders: [
-        { n: "Product Manager (pod)", ic: "🧩", t: "lead" }, { n: "Pod engineers", ic: "💻", t: "lead" }, { n: "QA", ic: "✅", t: "" },
-        { n: "Support team", ic: "🎧", t: "" }, { n: "Sales team", ic: "📈", t: "" }, { n: "Design & research", ic: "🎨", t: "" },
-        { n: "Pilot schools", ic: "🏫", t: "school" },
+        { n: "Product Manager (pod)", t: "lead" }, { n: "Pod engineers", t: "lead" }, { n: "QA", t: "" },
+        { n: "Support team", t: "" }, { n: "Sales team", t: "" }, { n: "Design & research", t: "" },
+        { n: "Pilot schools", t: "school" },
       ],
       shift: [
         { old: "Large teams, big-bang releases every few months", new: "Small focused pods shipping a usable slice every week", ai: "PODS" },
@@ -3608,16 +3599,16 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
       schoolHow: "How we engage: a named set of pilot schools per pod, with weekly check-ins, shared prototypes and a direct feedback channel to the PM. How it shapes priorities: their reaction to each weekly increment decides what the pod builds next, so the backlog re-orders around real usage rather than assumptions.",
     },
     adopt: {
-      cls: "adopt", accent: "#C42b94", soft: "rgba(232,55,172,0.2)",
+      accent: F.pink, accentDark: "#C42B94", accentSoft: "rgba(232,55,172,0.2)",
       eyebrow: "Phase 03 · Land, expand, learn", title: "Adopt",
       lede: "Where shipped value becomes school success and revenue. Product produces automated enablement; marketing focuses only on AAA campaigns; adoption signal feeds straight back into Prioritise.",
-      horizon: "Horizon: continuous, closes the loop",
+      horizon: "Continuous · closes the loop",
       parallel: null,
       stages: [
         { n: "Automated sales enablement", wk: "At release", p: "Each release auto-generates enablement — what shipped, who it's for, the pitch, the collateral — so Sales and Support are ready day one without waiting on a hand-off.", tools: ["Auto collateral"] },
         { n: "Marketing — AAA campaigns only", wk: "Wk 1", p: "Marketing runs campaigns for the marquee AAA features. Everything else reaches Sales and Support directly through the automated collateral Product produces.", tools: ["AAA campaigns", "AI copy"] },
-        { n: "Enablement certifications", wk: "Per AAA feature", p: "For AAA features, we plan and auto-generate certification paths so the enablement team can certify Sales and Support quickly and consistently.", tools: ["Cert paths", "AI assessments"] },
-        { n: "Land & expand", wk: "Ongoing", p: "Schools onboard and adopt. We track activation and expansion and step in where adoption stalls.", tools: ["Pendo", "Salesforce"] },
+        { n: "Enablement certifications", wk: "Per AAA feature", p: "For AAA features, plan and auto-generate certification paths so the enablement team can certify Sales and Support quickly and consistently.", tools: ["Cert paths", "AI assessments"] },
+        { n: "Land & expand", wk: "Ongoing", p: "Schools onboard and adopt. Track activation and expansion and step in where adoption stalls.", tools: ["Pendo", "Salesforce"] },
         { n: "Adoption signal → Prioritise", wk: "Continuous", p: "Activation, feature usage and expansion (Pendo) plus pipeline and win-loss (Salesforce) flow back as the freshest input to the next prioritisation cut. The loop closes.", tools: ["Pendo", "Salesforce"] },
       ],
       activities: [
@@ -3630,9 +3621,9 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
       ],
       build_tools: "Tools to build: an enablement generator (collateral + certification paths per AAA feature) and an adoption-signal pipeline that routes Pendo + Salesforce data into the prioritisation dashboard.",
       stakeholders: [
-        { n: "VP Sales", ic: "📈", t: "lead" }, { n: "Marketing", ic: "📣", t: "lead" }, { n: "Sales enablement", ic: "🎓", t: "" },
-        { n: "Customer success", ic: "🤝", t: "" }, { n: "Support", ic: "🎧", t: "" }, { n: "Implementation", ic: "🔧", t: "" },
-        { n: "Product (owns deliverables)", ic: "🧩", t: "" }, { n: "Adopting schools", ic: "🏫", t: "school" },
+        { n: "VP Sales", t: "lead" }, { n: "Marketing", t: "lead" }, { n: "Sales enablement", t: "" },
+        { n: "Customer success", t: "" }, { n: "Support", t: "" }, { n: "Implementation", t: "" },
+        { n: "Product (owns deliverables)", t: "" }, { n: "Adopting schools", t: "school" },
       ],
       shift: [
         { old: "Sales finds out about features after they ship", new: "Enablement auto-generated at release; Sales & Support ready day one", ai: "AUTO ENABLE" },
@@ -3645,281 +3636,221 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
     },
   };
 
-  const styles = `
-    .plc-stage { background: ${F.plum}; border-radius: 16px; position: relative; overflow: hidden; padding: 28px 24px 60px; color: ${F.paper}; font-family: 'Nunito Sans','Trebuchet MS',system-ui,sans-serif; }
-    .plc-stage::before { content: ""; position: absolute; width: 120%; height: 80%; right: -25%; bottom: -25%; background: ${F.gradient}; filter: blur(40px); opacity: 0.16; border-radius: 50%; pointer-events: none; }
-    .plc-stage::after { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at 20% 15%, rgba(247,211,95,0.06), transparent 40%); pointer-events: none; }
-    .plc-wrap { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; }
-    .plc-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 14px; flex-wrap: wrap; }
-    .plc-brand h1 { font-size: 23px; font-weight: 800; color: ${F.paper}; line-height: 1.1; margin: 0; }
-    .plc-brand h1 b { color: ${F.yellow}; font-weight: 800; }
-    .plc-legend { font-size: 12px; color: rgba(240,235,235,0.62); text-align: right; max-width: 300px; line-height: 1.45; }
-    .plc-legend b { color: ${F.paper}; }
+  // Shared styles
+  const card = { background: F.surface, border: `1px solid ${F.border}`, borderRadius: 12, padding: "18px 22px", marginBottom: 18, boxShadow: F.shadowSm };
+  const sectionTitle = { fontSize: 11, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 };
 
-    .plc-cycle { position: relative; width: 100%; max-width: 720px; margin: 14px auto 4px; aspect-ratio: 1/0.96; }
-    .plc-connector { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; z-index: 1; }
-    .plc-node { position: absolute; width: 29%; aspect-ratio: 1/1; border-radius: 50%; cursor: pointer; z-index: 2; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: ${F.plum}; padding: 14px; transition: transform 0.4s cubic-bezier(.2,.8,.2,1), box-shadow 0.4s; box-shadow: 0 16px 40px -12px rgba(0,0,0,0.55); border: 2.5px solid rgba(55,2,60,0.12); font-family: 'Nunito Sans','Trebuchet MS',system-ui,sans-serif; }
-    .plc-node:hover { transform: translateY(-6px) scale(1.035); }
-    .plc-node .ph { font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; font-weight: 800; opacity: 0.62; }
-    .plc-node .nm { font-size: clamp(19px, 3vw, 27px); font-weight: 800; line-height: 1.05; margin: 3px 0 5px; }
-    .plc-node .sub { font-size: 11px; font-weight: 600; line-height: 1.25; opacity: 0.78; max-width: 90%; }
-    .plc-node .tl { margin-top: 8px; font-size: 10px; font-weight: 700; background: rgba(55,2,60,0.14); padding: 3px 9px; border-radius: 20px; }
-    .plc-n-prioritise { top: 0; left: 50%; transform: translateX(-50%); background: ${F.yellow}; }
-    .plc-n-prioritise:hover { transform: translateX(-50%) translateY(-6px) scale(1.035); }
-    .plc-n-build { bottom: 3%; left: 2%; background: ${F.orange}; }
-    .plc-n-adopt { bottom: 3%; right: 2%; background: ${F.pink}; color: #fff; border-color: rgba(255,255,255,0.18); }
-    .plc-n-adopt .ph, .plc-n-adopt .nm, .plc-n-adopt .sub { color: #fff; }
-    .plc-n-adopt .tl { background: rgba(255,255,255,0.2); }
-
-    .plc-core { position: absolute; top: 48%; left: 50%; transform: translate(-50%, -50%); width: 31%; aspect-ratio: 1/1; border-radius: 50%; background: ${F.paper}; z-index: 3; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 6%; box-shadow: 0 0 0 7px rgba(240,235,235,0.07), 0 0 0 15px rgba(240,235,235,0.035), 0 10px 30px rgba(0,0,0,0.4); }
-    .plc-core .ico { width: 46%; aspect-ratio: 1/1; line-height: 0; }
-    .plc-core .t { font-size: clamp(13px, 2vw, 18px); font-weight: 800; color: ${F.plum}; margin-top: 5px; }
-    .plc-core .s { font-size: clamp(8px, 1.1vw, 11px); font-weight: 700; color: ${F.lightPlum}; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 2px; }
-
-    .plc-cycle-cap { text-align: center; color: rgba(240,235,235,0.55); font-size: 12px; margin-top: 8px; font-weight: 600; }
-    .plc-cycle-cap b { color: ${F.lightPink}; }
-    .plc-hint { text-align: center; color: rgba(240,235,235,0.5); font-size: 12.5px; margin-top: 16px; font-weight: 600; }
-    .plc-hint b { color: ${F.yellow}; }
-
-    .plc-panel { margin-top: 28px; background: ${F.paper}; border-radius: 22px; overflow: hidden; box-shadow: 0 30px 70px -20px rgba(0,0,0,0.6); }
-    .plc-panel-top { padding: 26px 30px 22px; color: #fff; position: relative; }
-    .plc-panel-top.prioritise { background: linear-gradient(120deg, #F7D35F, #F7B53f); color: ${F.plum}; }
-    .plc-panel-top.build { background: linear-gradient(120deg, #F78B43, #F26C5a); }
-    .plc-panel-top.adopt { background: linear-gradient(120deg, ${F.pink}, #C42b94); }
-    .plc-panel-top .eyebrow { font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; font-weight: 800; opacity: 0.8; }
-    .plc-panel-top h2 { font-size: 30px; font-weight: 800; line-height: 1.08; margin: 4px 0 8px; font-family: 'Nunito Sans','Trebuchet MS',system-ui,sans-serif; }
-    .plc-lede { font-size: 14.5px; font-weight: 600; line-height: 1.45; max-width: 700px; opacity: 0.95; margin: 0; }
-    .plc-horizon { display: inline-block; margin-top: 14px; font-size: 12px; font-weight: 800; background: rgba(255,255,255,0.22); padding: 6px 13px; border-radius: 30px; }
-    .plc-panel-top.prioritise .plc-horizon { background: rgba(55,2,60,0.16); }
-    .plc-closeb { position: absolute; top: 18px; right: 20px; width: 34px; height: 34px; border-radius: 50%; border: none; background: rgba(255,255,255,0.22); color: inherit; font-size: 18px; cursor: pointer; font-weight: 700; line-height: 1; font-family: inherit; }
-    .plc-panel-top.prioritise .plc-closeb { background: rgba(55,2,60,0.14); }
-    .plc-closeb:hover { background: rgba(255,255,255,0.36); }
-
-    .plc-panel-body { padding: 24px 30px 32px; color: ${F.plum}; }
-    .plc-sec-title { font-size: 12px; letter-spacing: 0.13em; text-transform: uppercase; font-weight: 800; color: ${F.lightPlum}; margin: 0 0 13px; display: flex; align-items: center; gap: 9px; }
-    .plc-sec-title::after { content: ""; flex: 1; height: 1.5px; background: linear-gradient(90deg, rgba(85,40,89,0.3), transparent); }
-    .plc-sec-block { margin-bottom: 30px; }
-    .plc-parallel-note { background: rgba(247,139,67,0.12); border: 1.5px dashed var(--plc-accent); border-radius: 12px; padding: 11px 15px; font-size: 12.5px; font-weight: 700; color: ${F.plum}; margin-bottom: 16px; display: flex; gap: 9px; align-items: center; }
-    .plc-parallel-note .ic { font-size: 17px; flex: none; }
-
-    .plc-stages { display: grid; gap: 12px; }
-    .plc-stage-row { display: grid; grid-template-columns: 30px 1fr; gap: 14px; align-items: start; }
-    .plc-stage-row .dot { position: relative; display: flex; justify-content: center; padding-top: 4px; }
-    .plc-stage-row .dot i { width: 13px; height: 13px; border-radius: 50%; background: var(--plc-accent); box-shadow: 0 0 0 4px var(--plc-accent-soft); z-index: 2; }
-    .plc-stage-row .dot::before { content: ""; position: absolute; top: 10px; bottom: -16px; width: 2px; background: rgba(85,40,89,0.18); }
-    .plc-stage-row:last-child .dot::before { display: none; }
-    .plc-stage-row .card { background: #fff; border-radius: 13px; padding: 13px 16px; box-shadow: 0 3px 10px rgba(55,2,60,0.05); border-left: 3px solid var(--plc-accent); }
-    .plc-stage-row .card h4 { font-size: 15px; font-weight: 800; color: ${F.plum}; display: flex; justify-content: space-between; gap: 10px; align-items: baseline; margin: 0; font-family: 'Nunito Sans','Trebuchet MS',system-ui,sans-serif; }
-    .plc-stage-row .card h4 .wk { font-size: 10.5px; font-weight: 800; color: var(--plc-accent); background: var(--plc-accent-soft); padding: 3px 9px; border-radius: 20px; white-space: nowrap; }
-    .plc-stage-row .card p { font-size: 13px; color: #4a3a4c; line-height: 1.45; margin: 5px 0 0; font-weight: 500; }
-    .plc-stage-row .card .tools { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
-    .plc-stage-row .card .tools .t { font-size: 10.5px; font-weight: 800; padding: 3px 9px; border-radius: 7px; background: var(--plc-accent-soft); color: ${F.plum}; }
-
-    .plc-acts { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; }
-    @media (max-width: 680px) { .plc-acts { grid-template-columns: 1fr; } }
-    .plc-act { background: #fff; border-radius: 12px; padding: 12px 15px; box-shadow: 0 2px 8px rgba(55,2,60,0.05); border-top: 3px solid var(--plc-accent); display: flex; flex-direction: column; gap: 4px; }
-    .plc-act .h { display: flex; align-items: center; gap: 8px; }
-    .plc-act .h .ic { width: 28px; height: 28px; border-radius: 8px; background: var(--plc-accent-soft); display: grid; place-items: center; font-size: 15px; flex: none; }
-    .plc-act .h .nm { font-size: 13.5px; font-weight: 800; color: ${F.plum}; line-height: 1.15; }
-    .plc-act .cad { font-size: 10.5px; font-weight: 800; color: var(--plc-accent); text-transform: uppercase; letter-spacing: 0.06em; }
-    .plc-act .d { font-size: 12px; color: #5a4a5c; line-height: 1.4; font-weight: 500; }
-
-    .plc-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 26px; }
-    @media (max-width: 760px) { .plc-cols { grid-template-columns: 1fr; } }
-    .plc-personas { display: flex; flex-wrap: wrap; gap: 9px; }
-    .plc-persona { display: flex; align-items: center; gap: 9px; background: #fff; border-radius: 30px; padding: 6px 14px 6px 7px; box-shadow: 0 2px 7px rgba(55,2,60,0.06); }
-    .plc-persona .av { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-size: 15px; flex: none; background: var(--plc-accent-soft); }
-    .plc-persona .nm { font-size: 12.5px; font-weight: 700; color: ${F.plum}; }
-    .plc-persona.lead { background: ${F.plum}; }
-    .plc-persona.lead .nm { color: ${F.paper}; }
-    .plc-persona.lead .av { background: ${F.yellow}; }
-    .plc-persona.school { background: var(--plc-accent-soft); border: 1.5px dashed var(--plc-accent); }
-    .plc-persona.school .av { background: #fff; }
-    .plc-persona-key { margin-top: 12px; font-size: 11px; color: #7a6a7c; font-weight: 700; }
-    .plc-persona-key i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; vertical-align: middle; margin: 0 4px 0 8px; }
-
-    .plc-shift { display: grid; gap: 11px; }
-    .plc-shift .row { background: #fff; border-radius: 12px; padding: 13px 15px; box-shadow: 0 2px 8px rgba(55,2,60,0.05); }
-    .plc-shift .row .old { font-size: 12px; color: #9a8a9c; font-weight: 600; text-decoration: line-through; text-decoration-color: rgba(154,138,156,0.5); }
-    .plc-shift .row .new { font-size: 13px; color: ${F.plum}; font-weight: 700; margin-top: 3px; display: flex; gap: 8px; align-items: flex-start; }
-    .plc-shift .row .new .ai { flex: none; font-size: 9px; font-weight: 800; letter-spacing: 0.06em; background: var(--plc-accent); color: #fff; padding: 3px 7px; border-radius: 6px; margin-top: 1px; }
-    .plc-prioritise-acc .plc-shift .row .new .ai { color: ${F.plum}; }
-
-    .plc-school-banner { margin-top: 6px; background: ${F.plum}; color: ${F.paper}; border-radius: 14px; padding: 16px 20px; display: flex; gap: 14px; align-items: flex-start; }
-    .plc-school-banner .ic { font-size: 24px; flex: none; }
-    .plc-school-banner .tx h5 { font-size: 12px; font-weight: 800; color: ${F.yellow}; text-transform: uppercase; letter-spacing: 0.1em; margin: 0; }
-    .plc-school-banner .tx p { font-size: 13.5px; font-weight: 600; line-height: 1.45; margin: 4px 0 0; color: rgba(240,235,235,0.92); }
-    .plc-school-banner .tx .how { margin-top: 8px; font-size: 12px; font-weight: 700; color: ${F.lightPink}; }
-
-    .plc-footer { text-align: center; margin-top: 40px; color: rgba(240,235,235,0.4); font-size: 11.5px; font-weight: 600; }
-  `;
-
-  const d = open ? DATA[open] : null;
-  const personaCls = (p) => p.t === "lead" ? "plc-persona lead" : p.t === "school" ? "plc-persona school" : "plc-persona";
-
-  return (
+  // ── Overview view ──────────────────────────────────────
+  const Overview = () => (
     <>
-      <style>{styles}</style>
-      <div className="plc-stage">
-        <div className="plc-wrap">
-          <header className="plc-header">
-            <div className="plc-brand">
-              <h1>The <b>AI-First</b> Product Lifecycle</h1>
-            </div>
-            <div className="plc-legend">One loop, three phases, <b>schools at the core</b>. Adoption feeds straight back into what we prioritise next. Tap any phase to go deep.</div>
-          </header>
-
-          <div className="plc-cycle" ref={cycleRef}>
-            <svg className="plc-connector" viewBox="-6 -6 112 110" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
-              <defs>
-                <marker id="plc-arrow" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
-                  <path d="M0.5,0.5 L5.5,3 L0.5,5.5 Z" fill="rgba(240,235,235,0.7)" />
-                </marker>
-              </defs>
-              <path d="M 27 21 C 2 38, -2 64, 6 80" fill="none" stroke="rgba(240,235,235,0.55)" strokeWidth="1.1" strokeDasharray="2.6 2.4" markerEnd="url(#plc-arrow)" />
-              <path d="M 26 92 C 44 100, 56 100, 74 92" fill="none" stroke="rgba(240,235,235,0.55)" strokeWidth="1.1" strokeDasharray="2.6 2.4" markerEnd="url(#plc-arrow)" />
-              <path d="M 94 80 C 102 64, 98 38, 73 21" fill="none" stroke="rgba(240,235,235,0.55)" strokeWidth="1.1" strokeDasharray="2.6 2.4" markerEnd="url(#plc-arrow)" />
-            </svg>
-
-            <div className="plc-node plc-n-prioritise" tabIndex={0} role="button" aria-label="Open Prioritise phase" onClick={() => setOpen(open === "prioritise" ? null : "prioritise")} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setOpen(open === "prioritise" ? null : "prioritise"); } }}>
-              <div className="ph">Phase 01</div>
-              <div className="nm">Prioritise</div>
-              <div className="sub">High-level vision &amp; revenue-driven bets</div>
-              <div className="tl">⌅ Annual · Quarterly · Monthly</div>
-            </div>
-            <div className="plc-node plc-n-build" tabIndex={0} role="button" aria-label="Open Build phase" onClick={() => setOpen(open === "build" ? null : "build")} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setOpen(open === "build" ? null : "build"); } }}>
-              <div className="ph">Phase 02</div>
-              <div className="nm">Build</div>
-              <div className="sub">AI-first SDLC, pods, weekly releases</div>
-              <div className="tl">⌅ 1–2 week sprints</div>
-            </div>
-            <div className="plc-node plc-n-adopt" tabIndex={0} role="button" aria-label="Open Adopt phase" onClick={() => setOpen(open === "adopt" ? null : "adopt")} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setOpen(open === "adopt" ? null : "adopt"); } }}>
-              <div className="ph">Phase 03</div>
-              <div className="nm">Adopt</div>
-              <div className="sub">Enablement, marketing, land &amp; expand</div>
-              <div className="tl">⌅ Continuous</div>
-            </div>
-
-            <div className="plc-core">
-              <div className="ico" aria-hidden="true">
-                <svg viewBox="0 0 64 64" width="100%" height="100%" fill="none" stroke="url(#plc-coreGrad)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                  <defs>
-                    <linearGradient id="plc-coreGrad" x1="0" y1="64" x2="64" y2="0" gradientUnits="userSpaceOnUse">
-                      <stop offset="0" stopColor="#F5D160" />
-                      <stop offset=".5" stopColor="#F0A67E" />
-                      <stop offset="1" stopColor="#EC57AD" />
-                    </linearGradient>
-                  </defs>
-                  <path d="M32 8 L56 20 L8 20 Z" />
-                  <path d="M12 20 V52" /><path d="M52 20 V52" />
-                  <path d="M8 52 H56" />
-                  <rect x="27" y="38" width="10" height="14" />
-                  <path d="M19 28 h8 v8 h-8 Z" /><path d="M37 28 h8 v8 h-8 Z" />
-                  <path d="M32 8 V3" /><path d="M32 3 h7 v4 h-7" />
-                </svg>
-              </div>
-              <div className="t">Schools</div>
-              <div className="s">Core users · every phase</div>
-            </div>
-          </div>
-
-          <div className="plc-cycle-cap">A continuous loop: what schools <b>adopt</b> feeds straight back into what we <b>prioritise</b> next.</div>
-          <div className="plc-hint">↑ Tap <b>Prioritise</b>, <b>Build</b> or <b>Adopt</b> for stages, activities &amp; cadence, who's involved, tooling and the old-way → AI-first shift.</div>
-
-          {d && (
-            <div ref={panelRef} className={`plc-panel plc-${d.cls}-acc`} style={{ ["--plc-accent"]: d.accent, ["--plc-accent-soft"]: d.soft }}>
-              <div className={`plc-panel-top ${d.cls}`}>
-                <button className="plc-closeb" aria-label="Close" onClick={() => setOpen(null)}>×</button>
-                <div className="eyebrow">{d.eyebrow}</div>
-                <h2>{d.title}</h2>
-                <p className="plc-lede">{d.lede}</p>
-                <div className="plc-horizon">{d.horizon}</div>
-              </div>
-
-              <div className="plc-panel-body">
-                <div className="plc-sec-block">
-                  <div className="plc-sec-title">Stages &amp; timeline</div>
-                  {d.parallel && (
-                    <div className="plc-parallel-note"><span className="ic">⚡</span>{d.parallel}</div>
-                  )}
-                  <div className="plc-stages">
-                    {d.stages.map((s, i) => (
-                      <div key={i} className="plc-stage-row">
-                        <div className="dot"><i></i></div>
-                        <div className="card">
-                          <h4>{s.n}<span className="wk">{s.wk}</span></h4>
-                          <p>{s.p}</p>
-                          {s.tools && s.tools.length > 0 && (
-                            <div className="tools">{s.tools.map((t, ti) => <span key={ti} className="t">{t}</span>)}</div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="plc-sec-block">
-                  <div className="plc-sec-title">Activities &amp; cadence</div>
-                  <div className="plc-acts">
-                    {d.activities.map((a, i) => (
-                      <div key={i} className="plc-act">
-                        <div className="h"><span className="ic">{a.ic}</span><span className="nm">{a.nm}</span></div>
-                        <div className="cad">{a.cad}</div>
-                        <div className="d">{a.d}</div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="plc-parallel-note" style={{ marginTop: 14, background: "rgba(55,2,60,0.05)", borderStyle: "solid", borderColor: d.accent }}>
-                    <span className="ic">🔧</span>{d.build_tools}
-                  </div>
-                </div>
-
-                <div className="plc-sec-block plc-cols">
-                  <div>
-                    <div className="plc-sec-title">Who's involved</div>
-                    <div className="plc-personas">
-                      {d.stakeholders.map((p, i) => (
-                        <span key={i} className={personaCls(p)}>
-                          <span className="av">{p.ic}</span>
-                          <span className="nm">{p.n}</span>
-                        </span>
-                      ))}
-                    </div>
-                    <div className="plc-persona-key">
-                      <i style={{ background: F.plum }}></i>Leads
-                      <i style={{ background: d.accent }}></i>Schools
-                    </div>
-                  </div>
-                  <div>
-                    <div className="plc-sec-title">Old way → AI-first</div>
-                    <div className="plc-shift">
-                      {d.shift.map((r, i) => (
-                        <div key={i} className="row">
-                          <div className="old">{r.old}</div>
-                          <div className="new"><span className="ai">{r.ai}</span>{r.new}</div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="plc-school-banner">
-                  <div className="ic">🏫</div>
-                  <div className="tx">
-                    <h5>Schools at this phase</h5>
-                    <p>{d.school}</p>
-                    <div className="how">{d.schoolHow}</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <div className="plc-footer">Product Lifecycle framework · draft for SLT review</div>
+      {/* Header band */}
+      <div style={{
+        background: F.gradient, borderRadius: 14, padding: "28px 28px 32px", position: "relative", overflow: "hidden", marginBottom: 22,
+      }}>
+        <div style={{ position: "absolute", height: 14, width: "60%", left: "30%", bottom: -7, background: F.lightYellow, opacity: 0.55, borderRadius: 9999, transform: "rotate(-1deg)", pointerEvents: "none" }} />
+        <div style={{ position: "relative", zIndex: 2 }}>
+          <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase", color: F.plum, opacity: 0.7, marginBottom: 8 }}>Faria · Product Development · Ways of Working</div>
+          <h1 style={{ fontSize: 32, fontWeight: 800, color: F.plum, margin: 0, lineHeight: 1.15, maxWidth: 720 }}>The AI-First Product Lifecycle</h1>
+          <p style={{ fontSize: 15, fontWeight: 500, color: F.plum, opacity: 0.85, margin: "10px 0 0", maxWidth: 620 }}>Smaller teams. Single ownership. A weekly rhythm built for speed, with schools and stakeholders in the loop before we build.</p>
         </div>
+      </div>
+
+      {/* Schools at the core callout */}
+      <div style={{ ...card, background: F.plum, color: F.paper, border: "none", display: "flex", gap: 16, alignItems: "center" }}>
+        <div style={{ fontSize: 38, lineHeight: 1, flexShrink: 0 }}>🏫</div>
+        <div>
+          <div style={{ fontSize: 11, fontWeight: 800, color: F.yellow, textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 4 }}>Schools at the core</div>
+          <h3 style={{ fontSize: 18, fontWeight: 700, margin: "0 0 4px", color: F.paper }}>One continuous loop. Schools at every phase.</h3>
+          <p style={{ fontSize: 13.5, color: F.paper, opacity: 0.88, margin: 0, lineHeight: 1.5 }}>What schools <strong style={{ color: F.lightPink }}>adopt</strong> feeds straight back into what we <strong style={{ color: F.yellow }}>prioritise</strong> next. Not a one-way pipeline — a working rhythm.</p>
+        </div>
+      </div>
+
+      {/* Flow strip */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "14px 0 22px", flexWrap: "wrap" }}>
+        {["prioritise", "build", "adopt"].map((p, i) => {
+          const d = DATA[p];
+          return (
+            <span key={p} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <button onClick={() => setOpen(p)} style={{
+                padding: "9px 18px", borderRadius: 999, border: "none", background: d.accent, color: F.plum,
+                fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "inherit",
+                textTransform: "uppercase", letterSpacing: "0.08em",
+                boxShadow: F.shadowSm,
+              }}>{d.title}</button>
+              {i < 2 && <span style={{ color: F.muted2, fontSize: 18, fontWeight: 700 }}>→</span>}
+              {i === 2 && <span style={{ color: F.pink, fontSize: 13, fontWeight: 700, fontStyle: "italic", marginLeft: 4 }}>↻ feeds back to Prioritise</span>}
+            </span>
+          );
+        })}
+      </div>
+
+      {/* Three phase cards */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 14 }}>
+        {["prioritise", "build", "adopt"].map((p, i) => {
+          const d = DATA[p];
+          return (
+            <button key={p} onClick={() => setOpen(p)} style={{
+              background: F.surface, border: `1px solid ${F.border}`, borderRadius: 12, padding: 0,
+              boxShadow: F.shadowSm, cursor: "pointer", textAlign: "left", fontFamily: "inherit",
+              color: F.plum, display: "flex", flexDirection: "column", overflow: "hidden",
+              transition: "transform 0.15s, box-shadow 0.15s",
+            }}
+            onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = F.shadowMd; }}
+            onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = F.shadowSm; }}
+            >
+              <div style={{ height: 5, background: d.accent }}></div>
+              <div style={{ padding: "18px 20px 16px", flex: 1, display: "flex", flexDirection: "column" }}>
+                <div style={{ fontSize: 10.5, fontWeight: 800, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>{d.eyebrow}</div>
+                <h3 style={{ fontSize: 22, fontWeight: 800, margin: "0 0 8px", color: F.plum, lineHeight: 1.15 }}>{d.title}</h3>
+                <p style={{ fontSize: 13, color: F.muted, margin: "0 0 14px", lineHeight: 1.5, flex: 1 }}>{d.lede}</p>
+                <div style={{ fontSize: 10.5, fontWeight: 700, color: F.plum, background: F.bg, border: `1px solid ${F.border}`, padding: "5px 10px", borderRadius: 999, display: "inline-block", marginBottom: 12, alignSelf: "flex-start" }}>{d.horizon}</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: F.pink, marginTop: "auto" }}>Explore phase →</div>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+
+      <div style={{ marginTop: 28, textAlign: "center", fontSize: 11, color: F.muted2, fontStyle: "italic" }}>
+        Product Lifecycle framework · draft for SLT review
       </div>
     </>
   );
+
+  // ── Phase deep-view ────────────────────────────────────
+  const PhaseView = ({ phase }) => {
+    const d = DATA[phase];
+    const personaCls = (p) => p.t === "lead"   ? { bg: F.plum, fg: F.paper, av: F.yellow }
+                          :  p.t === "school" ? { bg: d.accentSoft, fg: F.plum, av: F.surface, dashed: true }
+                          :                     { bg: F.surface, fg: F.plum, av: d.accentSoft };
+    return (
+      <>
+        {/* Breadcrumb + back link */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
+          <button onClick={() => setOpen(null)} style={{ ...bt("ghost"), padding: "5px 10px", fontSize: 12 }}>← All phases</button>
+          <span style={{ color: F.muted2, fontSize: 12 }}>·</span>
+          {["prioritise", "build", "adopt"].map(p => (
+            <button key={p} onClick={() => setOpen(p)} style={{
+              padding: "5px 12px", borderRadius: 999, fontSize: 12, fontWeight: 700, cursor: "pointer",
+              background: phase === p ? DATA[p].accent : F.surface,
+              color: F.plum,
+              border: `1px solid ${phase === p ? DATA[p].accent : F.borderStrong}`,
+              fontFamily: "inherit",
+            }}>{DATA[p].title}</button>
+          ))}
+        </div>
+
+        {/* Phase header */}
+        <div style={{ background: d.accent, borderRadius: 14, padding: "24px 28px 22px", marginBottom: 22, position: "relative" }}>
+          <div style={{ fontSize: 10.5, fontWeight: 800, color: F.plum, opacity: 0.75, textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: 4 }}>{d.eyebrow}</div>
+          <h1 style={{ fontSize: 32, fontWeight: 800, margin: "0 0 8px", color: F.plum, lineHeight: 1.1 }}>{d.title}</h1>
+          <p style={{ fontSize: 14, fontWeight: 500, color: F.plum, opacity: 0.92, margin: 0, maxWidth: 760, lineHeight: 1.5 }}>{d.lede}</p>
+          <div style={{ display: "inline-block", marginTop: 14, fontSize: 11.5, fontWeight: 800, background: "rgba(55,2,60,0.16)", color: F.plum, padding: "5px 12px", borderRadius: 999 }}>{d.horizon}</div>
+        </div>
+
+        {/* Stages & timeline */}
+        <div style={card}>
+          <div style={sectionTitle}>Stages &amp; timeline</div>
+          {d.parallel && (
+            <div style={{ background: d.accentSoft, border: `1.5px dashed ${d.accent}`, borderRadius: 10, padding: "10px 14px", fontSize: 12.5, fontWeight: 600, color: F.plum, marginBottom: 14, display: "flex", gap: 9, alignItems: "center" }}>
+              <span style={{ fontSize: 16 }}>⚡</span>{d.parallel}
+            </div>
+          )}
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {d.stages.map((s, i) => (
+              <div key={i} style={{ display: "grid", gridTemplateColumns: "26px 1fr", gap: 12, alignItems: "start" }}>
+                <div style={{ position: "relative", paddingTop: 6, display: "flex", justifyContent: "center" }}>
+                  <span style={{ width: 12, height: 12, borderRadius: "50%", background: d.accent, boxShadow: `0 0 0 4px ${d.accentSoft}`, zIndex: 1 }}></span>
+                  {i < d.stages.length - 1 && <span style={{ position: "absolute", top: 14, bottom: -16, width: 2, background: F.border }}></span>}
+                </div>
+                <div style={{ background: F.bg, border: `1px solid ${F.border}`, borderLeft: `3px solid ${d.accent}`, borderRadius: 10, padding: "12px 14px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12, marginBottom: 4, flexWrap: "wrap" }}>
+                    <h4 style={{ fontSize: 14.5, fontWeight: 700, color: F.plum, margin: 0 }}>{s.n}</h4>
+                    <span style={{ fontSize: 10.5, fontWeight: 800, color: d.accentDark, background: d.accentSoft, padding: "3px 9px", borderRadius: 999, whiteSpace: "nowrap" }}>{s.wk}</span>
+                  </div>
+                  <p style={{ fontSize: 13, color: F.muted, margin: "0 0 6px", lineHeight: 1.5 }}>{s.p}</p>
+                  {s.tools.length > 0 && (
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+                      {s.tools.map((t, ti) => <span key={ti} style={{ fontSize: 10.5, fontWeight: 700, padding: "3px 9px", borderRadius: 6, background: d.accentSoft, color: F.plum }}>{t}</span>)}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Activities */}
+        <div style={card}>
+          <div style={sectionTitle}>Activities &amp; cadence</div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 10 }}>
+            {d.activities.map((a, i) => (
+              <div key={i} style={{ background: F.bg, border: `1px solid ${F.border}`, borderTop: `3px solid ${d.accent}`, borderRadius: 10, padding: "12px 14px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                  <span style={{ width: 28, height: 28, borderRadius: 8, background: d.accentSoft, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 15, flexShrink: 0 }}>{a.ic}</span>
+                  <span style={{ fontSize: 13.5, fontWeight: 700, color: F.plum, lineHeight: 1.2 }}>{a.nm}</span>
+                </div>
+                <div style={{ fontSize: 10.5, fontWeight: 800, color: d.accentDark, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>{a.cad}</div>
+                <div style={{ fontSize: 12, color: F.muted, lineHeight: 1.4 }}>{a.d}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{ marginTop: 14, background: F.bg, border: `1.5px solid ${d.accent}`, borderRadius: 10, padding: "10px 14px", fontSize: 12.5, fontWeight: 600, color: F.plum, display: "flex", gap: 9, alignItems: "center" }}>
+            <span style={{ fontSize: 16 }}>🔧</span>{d.build_tools}
+          </div>
+        </div>
+
+        {/* Who's involved + Shift */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 18, marginBottom: 18 }}>
+          <div style={card}>
+            <div style={sectionTitle}>Who's involved</div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
+              {d.stakeholders.map((p, i) => {
+                const c = personaCls(p);
+                return (
+                  <span key={i} style={{ display: "flex", alignItems: "center", gap: 7, background: c.bg, borderRadius: 999, padding: "5px 12px 5px 5px", fontSize: 12, fontWeight: 700, color: c.fg, border: c.dashed ? `1.5px dashed ${d.accent}` : "none" }}>
+                    <span style={{ width: 22, height: 22, borderRadius: "50%", background: c.av, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 11, color: F.plum }}>•</span>
+                    {p.n}
+                  </span>
+                );
+              })}
+            </div>
+            <div style={{ marginTop: 12, fontSize: 11, color: F.muted, fontWeight: 600 }}>
+              <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: 4, background: F.plum, marginRight: 5, verticalAlign: "middle" }}></span>Leads
+              <span style={{ marginLeft: 12, display: "inline-block", width: 8, height: 8, borderRadius: 4, background: d.accent, marginRight: 5, verticalAlign: "middle" }}></span>Schools
+            </div>
+          </div>
+
+          <div style={card}>
+            <div style={sectionTitle}>Old way → AI-first</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+              {d.shift.map((r, i) => (
+                <div key={i} style={{ background: F.bg, border: `1px solid ${F.border}`, borderRadius: 10, padding: "10px 12px" }}>
+                  <div style={{ fontSize: 11.5, color: F.muted2, textDecoration: "line-through", fontWeight: 600 }}>{r.old}</div>
+                  <div style={{ marginTop: 4, fontSize: 12.5, color: F.plum, fontWeight: 700, display: "flex", gap: 8, alignItems: "flex-start" }}>
+                    <span style={{ flexShrink: 0, fontSize: 9, fontWeight: 800, letterSpacing: "0.06em", background: d.accent, color: F.plum, padding: "3px 7px", borderRadius: 5, marginTop: 1 }}>{r.ai}</span>
+                    <span style={{ lineHeight: 1.45 }}>{r.new}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Schools at this phase */}
+        <div style={{ ...card, background: F.plum, color: F.paper, border: "none", display: "flex", gap: 14, alignItems: "flex-start" }}>
+          <div style={{ fontSize: 28, lineHeight: 1, flexShrink: 0 }}>🏫</div>
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 800, color: F.yellow, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 4 }}>Schools at this phase</div>
+            <p style={{ fontSize: 14, fontWeight: 600, color: F.paper, opacity: 0.95, margin: "0 0 8px", lineHeight: 1.5 }}>{d.school}</p>
+            <p style={{ fontSize: 12.5, fontWeight: 600, color: F.lightPink, margin: 0, lineHeight: 1.55 }}>{d.schoolHow}</p>
+          </div>
+        </div>
+      </>
+    );
+  };
+
+  return open ? <PhaseView phase={open} /> : <Overview />;
 }
 
 /* ── AI Pods Page (top-level) ─────────────────────────────
@@ -4425,7 +4356,7 @@ const PAGE_SLUG = {
   product:  "product",
   ai:       "ai",
   monz:     "monetization",
-  handoff:  "prioritization",
+  handoff:  "lifecycle",
   pods:     "pods",
 };
 const SLUG_PAGE = Object.fromEntries(Object.entries(PAGE_SLUG).map(([k, v]) => [v, k]));
@@ -4546,7 +4477,7 @@ export default function App() {
           {navBtn("product", <><span className="lbl-full">Product Transformation</span><span className="lbl-short">Product</span></>)}
           {navBtn("ai", <><span className="lbl-full">AI Powered Features</span><span className="lbl-short">AI Features</span></>)}
           {navBtn("monz", "AI Monetization")}
-          {navBtn("handoff", <><span className="lbl-full">Prioritization</span><span className="lbl-short">Prioritize</span></>)}
+          {navBtn("handoff", <><span className="lbl-full">Product Lifecycle</span><span className="lbl-short">Lifecycle</span></>)}
           {navBtn("pods", <><span className="lbl-full">AI Pods</span><span className="lbl-short">Pods</span></>)}
         </div>
       </div>

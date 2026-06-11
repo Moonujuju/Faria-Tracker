@@ -229,31 +229,64 @@ const DEFAULT_PRODUCT = [
 const DEFAULT_AI = [
   { id: 201, name: "AI Writing Assistant", description: "Help admissions teams draft applicant communications and review notes.", deadline: "2026-06-30", owner: "", product: "OpenApply", type: "feature", priority: "high", effort: "medium", impact: "high", milestones: [
     { label: "Scope use cases and tone guidelines", target: "2026-05-15", done: false },{ label: "Design composer UX", target: "2026-05-30", done: false },{ label: "Build MVP with review flow", target: "2026-06-15", done: false },{ label: "Launch to early adopters", target: "2026-06-30", done: false },
-  ], status: "not-started" },
+  ], status: "not-started", valueRationale: "Saves admissions teams 5+ hours/week of drafting communications and review notes — direct staff productivity gain that scales with applicant volume.", wowOutcomes: [
+    "50% reduction in time spent drafting applicant communications",
+    "Admissions staff handle 30% more applicants per week without adding headcount",
+    "Consistent tone across the school's outbound communications, audited by admissions director",
+  ] },
   { id: 202, name: "AI Applicant Insights", description: "Surface AI-generated highlights and risk flags on each applicant profile.", deadline: "2026-06-30", owner: "", product: "OpenApply", type: "feature", priority: "medium", effort: "medium", impact: "high", milestones: [
     { label: "Define insight categories and signals", target: "2026-05-15", done: false },{ label: "Design insights panel", target: "2026-05-30", done: false },{ label: "Build extraction pipeline", target: "2026-06-15", done: false },{ label: "Launch to early adopters", target: "2026-06-30", done: false },
-  ], status: "not-started" },
+  ], status: "not-started", valueRationale: "Unlocks a capability schools cannot do today — risk flags + highlights surfaced before review. Faster, higher-quality decisions on every applicant.", wowOutcomes: [
+    "Application review time drops from 12 minutes to under 4 minutes per applicant",
+    "85% of risk flags raised by AI are confirmed actionable by the admissions reviewer",
+    "Director catches 3-5 high-priority applicants per week that would have otherwise been missed",
+  ] },
   { id: 203, name: "AI 2nd Language Translations", description: "On-the-fly translation of applicant content and outbound messages.", deadline: "2026-06-30", owner: "", product: "OpenApply", type: "feature", priority: "medium", effort: "medium", impact: "medium", milestones: [
     { label: "Pick target languages and provider", target: "2026-05-15", done: false },{ label: "Design translation UX", target: "2026-05-30", done: false },{ label: "Build inline translation flows", target: "2026-06-15", done: false },{ label: "Launch to early adopters", target: "2026-06-30", done: false },
-  ], status: "not-started" },
+  ], status: "not-started", valueRationale: "Broad low-friction utility — non-English-speaking applicants and parents get an immediate translation. Universally useful, low inference cost per use; fits the AI Essential surface.", wowOutcomes: [
+    "Schools with 20%+ non-English-speaking applicants report a 10-15% lift in application completion",
+    "Admissions team no longer copy-pastes through Google Translate during review",
+  ] },
   { id: 204, name: "Agentic Nurture Workflows", description: "Autonomous AI agents that nurture applicants through tailored follow-ups.", deadline: "2026-09-30", owner: "", product: "OpenApply", type: "feature", priority: "high", effort: "high", impact: "high", milestones: [
     { label: "Define agent goals and guardrails", target: "2026-07-15", done: false },{ label: "Design workflow builder", target: "2026-08-15", done: false },{ label: "Build orchestration + first agent", target: "2026-09-15", done: false },{ label: "Pilot with 3 schools", target: "2026-09-30", done: false },
-  ], status: "not-started" },
+  ], status: "not-started", valueRationale: "Unlocks something schools literally cannot do today — autonomous, tailored applicant follow-ups at scale. Direct measurable impact on yield.", wowOutcomes: [
+    "10-15% lift in applicant-to-enrolled conversion at pilot schools",
+    "Admissions team reclaims 8+ hours/week previously spent on manual follow-up emails",
+    "Drop-off at the document-submission stage reduced by 40%",
+  ] },
   { id: 205, name: "AI Admissions Assistant for Parents", description: "Conversational AI assistant that answers parent questions during the application process.", deadline: "2026-09-30", owner: "", product: "OpenApply", type: "feature", priority: "high", effort: "medium", impact: "high", milestones: [
     { label: "Define FAQ knowledge base scope", target: "2026-07-15", done: false },{ label: "Build RAG pipeline with school data", target: "2026-08-15", done: false },{ label: "Widget integration and styling", target: "2026-09-15", done: false },{ label: "Launch to early adopters", target: "2026-09-30", done: false },
-  ], status: "not-started" },
+  ], status: "not-started", valueRationale: "Saves admissions teams 5+ hours/week of repetitive parent Q&A and unlocks 24/7 self-service that schools cannot staff today.", wowOutcomes: [
+    "60% of parent questions resolved without human admissions touch",
+    "Parent satisfaction (NPS) up 15 points in pilot schools",
+    "Admissions email volume to the team reduced by 40%",
+  ] },
   { id: 206, name: "AI Lead Scoring", description: "Predictive scoring of applicant likelihood to enroll, with explanations.", deadline: "2026-09-30", owner: "", product: "OpenApply", type: "feature", priority: "high", effort: "high", impact: "high", milestones: [
     { label: "Research scoring models and bias mitigation", target: "2026-07-15", done: false },{ label: "Design score UX and override workflow", target: "2026-08-15", done: false },{ label: "Train model on anonymized data", target: "2026-09-15", done: false },{ label: "Pilot with 3 schools", target: "2026-09-30", done: false },
-  ], status: "not-started" },
+  ], status: "not-started", valueRationale: "Produces a measurable outcome (conversion lift, time-to-decision) and unlocks predictive enrolment likelihood schools currently approximate by hand. The headline Pro feature.", wowOutcomes: [
+    "15% conversion lift in the top-scored applicant cohort vs the rest",
+    "Director time-to-decision down from 8 days to under 3 days on top-scored applicants",
+    "80% of yield comes from the top 40% of leads — admissions team prioritises follow-up correctly",
+  ] },
   { id: 207, name: "AI Configuration Dashboard", description: "Central place for admins to configure AI features, prompts, and guardrails.", deadline: "2026-09-30", owner: "", product: "OpenApply", type: "feature", priority: "medium", effort: "medium", impact: "medium", milestones: [
     { label: "Inventory AI settings across product", target: "2026-07-15", done: false },{ label: "Design unified config UX", target: "2026-08-15", done: false },{ label: "Build dashboard and persistence", target: "2026-09-15", done: false },{ label: "Launch to admins", target: "2026-09-30", done: false },
-  ], status: "not-started" },
+  ], status: "not-started", valueRationale: "Operational admin tooling — important for adoption but not a standalone wow that justifies a paid SKU. Belongs free as a platform enabler.", wowOutcomes: [
+    "School admins roll out AI features across their team in under 10 minutes — no IT involvement",
+    "Support tickets about AI configuration reduced by 50% in pilot schools",
+  ] },
   { id: 208, name: "AI Form Creation", description: "Generate application forms from a school description and goals.", deadline: "2026-12-31", owner: "", product: "OpenApply", type: "feature", priority: "medium", effort: "medium", impact: "high", milestones: [
     { label: "Scope form templates and prompts", target: "2026-10-15", done: false },{ label: "Design generation UX", target: "2026-11-15", done: false },{ label: "Build generator + editor", target: "2026-12-15", done: false },{ label: "Launch to early adopters", target: "2026-12-31", done: false },
-  ], status: "not-started" },
+  ], status: "not-started", valueRationale: "Saves 10+ hours per application cycle of form building and unlocks deep customisation that small schools without IT staff cannot otherwise reach.", wowOutcomes: [
+    "Time to build a new application form drops from 4-6 hours to under 30 minutes",
+    "60% of schools customise their forms in year 1 vs 20% on the legacy form builder",
+    "Net new conversion lift from better-fit forms reported by 70% of pilot schools",
+  ] },
   { id: 209, name: "AI Custom Dashboard", description: "AI-assisted custom dashboards summarizing admissions metrics in plain language.", deadline: "2026-12-31", owner: "", product: "OpenApply", type: "feature", priority: "medium", effort: "medium", impact: "medium", milestones: [
     { label: "Pick chart primitives and metric set", target: "2026-10-15", done: false },{ label: "Design dashboard builder", target: "2026-11-15", done: false },{ label: "Build NL-to-dashboard pipeline", target: "2026-12-15", done: false },{ label: "Launch to early adopters", target: "2026-12-31", done: false },
-  ], status: "not-started" },
+  ], status: "not-started", valueRationale: "Broad analytics utility — universally useful, low inference cost per query. Sits in Essential to differentiate the platform without gating insight from free-tier schools.", wowOutcomes: [
+    "Director answers ad-hoc 'how many X' questions in plain English — replaces 30+ minutes of manual spreadsheet work per query",
+    "Custom-dashboard usage doubles within 60 days of launch in pilot schools",
+  ] },
   { id: 301, name: "AI Notification Summaries", description: "AI-generated digests of recent ManageBac+ notifications for teachers and parents.", deadline: "2026-06-30", owner: "", product: "ManageBac+", type: "feature", priority: "medium", effort: "medium", impact: "medium", milestones: [
     { label: "Define digest scope and frequency", target: "2026-05-15", done: false },{ label: "Design summary UX", target: "2026-05-30", done: false },{ label: "Build summarization pipeline", target: "2026-06-15", done: false },{ label: "Launch to early adopters", target: "2026-06-30", done: false },
   ], status: "not-started" },
@@ -902,7 +935,35 @@ function TrackerPage({ title, subtitle, storageKey, defaults, ModalComponent, ex
   useEffect(() => { if (selGroup) setExpandedGroups(prev => prev.has(selGroup) ? prev : new Set(prev).add(selGroup)); }, [selGroup]);
 
   // Load saved state and merge in any new default initiatives (preserves user edits — never overwrites saved milestones/status/etc.)
-  useEffect(() => { (async () => { const s = await loadState(storageKey); if (s?.inits) { const savedIds = new Set(s.inits.map(i => i.id)); const newOnes = defaults.filter(d => !savedIds.has(d.id)); setInits(newOnes.length ? [...s.inits, ...newOnes] : s.inits); } setReady(true); })(); }, []);
+  useEffect(() => { (async () => {
+    const s = await loadState(storageKey);
+    if (s?.inits) {
+      const savedIds = new Set(s.inits.map(i => i.id));
+      const newOnes = defaults.filter(d => !savedIds.has(d.id));
+      // Forward-fill: for each saved entry, if it lacks wowOutcomes / valueRationale,
+      // borrow from the matching default (when one exists). Also migrate legacy
+      // singular wowOutcome (string) to wowOutcomes (array). User edits always win.
+      const enriched = s.inits.map(saved => {
+        const def = defaults.find(d => d.id === saved.id);
+        const filled = { ...saved };
+        // Migrate legacy field
+        if (filled.wowOutcome && (!filled.wowOutcomes || filled.wowOutcomes.length === 0)) {
+          filled.wowOutcomes = [filled.wowOutcome];
+        }
+        delete filled.wowOutcome;
+        // Forward-fill from defaults
+        if (def?.wowOutcomes && (!filled.wowOutcomes || filled.wowOutcomes.length === 0)) {
+          filled.wowOutcomes = [...def.wowOutcomes];
+        }
+        if (def?.valueRationale && !filled.valueRationale) {
+          filled.valueRationale = def.valueRationale;
+        }
+        return filled;
+      });
+      setInits([...enriched, ...newOnes]);
+    }
+    setReady(true);
+  })(); }, []);
   useEffect(() => { if (!ready) return; clearTimeout(saveTimeout.current); saveTimeout.current = setTimeout(() => saveState(storageKey, { inits }), 1000); return () => clearTimeout(saveTimeout.current); }, [inits, ready]);
 
   const prev = useRef({});
@@ -1386,20 +1447,27 @@ function AiMonetizationPage({ subRoute, setSubRoute }) {
                     <p style={{ margin: 0, fontSize: 12.5, color: F.muted, fontStyle: "italic" }}>No Pro features yet. Move features into Pro and set their "wow" outcome to track 2–3 validation targets before paid go-live.</p>
                   ) : (
                     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                      {pro.map(f => (
-                        <div key={f.id} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "8px 12px", background: F.bg, border: `1px solid ${F.border}`, borderRadius: 8 }}>
-                          <span style={{ color: F.pink, fontSize: 14, lineHeight: 1.2, paddingTop: 1 }}>★</span>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontSize: 12.5, fontWeight: 700, color: F.plum }}>{f.name}</div>
-                            {f.wowOutcome ? (
-                              <div style={{ fontSize: 12, color: F.plum, marginTop: 3, lineHeight: 1.5 }}>{f.wowOutcome}</div>
-                            ) : (
-                              <div style={{ fontSize: 11.5, color: F.muted2, marginTop: 3, fontStyle: "italic" }}>No wow outcome set yet.</div>
-                            )}
+                      {pro.map(f => {
+                        const outs = (f.wowOutcomes || []).filter(Boolean);
+                        return (
+                          <div key={f.id} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "8px 12px", background: F.bg, border: `1px solid ${F.border}`, borderRadius: 8 }}>
+                            <span style={{ color: F.pink, fontSize: 14, lineHeight: 1.2, paddingTop: 1 }}>★</span>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ fontSize: 12.5, fontWeight: 700, color: F.plum }}>{f.name}</div>
+                              {outs.length > 0 ? (
+                                <ul style={{ margin: "3px 0 0", padding: "0 0 0 16px", listStyle: "disc", color: F.plum }}>
+                                  {outs.map((o, oi) => (
+                                    <li key={oi} style={{ fontSize: 12, marginBottom: 2, lineHeight: 1.5 }}>{o}</li>
+                                  ))}
+                                </ul>
+                              ) : (
+                                <div style={{ fontSize: 11.5, color: F.muted2, marginTop: 3, fontStyle: "italic" }}>No wow outcomes set yet.</div>
+                              )}
+                            </div>
+                            <button onClick={() => setEditFeat(f.id)} style={{ ...bt("ghost"), padding: "3px 8px", fontSize: 10.5 }}>edit</button>
                           </div>
-                          <button onClick={() => setEditFeat(f.id)} style={{ ...bt("ghost"), padding: "3px 8px", fontSize: 10.5 }}>edit</button>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                   <p style={{ margin: "10px 0 0", fontSize: 11.5, color: F.muted, fontStyle: "italic" }}>Validate 2–3 of these before {prod} AI Pro goes live.</p>
@@ -1426,7 +1494,9 @@ function AiMonetizationPage({ subRoute, setSubRoute }) {
                               <span style={{ flex: 1, fontSize: 12.5, fontWeight: 600, color: F.plum }}>{f.name}</span>
                               <span style={{ fontSize: 10, color: F.muted2, fontWeight: 600 }}>{fmt(f.deadline)}</span>
                             </div>
-                            {f.wowOutcome && b.key === "pro" && <div style={{ fontSize: 11.5, color: F.pink, marginLeft: 12, marginBottom: 4, lineHeight: 1.45, fontWeight: 600 }}>★ {f.wowOutcome}</div>}
+                            {b.key === "pro" && (f.wowOutcomes || []).filter(Boolean).map((o, oi) => (
+                              <div key={oi} style={{ fontSize: 11.5, color: F.pink, marginLeft: 12, marginBottom: 4, lineHeight: 1.45, fontWeight: 600 }}>★ {o}</div>
+                            ))}
                             {f.valueRationale && <div style={{ fontSize: 11.5, color: F.muted, marginLeft: 12, marginBottom: 6, lineHeight: 1.4 }}><span style={{ fontWeight: 700, color: F.muted2 }}>Why {b.title}:</span> {f.valueRationale}</div>}
                             <div style={{ display: "flex", gap: 4, marginLeft: 12, flexWrap: "wrap" }}>
                               <button onClick={() => setEditFeat(f.id)} style={{ ...bt("ghost"), padding: "3px 8px", fontSize: 10.5 }}>edit</button>
@@ -1519,24 +1589,52 @@ function AiMonetizationPage({ subRoute, setSubRoute }) {
       </div>
       </>)}
 
-      {/* Feature details editor modal — wow outcome + value rationale */}
-      {editFeatObj && (
-        <Modal onClose={() => setEditFeat(null)}>
-          <h3 style={{ margin: "0 0 4px", fontSize: 18, fontWeight: 700, color: F.plum }}>Feature details</h3>
-          <p style={{ margin: "0 0 16px", fontSize: 13, color: F.muted }}>{editFeatObj.name} · {editFeatObj.product} · <strong style={{ color: F.plum }}>{effectiveTier(editFeatObj) === "pro" ? "AI Pro" : effectiveTier(editFeatObj) === "essential" ? "AI Essential" : "Unassigned"}</strong></p>
+      {/* Feature details editor modal — wow outcomes (multi) + rationale + status + deadline */}
+      {editFeatObj && (() => {
+        const outs = editFeatObj.wowOutcomes || [];
+        const setOutAt = (idx, val) => setFeatField(editFeatObj.id, { wowOutcomes: outs.map((o, i) => i === idx ? val : o) });
+        const addOut = () => setFeatField(editFeatObj.id, { wowOutcomes: [...outs, ""] });
+        const removeOut = (idx) => setFeatField(editFeatObj.id, { wowOutcomes: outs.filter((_, i) => i !== idx) });
+        return (
+          <Modal onClose={() => setEditFeat(null)}>
+            <h3 style={{ margin: "0 0 4px", fontSize: 18, fontWeight: 700, color: F.plum }}>Feature details</h3>
+            <p style={{ margin: "0 0 16px", fontSize: 13, color: F.muted }}>{editFeatObj.name} · {editFeatObj.product} · <strong style={{ color: F.plum }}>{effectiveTier(editFeatObj) === "pro" ? "AI Pro" : effectiveTier(editFeatObj) === "essential" ? "AI Essential" : "Unassigned"}</strong></p>
 
-          <div style={lb}>"Wow" outcome <span style={{ color: F.pink, marginLeft: 4 }}>★</span></div>
-          <input value={editFeatObj.wowOutcome || ""} onChange={e => setFeatField(editFeatObj.id, { wowOutcome: e.target.value })} placeholder='e.g. 15% conversion lift in admissions pipeline' style={{ ...inp, width: "100%", marginBottom: 4 }} />
-          <p style={{ margin: "4px 0 14px", fontSize: 11.5, color: F.muted, fontStyle: "italic" }}>The single measurable "wow" we'll validate before {editFeatObj.product} AI Pro goes live. Surfaced at the top of the {editFeatObj.product} block.</p>
+            <div style={lb}>"Wow" outcomes <span style={{ color: F.pink, marginLeft: 4 }}>★</span></div>
+            {outs.length === 0 && (
+              <p style={{ margin: "2px 0 8px", fontSize: 11.5, color: F.muted2, fontStyle: "italic" }}>None yet. Add 1–3 measurable outcomes we'll validate before this feature goes live.</p>
+            )}
+            {outs.map((o, i) => (
+              <div key={i} style={{ display: "flex", gap: 6, marginBottom: 6, alignItems: "center" }}>
+                <input value={o} onChange={e => setOutAt(i, e.target.value)} placeholder='e.g. 15% conversion lift in admissions pipeline' style={{ ...inp, flex: 1 }} />
+                <button onClick={() => removeOut(i)} title="Remove outcome" style={{ width: 26, height: 26, borderRadius: 13, border: "none", background: "transparent", color: F.muted2, cursor: "pointer", fontSize: 16, lineHeight: 1, padding: 0, fontFamily: "inherit" }}>×</button>
+              </div>
+            ))}
+            <button onClick={addOut} style={{ padding: "5px 11px", borderRadius: 7, border: `1px dashed ${F.borderStrong}`, background: "transparent", color: F.plum, fontSize: 11.5, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", marginTop: 2, marginBottom: 12 }}>+ Add wow outcome</button>
+            <p style={{ margin: "0 0 14px", fontSize: 11.5, color: F.muted, fontStyle: "italic" }}>Measurable wins we'll validate before {editFeatObj.product} AI Pro goes live. Surfaced at the top of the {editFeatObj.product} block.</p>
 
-          <div style={lb}>Value rationale</div>
-          <textarea value={editFeatObj.valueRationale || ""} onChange={e => setFeatField(editFeatObj.id, { valueRationale: e.target.value })} rows={4} placeholder="Why is this Pro (or Essential)? e.g. saves 5+ hrs/wk of manual review; unlocks predictive enrolment likelihood" style={{ ...inp, width: "100%", resize: "vertical" }} />
+            <div style={lb}>Value rationale</div>
+            <textarea value={editFeatObj.valueRationale || ""} onChange={e => setFeatField(editFeatObj.id, { valueRationale: e.target.value })} rows={3} placeholder="Why is this Pro (or Essential)? e.g. saves 5+ hrs/wk of manual review; unlocks predictive enrolment likelihood" style={{ ...inp, width: "100%", resize: "vertical", marginBottom: 14 }} />
 
-          <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 16 }}>
-            <button onClick={() => setEditFeat(null)} style={bt("primary")}>Done</button>
-          </div>
-        </Modal>
-      )}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
+              <div>
+                <div style={lb}>Status</div>
+                <select value={editFeatObj.status} onChange={e => setFeatField(editFeatObj.id, { status: e.target.value })} style={{ ...inp, width: "100%", cursor: "pointer" }}>
+                  {STATUS_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
+              </div>
+              <div>
+                <div style={lb}>Deadline</div>
+                <input type="date" value={editFeatObj.deadline || ""} onChange={e => setFeatField(editFeatObj.id, { deadline: e.target.value })} style={{ ...inp, width: "100%" }} />
+              </div>
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+              <button onClick={() => setEditFeat(null)} style={bt("primary")}>Done</button>
+            </div>
+          </Modal>
+        );
+      })()}
 
       {/* Limits editor modal */}
       {editLimitsObj && (

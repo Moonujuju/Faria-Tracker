@@ -1422,12 +1422,15 @@ function AiMonetizationPage({ subRoute, setSubRoute }) {
         const pd = mz.products[prod] || { wowOutcomes: ["", "", ""] };
         const isOpen = expanded.has(prod);
         const feats = featuresByProduct(prod);
-        const pro = feats.filter(f => effectiveTier(f) === "pro");
-        const ess = feats.filter(f => effectiveTier(f) === "essential");
-        const un  = feats.filter(f => effectiveTier(f) === "unassigned");
+        // Sort each tier list chronologically by deadline (earliest first; undated → last)
+        const byDeadline = (a, b) => (a.deadline || "9999-12-31").localeCompare(b.deadline || "9999-12-31");
+        const pro = feats.filter(f => effectiveTier(f) === "pro").sort(byDeadline);
+        const ess = feats.filter(f => effectiveTier(f) === "essential").sort(byDeadline);
+        const un  = feats.filter(f => effectiveTier(f) === "unassigned").sort(byDeadline);
         const ship = proShipped(prod);
         const ready = proReadyDate(prod);
-        const limited = feats.filter(f => f.actionLimits);
+        // Pro features that also have an Essential foothold (preview or available)
+        const proWithEssAccess = pro.filter(f => f.essentialAccess && f.essentialAccess !== "locked");
 
         return (
           <div key={prod} style={card}>
@@ -1487,11 +1490,13 @@ function AiMonetizationPage({ subRoute, setSubRoute }) {
                       </div>
                       <div style={{ padding: 10, display: "flex", flexDirection: "column", gap: 8, minHeight: 60 }}>
                         {b.list.length === 0 && <div style={{ fontSize: 12, color: F.muted2, fontStyle: "italic", textAlign: "center", padding: 12 }}>No features yet</div>}
-                        {b.list.map(f => (
+                        {b.list.map(f => {
+                          const statusOpt = STATUS_OPTIONS.find(o => o.value === f.status);
+                          return (
                           <div key={f.id} style={{ background: F.surface, border: `1px solid ${F.border}`, borderRadius: 8, padding: "8px 10px" }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                              <span style={{ width: 6, height: 6, borderRadius: "50%", background: sC(f.status), flexShrink: 0 }} />
-                              <span style={{ flex: 1, fontSize: 12.5, fontWeight: 600, color: F.plum }}>{f.name}</span>
+                            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4, flexWrap: "wrap" }}>
+                              <span style={{ fontSize: 9, fontWeight: 800, padding: "2px 7px", borderRadius: 3, background: sC(f.status), color: "#fff", textTransform: "uppercase", letterSpacing: "0.05em", whiteSpace: "nowrap" }}>{statusOpt?.label || f.status}</span>
+                              <span style={{ flex: 1, minWidth: 100, fontSize: 12.5, fontWeight: 600, color: F.plum }}>{f.name}</span>
                               <span style={{ fontSize: 10, color: F.muted2, fontWeight: 600 }}>{fmt(f.deadline)}</span>
                             </div>
                             {b.key === "pro" && (f.wowOutcomes || []).filter(Boolean).map((o, oi) => (
@@ -1505,7 +1510,8 @@ function AiMonetizationPage({ subRoute, setSubRoute }) {
                               <button onClick={() => setFeatField(f.id, { tier: "unassigned" })} style={{ ...bt("ghost"), padding: "3px 8px", fontSize: 10.5, color: F.muted }}>→ Unassigned</button>
                             </div>
                           </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </div>
                   ))}
@@ -1515,52 +1521,60 @@ function AiMonetizationPage({ subRoute, setSubRoute }) {
                   <div style={{ background: F.bg, border: `1px solid ${F.border}`, borderRadius: 10, marginBottom: 16, overflow: "hidden" }}>
                     <div style={{ background: F.surface, color: F.muted, padding: "8px 12px", fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", borderBottom: `1px solid ${F.border}` }}>Unassigned · {un.length}</div>
                     <div style={{ padding: 10, display: "flex", flexDirection: "column", gap: 8 }}>
-                      {un.map(f => (
+                      {un.map(f => {
+                        const statusOpt = STATUS_OPTIONS.find(o => o.value === f.status);
+                        return (
                         <div key={f.id} style={{ background: F.surface, border: `1px solid ${F.border}`, borderRadius: 8, padding: "8px 10px", display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-                          <span style={{ width: 6, height: 6, borderRadius: "50%", background: sC(f.status), flexShrink: 0 }} />
+                          <span style={{ fontSize: 9, fontWeight: 800, padding: "2px 7px", borderRadius: 3, background: sC(f.status), color: "#fff", textTransform: "uppercase", letterSpacing: "0.05em", whiteSpace: "nowrap" }}>{statusOpt?.label || f.status}</span>
                           <span style={{ flex: 1, fontSize: 12.5, fontWeight: 600, color: F.plum, minWidth: 200 }}>{f.name}</span>
                           <span style={{ fontSize: 10, color: F.muted2, fontWeight: 600 }}>{fmt(f.deadline)}</span>
                           <button onClick={() => setFeatField(f.id, { tier: "pro" })} style={{ ...bt(), padding: "3px 8px", fontSize: 10.5 }}>→ Pro</button>
                           <button onClick={() => setFeatField(f.id, { tier: "essential" })} style={{ ...bt(), padding: "3px 8px", fontSize: 10.5 }}>→ Essential</button>
                         </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 )}
 
                 {/* Fair use limits */}
-                <div style={sectionTitle}>Fair use limits (per AI action, per tier)</div>
+                <div style={sectionTitle}>Essential access for Pro features</div>
+                <p style={{ margin: "-4px 0 10px", fontSize: 12, color: F.muted, lineHeight: 1.5 }}>
+                  Under <strong style={{ color: F.plum }}>Model B</strong> (shared credits), Pro features can still have an Essential foothold — a smaller-scope preview, or full access that just consumes the smaller free credit pool. Use this to track which Pro features pull double-duty as Essential teasers.
+                </p>
                 <div style={{ background: F.bg, border: `1px solid ${F.border}`, borderRadius: 10, overflow: "hidden", marginBottom: 8 }}>
-                  <div style={{ display: "grid", gridTemplateColumns: "1.6fr 1fr 1fr 70px", background: F.surface, padding: "8px 12px", fontSize: 10.5, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em", borderBottom: `1px solid ${F.border}` }}>
-                    <div>Action</div>
-                    <div>AI Essential</div>
-                    <div>AI Pro</div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1.6fr 130px 1fr 70px", background: F.surface, padding: "8px 12px", fontSize: 10.5, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em", borderBottom: `1px solid ${F.border}` }}>
+                    <div>Pro feature</div>
+                    <div>Essential access</div>
+                    <div>What Essential users see</div>
                     <div></div>
                   </div>
-                  {limited.length === 0 && <div style={{ padding: 14, fontSize: 12.5, color: F.muted, fontStyle: "italic", textAlign: "center" }}>No fair-use limits set. Add limits to any AI action that consumes inference cost.</div>}
-                  {limited.map(f => {
-                    const al = f.actionLimits;
-                    const tierCell = (t) => (
-                      <div style={{ fontSize: 12, color: F.plum, lineHeight: 1.5 }}>
-                        <div>{al.perUser?.[t] != null ? `${al.perUser[t]} / user / ${al.unit}` : "—"}</div>
-                        <div style={{ color: F.muted, fontSize: 11.5 }}>{al.perAccount?.[t] != null ? `${al.perAccount[t]} / account / ${al.unit}` : "—"}</div>
-                      </div>
-                    );
+                  {pro.length === 0 && <div style={{ padding: 14, fontSize: 12.5, color: F.muted, fontStyle: "italic", textAlign: "center" }}>No Pro features for {prod} yet. Once features are assigned to Pro they'll appear here so you can map their Essential access.</div>}
+                  {pro.map(f => {
+                    const access = f.essentialAccess || "locked";
+                    const badge = access === "available" ? { bg: F.green,    fg: "#fff", label: "Available" } :
+                                  access === "preview"   ? { bg: F.orange,   fg: F.plum, label: "Preview" } :
+                                                           { bg: F.muted2,   fg: "#fff", label: "Locked" };
                     return (
-                      <div key={f.id} style={{ display: "grid", gridTemplateColumns: "1.6fr 1fr 1fr 70px", padding: "10px 12px", borderBottom: `1px solid ${F.border}`, alignItems: "center" }}>
-                        <div style={{ fontSize: 12.5, fontWeight: 600, color: F.plum }}>{f.name} <span style={{ fontSize: 10, fontWeight: 700, color: F.muted2 }}>· {effectiveTier(f).toUpperCase()}</span></div>
-                        {tierCell("essential")}
-                        {tierCell("pro")}
-                        <button onClick={() => setEditLimits(f.id)} style={{ ...bt(), padding: "3px 8px", fontSize: 10.5 }}>edit</button>
+                      <div key={f.id} style={{ display: "grid", gridTemplateColumns: "1.6fr 130px 1fr 70px", padding: "10px 12px", borderBottom: `1px solid ${F.border}`, alignItems: "center", gap: 8 }}>
+                        <div style={{ fontSize: 12.5, fontWeight: 600, color: F.plum, minWidth: 0 }}>{f.name}</div>
+                        <div>
+                          <span style={{ fontSize: 10, fontWeight: 800, padding: "3px 9px", borderRadius: 4, background: badge.bg, color: badge.fg, textTransform: "uppercase", letterSpacing: "0.04em" }}>{badge.label}</span>
+                        </div>
+                        <div style={{ fontSize: 12, color: f.essentialNote ? F.muted : F.muted2, lineHeight: 1.45, fontStyle: f.essentialNote ? "normal" : "italic" }}>{f.essentialNote || "—"}</div>
+                        <button onClick={() => setEditFeat(f.id)} style={{ ...bt(), padding: "3px 8px", fontSize: 10.5 }}>edit</button>
                       </div>
                     );
                   })}
                 </div>
-                <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-                  <button onClick={() => { const first = feats.find(f => !f.actionLimits); if (first) setEditLimits(first.id); }} style={{ ...bt(), fontSize: 12 }}>+ Add fair-use limit</button>
-                  <button onClick={() => setView("fairuse")} style={{ ...bt("ghost"), fontSize: 12, color: F.pink, fontWeight: 700 }}>See live mockup →</button>
+                {proWithEssAccess.length > 0 && (
+                  <div style={{ marginTop: 10, padding: "10px 12px", background: F.bg, border: `1px solid ${F.border}`, borderRadius: 8, fontSize: 12, color: F.plum, lineHeight: 1.5 }}>
+                    <strong>{proWithEssAccess.length} of {pro.length}</strong> Pro {prod} feature{pro.length === 1 ? "" : "s"} also reachable from Essential — every one of these is an upgrade hook (school taps the ceiling on the smaller credit pool and is nudged to Pro).
+                  </div>
+                )}
+                <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap", marginTop: 10 }}>
+                  <button onClick={() => setView("usage")} style={{ ...bt("ghost"), fontSize: 12, color: F.pink, fontWeight: 700 }}>See Model B mockup →</button>
                 </div>
-                <p style={{ margin: "10px 0 0", fontSize: 11.5, color: F.muted, fontStyle: "italic" }}>Essential = generous-but-bounded so most schools never hit it. Pro = high cap to safeguard our inference investment.</p>
               </div>
             )}
           </div>
@@ -1628,6 +1642,40 @@ function AiMonetizationPage({ subRoute, setSubRoute }) {
                 <input type="date" value={editFeatObj.deadline || ""} onChange={e => setFeatField(editFeatObj.id, { deadline: e.target.value })} style={{ ...inp, width: "100%" }} />
               </div>
             </div>
+
+            {effectiveTier(editFeatObj) === "pro" && (
+              <>
+                <div style={lb}>Essential access</div>
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
+                  {[
+                    { v: "locked",    label: "Locked",    sub: "Pro-only" },
+                    { v: "preview",   label: "Preview",   sub: "Limited scope" },
+                    { v: "available", label: "Available", sub: "Same scope · credits apply" },
+                  ].map(opt => {
+                    const active = (editFeatObj.essentialAccess || "locked") === opt.v;
+                    return (
+                      <button key={opt.v} onClick={() => setFeatField(editFeatObj.id, { essentialAccess: opt.v })} style={{
+                        padding: "6px 11px",
+                        borderRadius: 7,
+                        fontSize: 12,
+                        fontWeight: 700,
+                        cursor: "pointer",
+                        background: active ? F.plum : F.surface,
+                        color: active ? F.paper : F.plum,
+                        border: `1px solid ${active ? F.plum : F.borderStrong}`,
+                        fontFamily: "inherit",
+                        textAlign: "left",
+                      }}>
+                        <div>{opt.label}</div>
+                        <div style={{ fontSize: 10, fontWeight: 600, opacity: active ? 0.85 : 0.6, marginTop: 1 }}>{opt.sub}</div>
+                      </button>
+                    );
+                  })}
+                </div>
+                <input value={editFeatObj.essentialNote || ""} onChange={e => setFeatField(editFeatObj.id, { essentialNote: e.target.value })} placeholder='e.g. "1 free preview per applicant; full mode requires Pro credits"' style={{ ...inp, width: "100%", marginBottom: 4 }} />
+                <p style={{ margin: "4px 0 16px", fontSize: 11.5, color: F.muted, fontStyle: "italic" }}>What does an Essential user actually see when they try this Pro feature? Surfaced in the "Essential access" table below the buckets.</p>
+              </>
+            )}
 
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
               <button onClick={() => setEditFeat(null)} style={bt("primary")}>Done</button>

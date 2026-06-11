@@ -3538,7 +3538,9 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
   useEffect(() => {
     setStageSel(0);
     if (!didMount.current) { didMount.current = true; return; }
-    if (topRef.current) topRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    // Jump to the very top of the page (the topbar is sticky, so nothing is hidden
+    // behind it). Instant, not smooth — a slow animated scroll read as a "refresh".
+    window.scrollTo({ top: 0, behavior: "auto" });
   }, [open]);
 
   // Phase data — content faithful to the source HTML, no diagram math.
@@ -3574,7 +3576,13 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
         { old: "Weeks pulling data together for the strategy deck", new: "Live Salesforce + Pendo + Planhat synthesis on demand", ai: "AI SYNTH" },
         { old: "Annual roadmap treated as fixed", new: "Rolling vision, re-cut every quarter against revenue signal", ai: "ROLLING" },
       ],
-      school: "At Prioritise, schools tell us where to aim.",
+      school: "Schools tell us where to aim.",
+      schoolChips: [
+        { ic: "🗂", t: "Advisory panels" },
+        { ic: "📊", t: "Usage signal" },
+        { ic: "📝", t: "Top requests" },
+      ],
+      schoolOutcome: "shape the themes we commit to",
       schoolHow: "How we engage: standing advisory panels across our core user groups (not just lighthouse schools), plus segment-level usage and request data. How it shapes priorities: their goals and pain points feed the opportunity scan, so the themes we commit to are the ones our schools are asking for.",
     },
     build: {
@@ -3612,7 +3620,13 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
         { old: "Schools & stakeholders brought in late, if at all", new: "In the loop Tue–Thu via prototype, before a line is built", ai: "EARLY" },
         { old: "Distractions hit and derail the whole team", new: "A dedicated shock-absorber pod soaks up bugs & interruptions", ai: "BUFFER" },
       ],
-      school: "At Build, schools shape the slice before a line is written.",
+      school: "Schools shape the slice before a line is written.",
+      schoolChips: [
+        { ic: "📱", t: "Wed prototype share" },
+        { ic: "💬", t: "WhatsApp + key contacts" },
+        { ic: "🔄", t: "Feedback folded in by Thu" },
+      ],
+      schoolOutcome: "steer what the pod builds next",
       schoolHow: "How we engage: every Wednesday the owner shares the working prototype with schools (WhatsApp + key contacts) a full week ahead of dev. Feedback is folded in Thursday, pre-lock. How it shapes priorities: schools react to a real prototype rather than a shipped feature, so we course-correct cheaply — substantive changes after Friday's lock simply ride the next weekly cycle.",
     },
     adopt: {
@@ -3648,7 +3662,13 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
         { old: "Certification is manual and inconsistent", new: "Auto-built certification paths per AAA feature", ai: "AUTO CERT" },
         { old: "Adoption data sits in a dashboard nobody reads", new: "Pendo + Salesforce signal feeds the next prioritisation", ai: "CLOSED LOOP" },
       ],
-      school: "At Adopt, schools become the signal for the next cycle.",
+      school: "Schools become the signal for the next cycle.",
+      schoolChips: [
+        { ic: "🚀", t: "Onboarding & guidance" },
+        { ic: "📈", t: "Pendo + Salesforce signal" },
+        { ic: "⭐", t: "Reference & expansion" },
+      ],
+      schoolOutcome: "feed the next Prioritise cut",
       schoolHow: "How we engage: onboarding, in-product guidance and customer-success outreach, with the most engaged schools invited into reference and expansion conversations. How it shapes priorities: we read their activation and expansion behaviour in Pendo and Salesforce, and that evidence is the freshest input to the next Prioritise cut.",
     },
   };
@@ -3813,8 +3833,8 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
     const nextP = order[(idx + 1) % 3];   // adopt loops back to prioritise
     const prevP = order[(idx + 2) % 3];
     const wrapNext = idx === 2, wrapPrev = idx === 0;
-    // Staggered entrance for each content block below the header.
-    const stg = (i) => ({ animation: "plc-stagger 0.5s cubic-bezier(0.22,1,0.36,1) both", animationDelay: `${0.1 + i * 0.08}s` });
+    // (Per-block stagger removed — the single soft crossfade on the view wrapper is calmer.)
+    const stg = () => ({});
     const sel = Math.min(stageSel, d.stages.length - 1);
     const selStage = d.stages[sel];
     // Group stakeholders into role lanes for the "Who's involved" map.
@@ -3823,6 +3843,22 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
       { key: "",       label: "Contributors", sub: "in the loop",     dot: F.muted2 },
       { key: "school", label: "Schools",      sub: "the core",        dot: d.accent },
     ].map(l => ({ ...l, items: d.stakeholders.filter(s => s.t === l.key) })).filter(l => l.items.length);
+
+    // Map activities onto a frequency timeline (most frequent → least frequent).
+    const RANK_LABEL = ["Always-on", "Daily", "Weekly", "Event-driven", "Monthly", "Quarterly", "Yearly"];
+    const cadRank = (c) => {
+      const s = (c || "").toLowerCase();
+      if (s.includes("continuous") || s.includes("always") || s.includes("ongoing")) return 0;
+      if (s.includes("daily")) return 1;
+      if (s.includes("week") || s === "wed" || s.includes("thu") || s.includes("mon")) return 2;
+      if (s.includes("monthly")) return 4;
+      if (s.includes("quarterly")) return 5;
+      if (s.includes("yearly") || s.includes("annual")) return 6;
+      return 3; // per-release / per-slice / per-AAA / at each … → event-driven
+    };
+    const cadColMap = {};
+    d.activities.forEach(a => { const r = cadRank(a.cad); (cadColMap[r] = cadColMap[r] || []).push(a); });
+    const cadCols = Object.keys(cadColMap).map(Number).sort((x, y) => x - y).map(r => ({ rank: r, label: RANK_LABEL[r], items: cadColMap[r] }));
 
     return (
       <>
@@ -3853,21 +3889,31 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
         </div>
 
         {/* Phase header */}
-        <div style={{ background: d.accent, borderRadius: 14, padding: "24px 28px 22px", marginBottom: 18, position: "relative", animation: "plc-header-pop 0.5s cubic-bezier(0.34,1.56,0.64,1) both" }}>
-          <div style={{ fontSize: 10.5, fontWeight: 800, color: F.plum, opacity: 0.75, textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: 4 }}>{d.eyebrow}</div>
-          <h1 style={{ fontSize: 32, fontWeight: 800, margin: "0 0 8px", color: F.plum, lineHeight: 1.1 }}>{d.title}</h1>
-          <p style={{ fontSize: 14, fontWeight: 500, color: F.plum, opacity: 0.92, margin: 0, maxWidth: 760, lineHeight: 1.5 }}>{d.lede}</p>
-          <div style={{ display: "inline-block", marginTop: 14, fontSize: 11.5, fontWeight: 800, background: "rgba(55,2,60,0.16)", color: F.plum, padding: "5px 12px", borderRadius: 999 }}>⏱ {d.horizon}</div>
+        <div style={{ background: d.accent, borderRadius: 14, padding: "22px 28px 20px", marginBottom: 18, position: "relative" }}>
+          <div style={{ fontSize: 10.5, fontWeight: 800, color: F.plum, opacity: 0.75, textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: 6 }}>{d.eyebrow}</div>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 14, flexWrap: "wrap" }}>
+            <h1 style={{ fontSize: 32, fontWeight: 800, margin: 0, color: F.plum, lineHeight: 1.1 }}>{d.title}</h1>
+            <div style={{ fontSize: 11.5, fontWeight: 800, background: "rgba(55,2,60,0.16)", color: F.plum, padding: "5px 12px", borderRadius: 999 }}>⏱ {d.horizon}</div>
+          </div>
         </div>
 
-        {/* ── Schools at this phase — elevated, this is the core of the loop ── */}
-        <div style={{ ...stg(0), position: "relative", overflow: "hidden", background: `linear-gradient(135deg, ${F.plum}, ${F.lightPlum})`, border: `1px solid ${F.lightPlum}`, borderRadius: 14, padding: "18px 22px", marginBottom: 18, display: "flex", gap: 16, alignItems: "center", boxShadow: F.shadowMd }}>
+        {/* ── Schools at this phase — elevated, the core of the loop · show-not-tell ── */}
+        <div style={{ ...stg(0), position: "relative", overflow: "hidden", background: `linear-gradient(135deg, ${F.plum}, ${F.lightPlum})`, border: `1px solid ${F.lightPlum}`, borderRadius: 14, padding: "18px 22px", marginBottom: 18, display: "flex", gap: 18, alignItems: "center", boxShadow: F.shadowMd, flexWrap: "wrap" }}>
           <div style={{ position: "absolute", inset: 0, background: `radial-gradient(circle at 10% 50%, ${F.yellow}26, transparent 46%)`, pointerEvents: "none" }} />
           <div style={{ position: "relative", flexShrink: 0, width: 58, height: 58, borderRadius: "50%", background: F.paper, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, boxShadow: `0 0 0 4px ${F.yellow}66` }}>🏫</div>
-          <div style={{ position: "relative", flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 10, fontWeight: 800, color: F.yellow, textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 5 }}>★ Schools at this phase · the core of the loop</div>
-            <h3 style={{ fontSize: 17.5, fontWeight: 800, color: F.paper, margin: "0 0 6px", lineHeight: 1.3 }}>{d.school}</h3>
-            <p style={{ fontSize: 12.5, fontWeight: 500, color: F.paper, opacity: 0.82, margin: 0, lineHeight: 1.55 }}>{d.schoolHow}</p>
+          <div style={{ position: "relative", flex: 1, minWidth: 240 }}>
+            <div style={{ fontSize: 10, fontWeight: 800, color: F.yellow, textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 6 }}>★ Schools at this phase · the core of the loop</div>
+            <h3 style={{ fontSize: 17.5, fontWeight: 800, color: F.paper, margin: "0 0 12px", lineHeight: 1.25 }}>{d.school}</h3>
+            {/* How we engage → outcome (chips, not prose) */}
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
+              {d.schoolChips.map((c, i) => (
+                <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(250,246,246,0.12)", border: "1px solid rgba(250,246,246,0.2)", borderRadius: 999, padding: "5px 12px", fontSize: 11.5, fontWeight: 700, color: F.paper }}>
+                  <span style={{ fontSize: 13 }}>{c.ic}</span>{c.t}
+                </span>
+              ))}
+              <span style={{ fontSize: 15, color: F.lightPink, fontWeight: 800, margin: "0 2px" }}>→</span>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 6, background: F.yellow, borderRadius: 999, padding: "5px 13px", fontSize: 12, fontWeight: 800, color: F.plum }}>{d.schoolOutcome}</span>
+            </div>
           </div>
         </div>
 
@@ -3924,22 +3970,43 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
           </div>
         </div>
 
-        {/* Activities — richer visual cards */}
+        {/* Activities — mapped onto a frequency timeline */}
         <div style={{ ...card, ...stg(2) }}>
-          <div style={sectionTitle}>Activities &amp; cadence</div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(232px, 1fr))", gap: 12 }}>
-            {d.activities.map((a, i) => (
-              <div key={i} className="plc-act" style={{ background: F.surface, border: `1px solid ${F.border}`, borderRadius: 12, padding: "14px 15px", display: "flex", gap: 12, alignItems: "flex-start" }}>
-                <span style={{ width: 42, height: 42, borderRadius: 11, background: d.accentSoft, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 21, flexShrink: 0 }}>{a.ic}</span>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 3, flexWrap: "wrap" }}>
-                    <span style={{ fontSize: 13.5, fontWeight: 800, color: F.plum, lineHeight: 1.2 }}>{a.nm}</span>
-                    <span style={{ fontSize: 9, fontWeight: 800, color: d.accentDark, background: d.accentSoft, padding: "2px 7px", borderRadius: 999, textTransform: "uppercase", letterSpacing: "0.04em" }}>{a.cad}</span>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: 8, marginBottom: 4 }}>
+            <div style={{ ...sectionTitle, marginBottom: 0 }}>Activities on a cadence timeline</div>
+            <div style={{ fontSize: 10.5, color: F.muted2, fontWeight: 700 }}>← more frequent · less frequent →</div>
+          </div>
+          <div style={{ overflowX: "auto", padding: "14px 2px 4px" }}>
+            <div style={{ position: "relative", minWidth: cadCols.length > 2 ? 640 : 420 }}>
+              {/* axis line connecting the cadence markers */}
+              <div style={{ position: "absolute", top: 8, left: `${50 / cadCols.length}%`, right: `${50 / cadCols.length}%`, height: 2, background: F.border, zIndex: 0 }} />
+              {/* cadence markers */}
+              <div style={{ display: "flex", position: "relative", zIndex: 1, marginBottom: 14 }}>
+                {cadCols.map(col => (
+                  <div key={col.rank} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 7 }}>
+                    <span style={{ width: 16, height: 16, borderRadius: "50%", background: d.accent, border: `3px solid ${F.surface}`, boxShadow: `0 0 0 1px ${d.accent}` }} />
+                    <span style={{ fontSize: 11, fontWeight: 800, color: F.plum, background: d.accentSoft, padding: "3px 11px", borderRadius: 999, whiteSpace: "nowrap" }}>{col.label}</span>
                   </div>
-                  <div style={{ fontSize: 12, color: F.muted, lineHeight: 1.45 }}>{a.d}</div>
-                </div>
+                ))}
               </div>
-            ))}
+              {/* activity cards under each cadence */}
+              <div style={{ display: "flex", alignItems: "flex-start" }}>
+                {cadCols.map(col => (
+                  <div key={col.rank} style={{ flex: 1, padding: "0 6px", display: "flex", flexDirection: "column", gap: 8 }}>
+                    {col.items.map((a, i) => (
+                      <div key={i} className="plc-act" style={{ background: F.surface, border: `1px solid ${F.border}`, borderTop: `3px solid ${d.accent}`, borderRadius: 10, padding: "11px 12px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5 }}>
+                          <span style={{ width: 32, height: 32, borderRadius: 9, background: d.accentSoft, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0 }}>{a.ic}</span>
+                          <span style={{ fontSize: 12.5, fontWeight: 800, color: F.plum, lineHeight: 1.2 }}>{a.nm}</span>
+                        </div>
+                        {a.cad !== col.label && <div style={{ fontSize: 9, fontWeight: 800, color: d.accentDark, textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 4 }}>{a.cad}</div>}
+                        <div style={{ fontSize: 11.5, color: F.muted, lineHeight: 1.45 }}>{a.d}</div>
+                      </div>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
           <div style={{ marginTop: 14, background: d.accentSoft, border: `1px solid ${d.accent}`, borderRadius: 10, padding: "11px 14px", fontSize: 12.5, fontWeight: 600, color: F.plum, display: "flex", gap: 10, alignItems: "flex-start", lineHeight: 1.5 }}>
             <span style={{ fontSize: 16, flexShrink: 0 }}>🔧</span><span>{d.build_tools}</span>
@@ -4023,22 +4090,20 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
 
   return (
     <div ref={topRef}>
-      {/* View-transition keyframes — kept here so they're available to both views */}
+      {/* Gentle opacity-only crossfade — no motion/scale that would read as a page reload */}
       <style>{`
-        @keyframes plc-view-in   { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes plc-header-pop { from { opacity: 0; transform: scale(0.94) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
-        @keyframes plc-stagger   { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes plc-soft-in { from { opacity: 0; } to { opacity: 1; } }
         .plc-act  { transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease; }
         .plc-act:hover  { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(55,2,60,0.10); }
         .plc-beat { transition: transform 0.15s ease, box-shadow 0.15s ease; }
         .plc-beat:hover { transform: translateY(-2px); }
-        .plc-detailfade { animation: plc-view-in 0.3s ease both; }
+        .plc-detailfade { animation: plc-soft-in 0.2s ease both; }
         @media (max-width: 620px) { .plc-tab-label { display: none; } }
         @media (max-width: 560px) { .plc-lane { grid-template-columns: 1fr !important; gap: 6px !important; } }
       `}</style>
       {open
-        ? <div key={"phase-" + open} style={{ animation: "plc-view-in 0.42s cubic-bezier(0.22,1,0.36,1) both" }}><PhaseView phase={open} /></div>
-        : <div key="overview" style={{ animation: "plc-view-in 0.42s cubic-bezier(0.22,1,0.36,1) both" }}><Overview /></div>}
+        ? <div key={"phase-" + open} style={{ animation: "plc-soft-in 0.22s ease both" }}><PhaseView phase={open} /></div>
+        : <div key="overview" style={{ animation: "plc-soft-in 0.22s ease both" }}><Overview /></div>}
     </div>
   );
 }

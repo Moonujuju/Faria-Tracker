@@ -1280,12 +1280,26 @@ function TrackerPage({ title, subtitle, storageKey, defaults, ModalComponent, ex
    from faria-ai-v12 (same store as the AI Powered Features page)
    and writes them back; reads/writes monetization config to
    faria-ai-monetization-v1. */
-function AiMonetizationPage({ subRoute, setSubRoute }) {
+// Product → URL slug map (used by the Framework sub-page for per-product deep URLs).
+const PRODUCT_SLUG = {
+  "OpenApply":    "openapply",
+  "ManageBac+":   "managebac",
+  "Atlas":        "atlas",
+  "SchoolsBuddy": "schoolsbuddy",
+  "Vectare":      "vectare",
+};
+const SLUG_PRODUCT = Object.fromEntries(Object.entries(PRODUCT_SLUG).map(([k, v]) => [v, k]));
+
+function AiMonetizationPage({ subRoute, setSubRoute, deepRoute, setDeepRoute }) {
   // view derived from URL sub-route. Valid: "plan" | "usage" | "competitive" | "market" | "finance".
   // Empty / unknown subRoute → default "plan".
   const VALID_VIEWS = ["plan", "usage", "competitive", "market", "finance"];
   const view = VALID_VIEWS.includes(subRoute) ? subRoute : "plan";
   const setView = (v) => setSubRoute(v);
+  // For the Framework view, the third URL segment selects a single product.
+  // Empty string = "Overview" (summary cards for all 5 products).
+  const focusedProduct = view === "plan" && SLUG_PRODUCT[deepRoute] ? SLUG_PRODUCT[deepRoute] : null;
+  const setFocusedProduct = (prod) => setDeepRoute(prod ? PRODUCT_SLUG[prod] || "" : "");
   const [ai, setAi] = useState({ inits: [] });
   const [mz, setMz] = useState(DEFAULT_MONETIZATION);
   const [readyAi, setReadyAi] = useState(false);
@@ -1314,9 +1328,6 @@ function AiMonetizationPage({ subRoute, setSubRoute }) {
 
   // Mutators
   const setFeatField = (id, patch) => setAi(prev => ({ ...prev, inits: prev.inits.map(f => f.id === id ? { ...f, ...patch } : f) }));
-  const setFilterBullet = (idx, val) => setMz(prev => ({ ...prev, framework: { ...prev.framework, proFilter: prev.framework.proFilter.map((b, i) => i === idx ? val : b) } }));
-  const addFilterRule = () => setMz(prev => ({ ...prev, framework: { ...prev.framework, proFilter: [...prev.framework.proFilter, ""] } }));
-  const removeFilterRule = (idx) => setMz(prev => ({ ...prev, framework: { ...prev.framework, proFilter: prev.framework.proFilter.filter((_, i) => i !== idx) } }));
   const toggleExpand = (p) => setExpanded(prev => { const n = new Set(prev); if (n.has(p)) n.delete(p); else n.add(p); return n; });
 
   // Computed
@@ -1358,7 +1369,7 @@ function AiMonetizationPage({ subRoute, setSubRoute }) {
     <>
       {(() => {
         const titles = {
-          plan:        { t: "Monetization Framework (open discussion)", s: "Working framework for AI Essential vs AI Pro across Faria products. Edit anything inline — this is a living document." },
+          plan:        { t: "Monetization Framework", s: "Working framework for AI Essential vs AI Pro across Faria products. Edit anything inline — this is a living document." },
           usage:       { t: "Usage", s: "Three candidate usage-limit models — Model B (shared credits) is the leading option. Below, a state-by-state deep dive across all three." },
           competitive: { t: "Competitive Analysis", s: "Track how competitors are pricing and packaging AI. Use this to calibrate our Pro tier and bundle pricing." },
           market:      { t: "Market Validation", s: "Per-product school validation — pilots, willingness to pay, and which Pro outcomes schools have confirmed." },
@@ -1428,21 +1439,51 @@ function AiMonetizationPage({ subRoute, setSubRoute }) {
             </ul>
           </div>
 
-          {/* Demarcation rules */}
+          {/* Demarcation rules — static, with concrete examples (read-only) */}
           <div style={{ background: F.bg, padding: "20px 22px", display: "flex", flexDirection: "column" }}>
             <div style={{ fontSize: 10.5, fontWeight: 800, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6, textAlign: "center" }}>Demarcation line</div>
             <p style={{ margin: "0 0 12px", fontSize: 12.5, color: F.plum, fontWeight: 700, textAlign: "center" }}>A feature crosses into AI Pro when it…</p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 7, flex: 1 }}>
-              {mz.framework.proFilter.map((b, i) => (
-                <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, background: F.surface, border: `1px solid ${F.border}`, borderRadius: 7, padding: "6px 8px 6px 10px" }}>
-                  <span style={{ width: 18, height: 18, borderRadius: 9, background: F.pink, color: "#fff", fontSize: 10, fontWeight: 800, display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{i + 1}</span>
-                  <input value={b} onChange={e => setFilterBullet(i, e.target.value)} placeholder="New rule…" style={{ flex: 1, fontSize: 12.5, padding: "2px 4px", border: "none", background: "transparent", color: F.plum, outline: "none", fontFamily: "inherit", fontWeight: 500, minWidth: 0 }} />
-                  <button onClick={() => removeFilterRule(i)} title="Remove rule" style={{ width: 20, height: 20, borderRadius: 10, border: "none", background: "transparent", color: F.muted2, cursor: "pointer", fontSize: 16, lineHeight: 1, padding: 0, flexShrink: 0, display: "inline-flex", alignItems: "center", justifyContent: "center", fontFamily: "inherit" }} onMouseEnter={e => { e.currentTarget.style.background = F.bg; e.currentTarget.style.color = F.pink; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = F.muted2; }}>×</button>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, flex: 1 }}>
+              {[
+                {
+                  rule: "Saves a school 5+ hours/week of manual work",
+                  examples: [
+                    "AI Writing Assistant — drafts applicant communications staff currently type by hand",
+                    "AI Document Verification — auto-cross-references transcripts against the school's checklist",
+                  ],
+                },
+                {
+                  rule: "Unlocks something they literally cannot do today",
+                  examples: [
+                    "MCP — schools query their OpenApply data from Claude / ChatGPT / Cursor",
+                    "Agentic Nurture Workflows — autonomous, tailored applicant follow-ups at scale",
+                  ],
+                },
+                {
+                  rule: "Produces a measurable outcome (conversion lift, time-to-decision, retention)",
+                  examples: [
+                    "AI Lead Scoring — 15% conversion lift in the top-scored applicant cohort",
+                    "AI Analyst — quarterly board reports auto-drafted in under 30 min (vs 8+ hrs)",
+                  ],
+                },
+              ].map((r, i) => (
+                <div key={i} style={{ background: F.surface, border: `1px solid ${F.border}`, borderRadius: 8, padding: "8px 11px" }}>
+                  <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+                    <span style={{ width: 18, height: 18, borderRadius: 9, background: F.pink, color: "#fff", fontSize: 10, fontWeight: 800, display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>{i + 1}</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 12.5, color: F.plum, fontWeight: 700, lineHeight: 1.4 }}>{r.rule}</div>
+                      <div style={{ marginTop: 6, paddingLeft: 4, borderLeft: `2px solid ${F.lightYellow}` }}>
+                        <div style={{ fontSize: 9.5, fontWeight: 800, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.08em", marginLeft: 8, marginBottom: 3 }}>Examples</div>
+                        {r.examples.map((ex, ei) => (
+                          <div key={ei} style={{ fontSize: 11.5, color: F.muted, lineHeight: 1.45, fontStyle: "italic", marginLeft: 8, marginBottom: 2 }}>· {ex}</div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               ))}
-              <button onClick={addFilterRule} style={{ marginTop: 2, padding: "6px 10px", borderRadius: 7, border: `1px dashed ${F.borderStrong}`, background: "transparent", color: F.plum, fontSize: 11.5, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>+ Add rule</button>
             </div>
-            <div style={{ marginTop: 12, fontSize: 11.5, color: F.muted, fontStyle: "italic", textAlign: "center" }}>Pass <strong style={{ color: F.plum }}>any one</strong> rule → Pro. Else → Essential.</div>
+            <div style={{ marginTop: 12, fontSize: 11.5, color: F.muted, fontStyle: "italic", textAlign: "center" }}>Pass <strong style={{ color: F.plum }}>any one</strong> rule → Pro. Else → Essential. <span style={{ color: F.muted2 }}>(Examples illustrative — actual tier assignment per feature lives in each product block.)</span></div>
           </div>
 
           {/* AI Pro */}
@@ -1461,8 +1502,56 @@ function AiMonetizationPage({ subRoute, setSubRoute }) {
         </div>
       </div>
 
-      {/* Per-product breakdown */}
-      {MONZ_PRODUCTS.map(prod => {
+      {/* Product chip nav — Framework's third URL level. "Overview" shows every product. Selecting a chip filters to one product's deep block. */}
+      <div style={{ display: "flex", gap: 6, marginBottom: 14, flexWrap: "wrap", alignItems: "center" }}>
+        <span style={{ fontSize: 10.5, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.08em", marginRight: 4 }}>Product:</span>
+        <button onClick={() => setFocusedProduct(null)} style={{
+          padding: "5px 12px", borderRadius: 999, fontSize: 12, fontWeight: 700, cursor: "pointer",
+          background: !focusedProduct ? F.plum : F.surface,
+          color: !focusedProduct ? F.paper : F.plum,
+          border: `1px solid ${!focusedProduct ? F.plum : F.borderStrong}`,
+          fontFamily: "inherit",
+        }}>Overview</button>
+        {MONZ_PRODUCTS.map(p => {
+          const active = focusedProduct === p;
+          return (
+            <button key={p} onClick={() => setFocusedProduct(p)} style={{
+              padding: "5px 12px", borderRadius: 999, fontSize: 12, fontWeight: 700, cursor: "pointer",
+              background: active ? F.plum : F.surface,
+              color: active ? F.paper : F.plum,
+              border: `1px solid ${active ? F.plum : F.borderStrong}`,
+              fontFamily: "inherit",
+            }}>{p}</button>
+          );
+        })}
+      </div>
+
+      {/* Overview mode: small per-product summary cards (linking to each product's deep view) */}
+      {!focusedProduct && (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12, marginBottom: 18 }}>
+          {MONZ_PRODUCTS.map(prod => {
+            const feats = featuresByProduct(prod);
+            const proCount = feats.filter(f => effectiveTier(f) === "pro").length;
+            const essCount = feats.filter(f => effectiveTier(f) === "essential").length;
+            const unCount = feats.filter(f => effectiveTier(f) === "unassigned").length;
+            const ready = proReadyDate(prod);
+            return (
+              <button key={prod} onClick={() => setFocusedProduct(prod)} style={{
+                background: F.surface, border: `1px solid ${F.border}`, borderRadius: 12, padding: "16px 18px", boxShadow: F.shadowSm,
+                cursor: "pointer", textAlign: "left", fontFamily: "inherit", color: F.plum, display: "block",
+              }}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: F.plum, marginBottom: 6 }}>{prod}</div>
+                <div style={{ fontSize: 11, color: F.muted, marginBottom: 10 }}>{proCount} Pro · {essCount} Essential{unCount > 0 ? ` · ${unCount} unassigned` : ""}</div>
+                <div style={{ fontSize: 10.5, fontWeight: 700, color: ready.complete ? F.green : (ready.muted ? F.muted2 : F.plum), background: ready.complete ? F.greenSoft : F.bg, padding: "3px 9px", borderRadius: 999, display: "inline-block", border: `1px solid ${ready.complete ? F.green : F.border}` }}>{ready.label}</div>
+                <div style={{ marginTop: 12, fontSize: 11, fontWeight: 700, color: F.pink }}>View details →</div>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Per-product breakdown — only render the focused product (or all if there's no focus AND user explicitly wants the long view) */}
+      {focusedProduct && MONZ_PRODUCTS.filter(p => p === focusedProduct).map(prod => {
         const pd = mz.products[prod] || { wowOutcomes: ["", "", ""] };
         const isOpen = expanded.has(prod);
         const feats = featuresByProduct(prod);
@@ -1587,7 +1676,7 @@ function AiMonetizationPage({ subRoute, setSubRoute }) {
                   Under <strong style={{ color: F.plum }}>Model B</strong> (shared credits), Pro features can still have an Essential foothold — a smaller-scope preview, or full access that just consumes the smaller free credit pool. Use this to track which Pro features pull double-duty as Essential teasers.
                 </p>
                 <div style={{ background: F.bg, border: `1px solid ${F.border}`, borderRadius: 10, overflow: "hidden", marginBottom: 8 }}>
-                  <div style={{ display: "grid", gridTemplateColumns: "1.6fr 130px 1fr 70px", background: F.surface, padding: "8px 12px", fontSize: 10.5, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em", borderBottom: `1px solid ${F.border}` }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1.6fr 170px 1fr 70px", background: F.surface, padding: "8px 12px", fontSize: 10.5, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em", borderBottom: `1px solid ${F.border}` }}>
                     <div>Pro feature</div>
                     <div>Essential access</div>
                     <div>What Essential users see</div>
@@ -1595,17 +1684,19 @@ function AiMonetizationPage({ subRoute, setSubRoute }) {
                   </div>
                   {pro.length === 0 && <div style={{ padding: 14, fontSize: 12.5, color: F.muted, fontStyle: "italic", textAlign: "center" }}>No Pro features for {prod} yet. Once features are assigned to Pro they'll appear here so you can map their Essential access.</div>}
                   {pro.map(f => {
-                    const access = f.essentialAccess || "locked";
-                    const badge = access === "available" ? { bg: F.green,    fg: "#fff", label: "Available" } :
-                                  access === "preview"   ? { bg: F.orange,   fg: F.plum, label: "Preview" } :
-                                                           { bg: F.muted2,   fg: "#fff", label: "Locked" };
+                    // Older saved data may have "available" — treat as preview (limited credits in Essential).
+                    const raw = f.essentialAccess || "locked";
+                    const access = raw === "preview" || raw === "available" ? "preview" : "locked";
+                    const badge = access === "preview"
+                      ? { bg: F.orange, fg: F.plum, label: "Preview · limited credits" }
+                      : { bg: F.muted2, fg: "#fff", label: "Locked · Pro only" };
                     return (
-                      <div key={f.id} style={{ display: "grid", gridTemplateColumns: "1.6fr 130px 1fr 70px", padding: "10px 12px", borderBottom: `1px solid ${F.border}`, alignItems: "center", gap: 8 }}>
+                      <div key={f.id} style={{ display: "grid", gridTemplateColumns: "1.6fr 170px 1fr 70px", padding: "10px 12px", borderBottom: `1px solid ${F.border}`, alignItems: "center", gap: 8 }}>
                         <div style={{ fontSize: 12.5, fontWeight: 600, color: F.plum, minWidth: 0 }}>{f.name}</div>
                         <div>
-                          <span style={{ fontSize: 10, fontWeight: 800, padding: "3px 9px", borderRadius: 4, background: badge.bg, color: badge.fg, textTransform: "uppercase", letterSpacing: "0.04em" }}>{badge.label}</span>
+                          <span style={{ fontSize: 9.5, fontWeight: 800, padding: "3px 9px", borderRadius: 4, background: badge.bg, color: badge.fg, textTransform: "uppercase", letterSpacing: "0.04em", whiteSpace: "nowrap" }}>{badge.label}</span>
                         </div>
-                        <div style={{ fontSize: 12, color: f.essentialNote ? F.muted : F.muted2, lineHeight: 1.45, fontStyle: f.essentialNote ? "normal" : "italic" }}>{f.essentialNote || "—"}</div>
+                        <div style={{ fontSize: 12, color: f.essentialNote ? F.muted : F.muted2, lineHeight: 1.45, fontStyle: f.essentialNote ? "normal" : "italic" }}>{f.essentialNote || (access === "preview" ? "Smaller scope or capped use — credits apply" : "—")}</div>
                         <button onClick={() => setEditFeat(f.id)} style={{ ...bt(), padding: "3px 8px", fontSize: 10.5 }}>edit</button>
                       </div>
                     );
@@ -1625,7 +1716,8 @@ function AiMonetizationPage({ subRoute, setSubRoute }) {
         );
       })}
 
-      {/* Launch timeline */}
+      {/* Launch timeline — overview only (full picture across all 5 products) */}
+      {!focusedProduct && (
       <div style={card}>
         <div style={sectionTitle}>Launch timeline</div>
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -1645,6 +1737,7 @@ function AiMonetizationPage({ subRoute, setSubRoute }) {
           })}
         </div>
       </div>
+      )}
       </>)}
 
       {/* Feature details editor modal — wow outcomes (multi) + rationale + status + deadline */}
@@ -1692,16 +1785,20 @@ function AiMonetizationPage({ subRoute, setSubRoute }) {
                 <div style={lb}>Essential access</div>
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
                   {[
-                    { v: "locked",    label: "Locked",    sub: "Pro-only" },
-                    { v: "preview",   label: "Preview",   sub: "Limited scope" },
-                    { v: "available", label: "Available", sub: "Same scope · credits apply" },
+                    { v: "locked",  label: "Locked",  sub: "Pro-only — Essential users cannot run this feature" },
+                    { v: "preview", label: "Preview", sub: "Essential users can try it, but get a small allotment of credits" },
                   ].map(opt => {
-                    const active = (editFeatObj.essentialAccess || "locked") === opt.v;
+                    // Coerce legacy "available" → "preview" for the active check
+                    const raw = editFeatObj.essentialAccess || "locked";
+                    const current = raw === "preview" || raw === "available" ? "preview" : "locked";
+                    const active = current === opt.v;
                     return (
                       <button key={opt.v} onClick={() => setFeatField(editFeatObj.id, { essentialAccess: opt.v })} style={{
-                        padding: "6px 11px",
+                        flex: 1,
+                        minWidth: 200,
+                        padding: "8px 12px",
                         borderRadius: 7,
-                        fontSize: 12,
+                        fontSize: 12.5,
                         fontWeight: 700,
                         cursor: "pointer",
                         background: active ? F.plum : F.surface,
@@ -1711,7 +1808,7 @@ function AiMonetizationPage({ subRoute, setSubRoute }) {
                         textAlign: "left",
                       }}>
                         <div>{opt.label}</div>
-                        <div style={{ fontSize: 10, fontWeight: 600, opacity: active ? 0.85 : 0.6, marginTop: 1 }}>{opt.sub}</div>
+                        <div style={{ fontSize: 10.5, fontWeight: 600, opacity: active ? 0.85 : 0.6, marginTop: 2, lineHeight: 1.35 }}>{opt.sub}</div>
                       </button>
                     );
                   })}
@@ -4252,16 +4349,18 @@ const SLUG_SUB = Object.fromEntries(
 );
 function parseHash() {
   const h = (typeof window === "undefined" ? "" : window.location.hash).replace(/^#\/?/, "");
-  const [pageSlug = "", subSlug = ""] = h.split("/").map(s => s.trim());
+  const parts = h.split("/").map(s => s.trim());
+  const [pageSlug = "", subSlug = "", deepSlug = ""] = parts;
   const page = SLUG_PAGE[pageSlug] || "product";
   let sub = subSlug;
   if (SLUG_SUB[page]) sub = SLUG_SUB[page][subSlug] || "";
-  return { page, sub };
+  return { page, sub, deep: deepSlug };
 }
-function buildHash(page, sub) {
+function buildHash(page, sub, deep) {
   const pageSlug = PAGE_SLUG[page] || "product";
   let subSlug = sub || "";
   if (subSlug && SUB_SLUG[page]) subSlug = SUB_SLUG[page][sub] || sub;
+  if (deep && subSlug) return `#/${pageSlug}/${subSlug}/${deep}`;
   return subSlug ? `#/${pageSlug}/${subSlug}` : `#/${pageSlug}`;
 }
 function useHashRoute() {
@@ -4271,12 +4370,12 @@ function useHashRoute() {
     window.addEventListener("hashchange", onHash);
     return () => window.removeEventListener("hashchange", onHash);
   }, []);
-  const navigate = (page, sub = "") => {
-    const target = buildHash(page, sub);
+  const navigate = (page, sub = "", deep = "") => {
+    const target = buildHash(page, sub, deep);
     if (window.location.hash !== target) {
       window.history.pushState(null, "", target);
     }
-    setRouteState({ page, sub });
+    setRouteState({ page, sub, deep });
   };
   return [route, navigate];
 }
@@ -4284,9 +4383,10 @@ function useHashRoute() {
 /* ── Main App ── */
 export default function App() {
   const [route, navigate] = useHashRoute();
-  const { page, sub } = route;
+  const { page, sub, deep } = route;
   const setPage = (p) => navigate(p);
   const setSub = (s) => navigate(page, s);
+  const setDeep = (d) => navigate(page, sub, d);
   const [celName, setCelName] = useState(null);
   const [hovNav, setHovNav] = useState(null);
   const navBtn = (id, label) => {
@@ -4367,7 +4467,7 @@ export default function App() {
           extraRowInfo={(init) => (<>{init.product && chip(init.product)}{init.priority && <span style={{ fontSize: 10, padding: "2px 7px", borderRadius: 4, background: pC(init.priority), color: "#fff", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em" }}>{init.priority}</span>}</>)}
           extraDetailFields={(init, setField) => (<><div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>{init.product && chip(init.product)}{init.type && chip(init.type)}{init.priority && <span style={{ fontSize: 11, padding: "3px 8px", borderRadius: 4, background: pC(init.priority), color: "#fff", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em" }}>{init.priority}</span>}</div><div style={{ display: "flex", gap: 12, marginBottom: 12 }}><div style={{ flex: 1 }}><div style={lb}>Effort</div><div style={{ fontSize: 13, color: F.plum, fontWeight: 700 }}>{(init.effort||"medium").charAt(0).toUpperCase()+(init.effort||"medium").slice(1)}</div></div><div style={{ flex: 1 }}><div style={lb}>Impact</div><div style={{ fontSize: 13, color: F.plum, fontWeight: 700 }}>{(init.impact||"medium").charAt(0).toUpperCase()+(init.impact||"medium").slice(1)}</div></div></div></>)}
         />}
-        {page === "monz" && <AiMonetizationPage subRoute={sub} setSubRoute={setSub} />}
+        {page === "monz" && <AiMonetizationPage subRoute={sub} setSubRoute={setSub} deepRoute={deep} setDeepRoute={setDeep} />}
         {page === "handoff" && <PrioritizationPage subRoute={sub} setSubRoute={setSub} />}
         {page === "pods" && <AiPodsPage subRoute={sub} setSubRoute={setSub} />}
       </div>

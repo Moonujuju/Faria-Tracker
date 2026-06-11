@@ -3520,6 +3520,8 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
   const VALID_PHASES = ["prioritise", "build", "adopt"];
   const open = VALID_PHASES.includes(subRoute) ? subRoute : null;
   const setOpen = (p) => setSubRoute(p || "");
+  // Hovered-phase drives the dynamic info panel below the cycle (and the spoke highlight in the SVG).
+  const [hover, setHover] = useState(null);
 
   useEffect(() => {
     const onKey = (e) => { if (e.key === "Escape" && open) setOpen(null); };
@@ -3641,8 +3643,39 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
   const sectionTitle = { fontSize: 11, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 };
 
   // ── Overview view ──────────────────────────────────────
+  // ── Cycle node positions (SVG user-space, viewBox 0 0 600 600) ──
+  // Three phases equally spaced around a 190-radius circle centered at (300, 300).
+  // Clockwise visual order: Prioritise (top) → Build (bottom-right) → Adopt (bottom-left) → loop back.
+  const PHASES = [
+    { id: "prioritise", cx: 300, cy: 110, num: "01", short: "Prioritise" },
+    { id: "build",      cx: 465, cy: 395, num: "02", short: "Build"      },
+    { id: "adopt",      cx: 135, cy: 395, num: "03", short: "Adopt"      },
+  ];
+  // Active phase = hovered OR (if nothing hovered) defaults to a rotating walkthrough mode (just Prioritise).
+  const active = hover || "prioritise";
+  const activeData = DATA[active];
+
   const Overview = () => (
     <>
+      {/* Scoped styles for the interactive cycle */}
+      <style>{`
+        @keyframes plc-rot   { to { stroke-dashoffset: -240; } }
+        @keyframes plc-pulse { 0%,100% { opacity: 0.9; transform: scale(1); } 50% { opacity: 1; transform: scale(1.03); } }
+        @keyframes plc-orbit { to { transform: rotate(360deg); } }
+        @keyframes plc-fade  { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+        .plc-loop          { animation: plc-rot 32s linear infinite; }
+        .plc-phase         { cursor: pointer; transform-box: fill-box; transform-origin: center; transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .plc-phase:hover   { transform: scale(1.09); }
+        .plc-phase:hover .plc-phase-circle { filter: drop-shadow(0 0 18px var(--phase-color)); }
+        .plc-phase-circle  { transition: filter 0.25s ease; }
+        .plc-core          { transform-box: fill-box; transform-origin: center; animation: plc-pulse 4.5s ease-in-out infinite; }
+        .plc-core-ring     { transform-box: fill-box; transform-origin: center; animation: plc-orbit 30s linear infinite; }
+        .plc-spoke         { stroke: ${F.paper}; stroke-width: 1.5; stroke-dasharray: 3 5; opacity: 0; transition: opacity 0.3s ease; }
+        .plc-spoke-active  { opacity: 0.55; }
+        .plc-chevron       { transition: opacity 0.2s ease; }
+        .plc-info          { animation: plc-fade 0.35s ease; }
+      `}</style>
+
       {/* Header band */}
       <div style={{
         background: F.gradient, borderRadius: 14, padding: "28px 28px 32px", position: "relative", overflow: "hidden", marginBottom: 22,
@@ -3655,65 +3688,129 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
         </div>
       </div>
 
-      {/* Schools at the core callout */}
-      <div style={{ ...card, background: F.plum, color: F.paper, border: "none", display: "flex", gap: 16, alignItems: "center" }}>
-        <div style={{ fontSize: 38, lineHeight: 1, flexShrink: 0 }}>🏫</div>
-        <div>
-          <div style={{ fontSize: 11, fontWeight: 800, color: F.yellow, textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 4 }}>Schools at the core</div>
-          <h3 style={{ fontSize: 18, fontWeight: 700, margin: "0 0 4px", color: F.paper }}>One continuous loop. Schools at every phase.</h3>
-          <p style={{ fontSize: 13.5, color: F.paper, opacity: 0.88, margin: 0, lineHeight: 1.5 }}>What schools <strong style={{ color: F.lightPink }}>adopt</strong> feeds straight back into what we <strong style={{ color: F.yellow }}>prioritise</strong> next. Not a one-way pipeline — a working rhythm.</p>
+      {/* THE CYCLE — main interactive visual */}
+      <div style={{ background: F.plum, borderRadius: 14, padding: "28px 24px 30px", marginBottom: 22, position: "relative", overflow: "hidden" }}>
+        {/* Subtle radial glow behind the cycle */}
+        <div style={{ position: "absolute", inset: 0, background: `radial-gradient(circle at 50% 45%, ${F.lightPlum}66, transparent 60%)`, pointerEvents: "none" }} />
+
+        <div style={{ position: "relative", display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(0, 380px)", gap: 24, alignItems: "center" }} className="plc-cycle-grid">
+          {/* SVG cycle */}
+          <div style={{ position: "relative" }}>
+            <svg viewBox="0 0 600 600" style={{ width: "100%", maxWidth: 560, height: "auto", display: "block", margin: "0 auto" }} role="img" aria-label="Product Lifecycle cycle — three phases around schools at the core">
+              {/* Spokes from each phase toward Schools core (lit when that phase is active/hovered) */}
+              {PHASES.map(p => (
+                <line key={`spoke-${p.id}`}
+                  x1={p.cx} y1={p.cy} x2="300" y2="300"
+                  className={`plc-spoke ${active === p.id ? "plc-spoke-active" : ""}`}
+                />
+              ))}
+
+              {/* Outer animated dashed loop */}
+              <circle cx="300" cy="300" r="190" fill="none" stroke={F.paper} strokeWidth="1.5" strokeDasharray="6 10" strokeOpacity="0.35" className="plc-loop" />
+
+              {/* Direction chevrons indicating CW flow (between phases on the loop) */}
+              {[
+                { x: 490, y: 300, rot: 90  }, // right side: Prioritise → Build
+                { x: 300, y: 490, rot: 180 }, // bottom:     Build → Adopt
+                { x: 110, y: 300, rot: 270 }, // left side:  Adopt → Prioritise
+              ].map((a, i) => (
+                <g key={`chev-${i}`} transform={`translate(${a.x} ${a.y}) rotate(${a.rot})`} className="plc-chevron">
+                  <path d="M -7 -7 L 7 0 L -7 7 Z" fill={F.yellow} opacity="0.8" />
+                </g>
+              ))}
+
+              {/* Schools core */}
+              <g className="plc-core">
+                {/* Outer rotating ring */}
+                <g className="plc-core-ring">
+                  <circle cx="300" cy="300" r="86" fill="none" stroke={F.yellow} strokeWidth="1" strokeDasharray="2 6" opacity="0.6" />
+                </g>
+                <circle cx="300" cy="300" r="76" fill={F.paper} stroke={F.yellow} strokeWidth="3" />
+                <text x="300" y="288" textAnchor="middle" fontSize="26" style={{ userSelect: "none" }}>🏫</text>
+                <text x="300" y="312" textAnchor="middle" fontSize="13" fontWeight="800" fill={F.plum} letterSpacing="0.8" style={{ userSelect: "none" }}>SCHOOLS</text>
+                <text x="300" y="326" textAnchor="middle" fontSize="8.5" fontWeight="700" fill={F.muted} letterSpacing="1.2" style={{ userSelect: "none" }}>AT THE CORE</text>
+              </g>
+
+              {/* Phase nodes (clickable) — rendered LAST so they layer above the loop */}
+              {PHASES.map(p => {
+                const d = DATA[p.id];
+                const isActive = active === p.id;
+                return (
+                  <g key={p.id}
+                     className="plc-phase"
+                     style={{ "--phase-color": d.accent }}
+                     onClick={() => setOpen(p.id)}
+                     onMouseEnter={() => setHover(p.id)}
+                     onMouseLeave={() => setHover(null)}
+                     onFocus={() => setHover(p.id)}
+                     onBlur={() => setHover(null)}
+                     tabIndex={0}
+                     role="button"
+                     aria-label={`Open ${p.short} phase`}>
+                    <circle className="plc-phase-circle" cx={p.cx} cy={p.cy} r="62" fill={d.accent} stroke={F.paper} strokeWidth={isActive ? "4" : "2.5"} />
+                    <text x={p.cx} y={p.cy - 16} textAnchor="middle" fontSize="11" fontWeight="800" fill={F.plum} opacity="0.7" letterSpacing="1.4" style={{ userSelect: "none" }}>{p.num}</text>
+                    <text x={p.cx} y={p.cy + 8} textAnchor="middle" fontSize="18" fontWeight="800" fill={F.plum} letterSpacing="0.5" style={{ userSelect: "none" }}>{p.short.toUpperCase()}</text>
+                    <text x={p.cx} y={p.cy + 28} textAnchor="middle" fontSize="9" fontWeight="700" fill={F.plum} opacity="0.65" style={{ userSelect: "none" }}>CLICK →</text>
+                  </g>
+                );
+              })}
+            </svg>
+          </div>
+
+          {/* Dynamic info panel — updates as you hover phases */}
+          <div className="plc-info" key={active} style={{ background: "rgba(250, 246, 246, 0.08)", border: `1px solid rgba(250, 246, 246, 0.16)`, borderLeft: `4px solid ${activeData.accent}`, borderRadius: 12, padding: "20px 22px", color: F.paper }}>
+            <div style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase", color: activeData.accent, marginBottom: 6 }}>{activeData.eyebrow}</div>
+            <h3 style={{ fontSize: 26, fontWeight: 800, color: F.paper, margin: "0 0 10px", lineHeight: 1.1 }}>{activeData.title}</h3>
+            <p style={{ fontSize: 13.5, color: F.paper, opacity: 0.85, lineHeight: 1.55, margin: "0 0 14px" }}>{activeData.lede}</p>
+            <div style={{ display: "inline-block", fontSize: 10.5, fontWeight: 800, padding: "5px 11px", borderRadius: 999, background: "rgba(255,255,255,0.1)", color: F.paper, marginBottom: 16, letterSpacing: "0.04em" }}>⏱ {activeData.horizon}</div>
+            <button onClick={() => setOpen(active)} style={{
+              display: "block", width: "100%", padding: "10px 16px", borderRadius: 8, border: "none",
+              background: activeData.accent, color: F.plum, fontSize: 13, fontWeight: 800, cursor: "pointer",
+              fontFamily: "inherit", textTransform: "uppercase", letterSpacing: "0.08em",
+            }}>Explore {activeData.title} →</button>
+            <div style={{ marginTop: 12, fontSize: 11, color: F.paper, opacity: 0.55, fontStyle: "italic", textAlign: "center" }}>{hover ? "Click a phase, or…" : "Hover any phase to preview"}</div>
+          </div>
         </div>
+
+        {/* Caption beneath the cycle */}
+        <p style={{ textAlign: "center", color: F.paper, opacity: 0.7, fontSize: 12.5, margin: "24px auto 0", maxWidth: 560, lineHeight: 1.55 }}>
+          One continuous loop. What schools <strong style={{ color: F.lightPink }}>adopt</strong> feeds straight back into what we <strong style={{ color: F.yellow }}>prioritise</strong> next — not a one-way pipeline, a working rhythm.
+        </p>
       </div>
 
-      {/* Flow strip */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "14px 0 22px", flexWrap: "wrap" }}>
-        {["prioritise", "build", "adopt"].map((p, i) => {
-          const d = DATA[p];
+      {/* Quick-jump phase cards (mobile-friendly fallback + redundancy for keyboard users) */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
+        {PHASES.map(p => {
+          const d = DATA[p.id];
           return (
-            <span key={p} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <button onClick={() => setOpen(p)} style={{
-                padding: "9px 18px", borderRadius: 999, border: "none", background: d.accent, color: F.plum,
-                fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "inherit",
-                textTransform: "uppercase", letterSpacing: "0.08em",
-                boxShadow: F.shadowSm,
-              }}>{d.title}</button>
-              {i < 2 && <span style={{ color: F.muted2, fontSize: 18, fontWeight: 700 }}>→</span>}
-              {i === 2 && <span style={{ color: F.pink, fontSize: 13, fontWeight: 700, fontStyle: "italic", marginLeft: 4 }}>↻ feeds back to Prioritise</span>}
-            </span>
-          );
-        })}
-      </div>
-
-      {/* Three phase cards */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 14 }}>
-        {["prioritise", "build", "adopt"].map((p, i) => {
-          const d = DATA[p];
-          return (
-            <button key={p} onClick={() => setOpen(p)} style={{
-              background: F.surface, border: `1px solid ${F.border}`, borderRadius: 12, padding: 0,
-              boxShadow: F.shadowSm, cursor: "pointer", textAlign: "left", fontFamily: "inherit",
-              color: F.plum, display: "flex", flexDirection: "column", overflow: "hidden",
-              transition: "transform 0.15s, box-shadow 0.15s",
-            }}
-            onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = F.shadowMd; }}
-            onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = F.shadowSm; }}
-            >
-              <div style={{ height: 5, background: d.accent }}></div>
-              <div style={{ padding: "18px 20px 16px", flex: 1, display: "flex", flexDirection: "column" }}>
-                <div style={{ fontSize: 10.5, fontWeight: 800, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>{d.eyebrow}</div>
-                <h3 style={{ fontSize: 22, fontWeight: 800, margin: "0 0 8px", color: F.plum, lineHeight: 1.15 }}>{d.title}</h3>
-                <p style={{ fontSize: 13, color: F.muted, margin: "0 0 14px", lineHeight: 1.5, flex: 1 }}>{d.lede}</p>
-                <div style={{ fontSize: 10.5, fontWeight: 700, color: F.plum, background: F.bg, border: `1px solid ${F.border}`, padding: "5px 10px", borderRadius: 999, display: "inline-block", marginBottom: 12, alignSelf: "flex-start" }}>{d.horizon}</div>
-                <div style={{ fontSize: 12, fontWeight: 700, color: F.pink, marginTop: "auto" }}>Explore phase →</div>
-              </div>
+            <button key={p.id} onClick={() => setOpen(p.id)}
+              onMouseEnter={() => setHover(p.id)}
+              onMouseLeave={() => setHover(null)}
+              style={{
+                background: F.surface, border: `1px solid ${F.border}`, borderTop: `3px solid ${d.accent}`, borderRadius: 10, padding: "14px 16px",
+                boxShadow: F.shadowSm, cursor: "pointer", textAlign: "left", fontFamily: "inherit", color: F.plum,
+                transition: "transform 0.15s, box-shadow 0.15s",
+              }}
+              onMouseDown={e => e.currentTarget.style.transform = "scale(0.985)"}
+              onMouseUp={e => e.currentTarget.style.transform = "translateY(0)"}>
+              <div style={{ fontSize: 10, fontWeight: 800, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.1em" }}>{p.num} · {d.title}</div>
+              <div style={{ fontSize: 12.5, color: F.muted, marginTop: 4, lineHeight: 1.4 }}>{d.horizon}</div>
+              <div style={{ fontSize: 11.5, fontWeight: 700, color: F.pink, marginTop: 8 }}>Open phase →</div>
             </button>
           );
         })}
       </div>
 
-      <div style={{ marginTop: 28, textAlign: "center", fontSize: 11, color: F.muted2, fontStyle: "italic" }}>
+      <div style={{ marginTop: 24, textAlign: "center", fontSize: 11, color: F.muted2, fontStyle: "italic" }}>
         Product Lifecycle framework · draft for SLT review
       </div>
+
+      {/* Stack the cycle grid on narrow viewports */}
+      <style>{`
+        @media (max-width: 880px) {
+          .plc-cycle-grid { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
     </>
   );
 

@@ -2584,6 +2584,24 @@ function MonzMarketPage() {
   return (
     <>
       <style>{`@media (max-width: 720px) { .mkt-viz-grid { grid-template-columns: 1fr !important; } }`}</style>
+
+      <div style={card}>
+        <div style={sectionTitle}>Summary by product</div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10 }}>
+          {MONZ_PRODUCTS.map(p => {
+            const c = counts(p);
+            const active = filter === p;
+            return (
+              <div key={p} onClick={() => setFilter(active ? "All" : p)} style={{ padding: "12px 14px", background: active ? F.lightYellow : F.bg, border: `1px solid ${active ? F.yellow : F.border}`, borderRadius: 10, cursor: "pointer", transition: "all 0.15s" }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>{p}</div>
+                <div style={{ fontSize: 20, fontWeight: 700, color: F.plum, lineHeight: 1.1 }}>{c.total}</div>
+                <div style={{ fontSize: 11, color: F.muted, marginTop: 4 }}>{c.piloting} piloting · {c.committed} committed · {c.declined} declined</div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
       {/* ── Market Insights — data-viz dashboard over the entered validation data ── */}
       <div style={{ ...card, borderLeft: `4px solid ${F.pink}` }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
@@ -2687,23 +2705,6 @@ function MonzMarketPage() {
             )}
           </>
         )}
-      </div>
-
-      <div style={card}>
-        <div style={sectionTitle}>Summary by product</div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10 }}>
-          {MONZ_PRODUCTS.map(p => {
-            const c = counts(p);
-            const active = filter === p;
-            return (
-              <div key={p} onClick={() => setFilter(active ? "All" : p)} style={{ padding: "12px 14px", background: active ? F.lightYellow : F.bg, border: `1px solid ${active ? F.yellow : F.border}`, borderRadius: 10, cursor: "pointer", transition: "all 0.15s" }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>{p}</div>
-                <div style={{ fontSize: 20, fontWeight: 700, color: F.plum, lineHeight: 1.1 }}>{c.total}</div>
-                <div style={{ fontSize: 11, color: F.muted, marginTop: 4 }}>{c.piloting} piloting · {c.committed} committed · {c.declined} declined</div>
-              </div>
-            );
-          })}
-        </div>
       </div>
 
       <div style={{ marginBottom: 14, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>

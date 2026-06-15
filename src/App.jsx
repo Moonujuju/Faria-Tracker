@@ -796,6 +796,34 @@ const DEFAULT_MARKET = {
             ],
           },
           {
+            q: "One AI capability you want most in the next 12 months",
+            sub: "Open text · 65 responses · grouped into themes",
+            type: "themes",
+            data: [
+              { label: "Chasing, reminders & follow-up", value: 12 },
+              { label: "Analytics & reporting", value: 11 },
+              { label: "Helping parents use OpenApply", value: 7 },
+              { label: "Document & data accuracy checks", value: 6 },
+              { label: "Workflow, priorities & daily focus", value: 6 },
+              { label: "Enquiry management & conversion", value: 6 },
+              { label: "Drafting & communications", value: 5 },
+              { label: "Forms builder", value: 5 },
+              { label: "Scheduling & events", value: 4 },
+              { label: "Integrations & bulk export", value: 3 },
+            ],
+            quotes: [
+              "Automated chasing of outstanding documentation — references, reports etc",
+              "Smart reminders about missing documents, forms and information",
+              "Summary profile of each candidate",
+              "Draft responses to enquiries",
+              "Dashboard for tours & events booked by day/time with spaces available",
+              "Save offer emails as PDFs and auto-transfer to iSAMS",
+              "Help parents with their Open Apply technical issues",
+              "A daily 'to-do' list by team role, or lead scoring, or CRM support",
+            ],
+            tail: "Themes are a grouping of 65 open responses; some touch more than one. The clear leader — chasing, reminders & follow-up — echoes the top time-sinks.",
+          },
+          {
             q: "What would make you hesitate to trust an AI feature?",
             sub: "Open word response · 110 mentions · 49 responses",
             type: "tags",
@@ -842,7 +870,15 @@ function mergeMarket(saved) {
   if (!saved) return DEFAULT_MARKET;
   // id-merge: keep every saved validation (and edits), append any default
   // validation whose stable id isn't already saved. Mirrors mergeCompetitive.
-  const savedV = saved.validations || [];
+  // For code-seeded entries (stable string id matching a default), keep the
+  // read-only `survey` chart data authoritative from code — users can't edit it,
+  // and it must stay in sync as we add/adjust charts. User-entered text fields
+  // (feedback, notes, stage, willingnessToPay, …) on that entry are preserved.
+  const defById = new Map(DEFAULT_MARKET.validations.map(d => [d.id, d]));
+  const savedV = (saved.validations || []).map(v => {
+    const def = defById.get(v.id);
+    return def && def.survey ? { ...v, survey: def.survey } : v;
+  });
   const savedIds = new Set(savedV.map(v => v.id));
   const newDefaults = DEFAULT_MARKET.validations.filter(d => !savedIds.has(d.id));
   return { ...DEFAULT_MARKET, ...saved, validations: [...savedV, ...newDefaults] };
@@ -2538,6 +2574,7 @@ function MonzMarketPage() {
   const sellChart = chartByKeyword("easy or hard sell");
   const featuresChart = chartByKeyword("which ai feature");
   const painsChart = chartByKeyword("lose the most time");
+  const wishChart = chartByKeyword("capability you want most");
   const trustChart = chartByKeyword("hesitate");
   const SENTIMENT_COLORS = { "Open but cautious": F.yellow, "Excited, want it now": F.green, "Skeptical": F.orange, "Neutral": F.muted2, "Uncomfortable": F.pink };
   const SELL_COLORS = { "Worth it with proof of time saved": F.yellow, "Hard sell internally": F.orange, "Easy, clear value": F.green, "Unlikely to be approved": F.pink };
@@ -2596,6 +2633,26 @@ function MonzMarketPage() {
                   rightTitle="Most-wanted AI"
                   right={featuresChart.data.slice(0, 4).map(d => ({ label: d.label, value: d.value }))}
                 />
+              </div>
+            )}
+
+            {/* Most-wanted capability (open text → themes + verbatims) */}
+            {wishChart && (
+              <div style={{ background: F.bg, border: `1px solid ${F.border}`, borderRadius: 10, padding: "14px 16px", marginTop: 14 }}>
+                <div style={{ ...sectionTitle, marginBottom: 4 }}>What they asked for, unprompted <span style={{ color: F.muted2, fontWeight: 600, textTransform: "none", letterSpacing: 0 }}>· {wishChart.sub}</span></div>
+                <p style={{ margin: "0 0 12px", fontSize: 11.5, color: F.muted, fontStyle: "italic" }}>"One AI capability you want most in the next 12 months" — open responses, grouped.</p>
+                <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1.1fr) minmax(0,0.9fr)", gap: 18, alignItems: "start" }} className="mkt-viz-grid">
+                  <VizBars data={wishChart.data} accent={F.lightPlum} highlightTop />
+                  <div>
+                    <div style={{ fontSize: 10, fontWeight: 800, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 8 }}>In their words</div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+                      {wishChart.quotes.map((q, i) => (
+                        <div key={i} style={{ fontSize: 12, color: F.plum, fontStyle: "italic", lineHeight: 1.4, paddingLeft: 11, borderLeft: `3px solid ${F.lightPink}` }}>"{q}"</div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                {wishChart.tail && <div style={{ marginTop: 12, fontSize: 11, color: F.muted2, fontStyle: "italic", lineHeight: 1.5 }}>{wishChart.tail}</div>}
               </div>
             )}
 

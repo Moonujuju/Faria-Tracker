@@ -716,7 +716,111 @@ function mergeCompetitive(saved) {
   };
 }
 
-const DEFAULT_MARKET = { validations: [] };
+const DEFAULT_MARKET = {
+  validations: [
+    {
+      id: "mkt-oa-ukug-2026-06",
+      product: "OpenApply",
+      schoolName: "UK User Group Conference — 45 schools",
+      region: "UK",
+      stage: "interested",
+      contactedDate: "2026-06-12",
+      pilotedDate: "",
+      feedback: "Demand maps directly onto pain: the admissions tasks schools say cost them the most time (responding to family inquiries, chasing missing documents, scheduling, reviewing applications) are exactly the AI features they most want. Sentiment is ~90% positive (35 of 49 \"open but cautious\", 9 \"excited\"), and the add-on is sellable — 0 of 48 said \"unlikely to be approved\" — but \"worth it with proof of time saved\" (31) is the dominant frame, so ROI evidence is the lever. Trust hesitations cluster on security, impersonality / loss of personalisation, and data protection / GDPR.",
+      willingnessToPay: "Sellable: 79% (38/48) say \"easy, clear value\" or \"worth it with proof of time saved\"; 0 said \"unlikely to be approved\". Proof of time saved is the unlock.",
+      contactName: "",
+      contactRole: "User-group attendees (admissions leaders)",
+      contactEmail: "",
+      wowOutcomesValidated: "Top requested features validate OA AI Pro priorities: Draft replies to family inquiries (33/49) → AI Admissions Assistant; Document checking missing/mismatched/expired (32) → AI Document Verification; Auto-tagging & sorting (32) + Applicant profile summarizer (23) → AI Applicant Insights / screening; Lead scoring (17) → AI Lead Scoring.",
+      notes: "Source: OpenApply UK User Group Conference, 2026-06-12. 50 attendees from different UK schools; 45–49 responded per question. Caveat: single region (UK) — re-run with APAC / Americas cohorts before generalising.",
+      survey: {
+        event: "UK User Group Conference",
+        date: "2026-06-12",
+        location: "United Kingdom",
+        participants: 45,
+        invited: 50,
+        charts: [
+          {
+            q: "Where do you lose the most time in your admissions cycle?",
+            sub: "Ranked #1 most time-consuming · 45 responses",
+            type: "bars",
+            data: [
+              { label: "Chasing missing documents", value: 9 },
+              { label: "Responding to family inquiries", value: 9 },
+              { label: "Scheduling (interviews, tours, tests)", value: 8 },
+              { label: "Reviewing & screening applications", value: 8 },
+              { label: "Manual data entry", value: 5 },
+              { label: "Coordinating internally across staff", value: 4 },
+              { label: "Following up with unconverted leads", value: 2 },
+              { label: "Generating reports", value: 0 },
+              { label: "Verifying document accuracy", value: 0 },
+            ],
+          },
+          {
+            q: "Which AI feature would help your team most?",
+            sub: "Multi-select · 49 responses",
+            type: "bars",
+            data: [
+              { label: "Draft replies to family inquiries", value: 33 },
+              { label: "Document checking (missing, mismatched, expired)", value: 32 },
+              { label: "Auto-tagging & sorting of applications", value: 32 },
+              { label: "Applicant profile summarizer", value: 23 },
+              { label: "AI search across applicant data", value: 19 },
+              { label: "Lead scoring / likelihood to enroll", value: 17 },
+              { label: "Interview note summarization", value: 15 },
+              { label: "Translation of family communication", value: 7 },
+              { label: "Natural-language reporting", value: 6 },
+            ],
+          },
+          {
+            q: "How do you feel about AI helping with admissions tasks today?",
+            sub: "49 responses",
+            type: "bars",
+            data: [
+              { label: "Open but cautious", value: 35 },
+              { label: "Excited, want it now", value: 9 },
+              { label: "Skeptical", value: 4 },
+              { label: "Neutral", value: 1 },
+              { label: "Uncomfortable", value: 0 },
+            ],
+          },
+          {
+            q: "Would an AI add-on be an easy or hard sell at your school?",
+            sub: "48 responses",
+            type: "bars",
+            data: [
+              { label: "Worth it with proof of time saved", value: 31 },
+              { label: "Hard sell internally", value: 10 },
+              { label: "Easy, clear value", value: 7 },
+              { label: "Unlikely to be approved", value: 0 },
+            ],
+          },
+          {
+            q: "What would make you hesitate to trust an AI feature?",
+            sub: "Open word response · 110 mentions · 49 responses",
+            type: "tags",
+            data: [
+              { term: "security", count: 9 },
+              { term: "impersonal", count: 8 },
+              { term: "personalisation", count: 7 },
+              { term: "accuracy", count: 5 },
+              { term: "data protection", count: 5 },
+              { term: "gdpr", count: 5 },
+              { term: "confidentiality", count: 4 },
+              { term: "data breach", count: 3 },
+              { term: "bespoke", count: 2 },
+              { term: "generic", count: 2 },
+              { term: "incorrect information", count: 2 },
+              { term: "reliability", count: 2 },
+              { term: "not bespoke", count: 2 },
+            ],
+            tail: "+ ~30 single mentions: loss of personalisation, ai errors, too robotic, privacy concerns, human touch, inauthentic, brand voice, mistakes, sensitive data…",
+          },
+        ],
+      },
+    },
+  ],
+};
 const VALIDATION_TEMPLATE = (product = "OpenApply") => ({
   id: Date.now() + Math.floor(Math.random() * 1000),
   product,
@@ -732,10 +836,16 @@ const VALIDATION_TEMPLATE = (product = "OpenApply") => ({
   contactEmail: "",
   wowOutcomesValidated: "",
   notes: "",
+  survey: null,
 });
 function mergeMarket(saved) {
   if (!saved) return DEFAULT_MARKET;
-  return { ...DEFAULT_MARKET, ...saved, validations: saved.validations || [] };
+  // id-merge: keep every saved validation (and edits), append any default
+  // validation whose stable id isn't already saved. Mirrors mergeCompetitive.
+  const savedV = saved.validations || [];
+  const savedIds = new Set(savedV.map(v => v.id));
+  const newDefaults = DEFAULT_MARKET.validations.filter(d => !savedIds.has(d.id));
+  return { ...DEFAULT_MARKET, ...saved, validations: [...savedV, ...newDefaults] };
 }
 
 const DEFAULT_FINANCE = {
@@ -1926,6 +2036,140 @@ function stageColor(stage) {
          stage === "declined"   ? F.pink  : F.muted2;
 }
 
+/* ── Reusable data-viz primitives (Market Insights) ───────────────
+   Small inline-SVG / flexbox chart tools driven by validation data.
+   Shared by the Market Insights dashboard and reused anywhere a
+   {label,value} or {term,count} series needs visualising. */
+
+// Ranked horizontal bars. data: [{label, value}], scaled to the max value.
+function VizBars({ data, accent = F.plum, highlightTop = false, valueSuffix = "" }) {
+  const max = Math.max(1, ...data.map(d => d.value));
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      {data.map((d, i) => {
+        const pct = Math.round((d.value / max) * 100);
+        const top = highlightTop && i === 0;
+        return (
+          <div key={i} style={{ display: "grid", gridTemplateColumns: "minmax(120px, 44%) 1fr auto", gap: 10, alignItems: "center" }}>
+            <div style={{ fontSize: 12, color: F.plum, fontWeight: top ? 800 : 600, lineHeight: 1.25 }}>{d.label}</div>
+            <div style={{ background: F.bg, borderRadius: 999, height: 16, overflow: "hidden", border: `1px solid ${F.border}` }}>
+              <div style={{ width: `${pct}%`, height: "100%", borderRadius: 999, background: top ? F.gradient : accent, transition: "width 0.4s ease" }} />
+            </div>
+            <div style={{ fontSize: 12.5, fontWeight: 800, color: top ? F.pink : F.plum, minWidth: 22, textAlign: "right" }}>{d.value}{valueSuffix}</div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// SVG donut + legend. segments: [{label, value, color}].
+function VizDonut({ segments, centerLabel, centerSub }) {
+  const total = Math.max(1, segments.reduce((s, x) => s + x.value, 0));
+  const R = 52, C = 2 * Math.PI * R;
+  let offset = 0;
+  return (
+    <div style={{ display: "flex", gap: 18, alignItems: "center", flexWrap: "wrap" }}>
+      <svg viewBox="0 0 140 140" style={{ width: 130, height: 130, flexShrink: 0 }}>
+        <circle cx="70" cy="70" r={R} fill="none" stroke={F.bg} strokeWidth="16" />
+        {segments.map((s, i) => {
+          const frac = s.value / total;
+          const dash = frac * C;
+          const el = (
+            <circle key={i} cx="70" cy="70" r={R} fill="none" stroke={s.color} strokeWidth="16"
+              strokeDasharray={`${dash} ${C - dash}`} strokeDashoffset={-offset}
+              transform="rotate(-90 70 70)" strokeLinecap="butt" />
+          );
+          offset += dash;
+          return el;
+        })}
+        <text x="70" y="66" textAnchor="middle" fontSize="22" fontWeight="800" fill={F.plum}>{centerLabel}</text>
+        {centerSub && <text x="70" y="84" textAnchor="middle" fontSize="9" fontWeight="700" fill={F.muted2}>{centerSub}</text>}
+      </svg>
+      <div style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1, minWidth: 150 }}>
+        {segments.map((s, i) => (
+          <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12 }}>
+            <span style={{ width: 11, height: 11, borderRadius: 3, background: s.color, flexShrink: 0 }} />
+            <span style={{ color: F.plum, fontWeight: 600, flex: 1 }}>{s.label}</span>
+            <span style={{ color: F.muted, fontWeight: 800 }}>{s.value}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// 100%-stacked single bar + legend. segments: [{label, value, color}].
+function VizMeter({ segments }) {
+  const total = Math.max(1, segments.reduce((s, x) => s + x.value, 0));
+  return (
+    <div>
+      <div style={{ display: "flex", height: 26, borderRadius: 8, overflow: "hidden", border: `1px solid ${F.border}` }}>
+        {segments.filter(s => s.value > 0).map((s, i) => (
+          <div key={i} title={`${s.label}: ${s.value}`} style={{ width: `${(s.value / total) * 100}%`, background: s.color, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, color: "#fff" }}>
+            {s.value / total > 0.12 ? s.value : ""}
+          </div>
+        ))}
+      </div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 14px", marginTop: 10 }}>
+        {segments.map((s, i) => (
+          <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11.5 }}>
+            <span style={{ width: 10, height: 10, borderRadius: 3, background: s.color, flexShrink: 0 }} />
+            <span style={{ color: F.plum, fontWeight: 600 }}>{s.label}</span>
+            <span style={{ color: F.muted2, fontWeight: 800 }}>{s.value}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Weighted tag cloud. data: [{term, count}] sorted desc; font + tint scale with count.
+function VizTags({ data, tail }) {
+  const max = Math.max(1, ...data.map(d => d.count));
+  return (
+    <div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
+        {data.map((d, i) => {
+          const w = d.count / max; // 0..1
+          const fs = 11 + Math.round(w * 9);     // 11–20px
+          const alpha = 0.12 + w * 0.4;          // background intensity
+          return (
+            <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 12px", borderRadius: 999, background: `rgba(232,55,172,${alpha.toFixed(2)})`, color: F.plum, fontWeight: w > 0.55 ? 800 : 700, fontSize: fs, lineHeight: 1.1 }}>
+              {d.term}<span style={{ fontSize: 10, fontWeight: 800, color: F.muted, background: F.surface, borderRadius: 999, padding: "1px 6px" }}>{d.count}</span>
+            </span>
+          );
+        })}
+      </div>
+      {tail && <div style={{ marginTop: 10, fontSize: 11.5, color: F.muted2, fontStyle: "italic", lineHeight: 1.5 }}>{tail}</div>}
+    </div>
+  );
+}
+
+// Pain ↔ Demand alignment: two ranked columns side by side with a center spine.
+function VizAlignment({ leftTitle, left, rightTitle, right }) {
+  const col = (title, items, accent, align) => (
+    <div style={{ flex: 1, minWidth: 200 }}>
+      <div style={{ fontSize: 10.5, fontWeight: 800, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 8, textAlign: align }}>{title}</div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        {items.map((it, i) => (
+          <div key={i} style={{ display: "flex", flexDirection: align === "right" ? "row-reverse" : "row", alignItems: "center", gap: 8 }}>
+            <span style={{ width: 22, height: 22, borderRadius: "50%", background: accent, color: F.plum, fontSize: 10.5, fontWeight: 800, display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{i + 1}</span>
+            <span style={{ fontSize: 12, fontWeight: 600, color: F.plum, lineHeight: 1.25, textAlign: align }}>{it.label}{it.value != null ? <span style={{ color: F.muted2, fontWeight: 800 }}> · {it.value}</span> : ""}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+  return (
+    <div style={{ display: "flex", gap: 14, alignItems: "stretch" }}>
+      {col(leftTitle, left, F.lightYellow, "left")}
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: F.pink, fontWeight: 800, fontSize: 16 }}>→</div>
+      {col(rightTitle, right, F.lightPink, "right")}
+    </div>
+  );
+}
+
 /* ── Competitive Analysis sub-page ──────────────────────── */
 function MonzCompetitivePage() {
   const [comp, setComp] = useState(DEFAULT_COMPETITIVE);
@@ -2245,7 +2489,11 @@ function MonzMarketPage() {
 
   useEffect(() => { (async () => {
     const s = await loadState("faria-monz-market-v1");
-    setMkt(mergeMarket(s));
+    const merged = mergeMarket(s);
+    setMkt(merged);
+    // Auto-expand any survey-backed entry so its key findings are visible.
+    const surveyIds = merged.validations.filter(v => v.survey).map(v => v.id);
+    if (surveyIds.length) setExpanded(prev => { const n = new Set(prev); surveyIds.forEach(id => n.add(id)); return n; });
     setReady(true);
   })(); }, []);
   useEffect(() => { if (!ready) return; clearTimeout(saveTimer.current); saveTimer.current = setTimeout(() => saveState("faria-monz-market-v1", mkt), 1000); return () => clearTimeout(saveTimer.current); }, [mkt, ready]);
@@ -2270,8 +2518,120 @@ function MonzMarketPage() {
   const filtered = filter === "All" ? mkt.validations : mkt.validations.filter(v => v.product === filter);
   const sorted = [...filtered].sort((a, b) => (b.contactedDate || "").localeCompare(a.contactedDate || ""));
 
+  // ── Market Insights derivations (scoped to the active filter) ──
+  // Pipeline donut: count filtered validations by stage.
+  const stageMeta = [
+    { key: "interested", label: "Interested", color: F.muted2 },
+    { key: "piloting",   label: "Piloting",   color: F.yellow },
+    { key: "live",       label: "Live",        color: F.green },
+    { key: "committed",  label: "Committed",   color: F.lightPlum },
+    { key: "declined",   label: "Declined",    color: F.pink },
+  ];
+  const pipelineSegs = stageMeta
+    .map(s => ({ label: s.label, color: s.color, value: filtered.filter(v => v.stage === s.key).length }))
+    .filter(s => s.value > 0);
+  // Survey to feature in the dashboard: first survey-backed validation in the filtered set.
+  const surveyV = filtered.find(v => v.survey);
+  const survey = surveyV?.survey;
+  const chartByKeyword = (kw) => survey?.charts.find(c => c.q.toLowerCase().includes(kw));
+  const sentimentChart = chartByKeyword("how do you feel");
+  const sellChart = chartByKeyword("easy or hard sell");
+  const featuresChart = chartByKeyword("which ai feature");
+  const painsChart = chartByKeyword("lose the most time");
+  const trustChart = chartByKeyword("hesitate");
+  const SENTIMENT_COLORS = { "Open but cautious": F.yellow, "Excited, want it now": F.green, "Skeptical": F.orange, "Neutral": F.muted2, "Uncomfortable": F.pink };
+  const SELL_COLORS = { "Worth it with proof of time saved": F.yellow, "Hard sell internally": F.orange, "Easy, clear value": F.green, "Unlikely to be approved": F.pink };
+  const withColors = (chart, map) => (chart ? chart.data.map(d => ({ label: d.label, value: d.value, color: map[d.label] || F.muted2 })) : []);
+  const positivePct = sentimentChart ? Math.round(((sentimentChart.data.find(d => d.label.startsWith("Open"))?.value || 0) + (sentimentChart.data.find(d => d.label.startsWith("Excited"))?.value || 0)) / sentimentChart.data.reduce((s, d) => s + d.value, 0) * 100) : 0;
+
   return (
     <>
+      <style>{`@media (max-width: 720px) { .mkt-viz-grid { grid-template-columns: 1fr !important; } }`}</style>
+      {/* ── Market Insights — data-viz dashboard over the entered validation data ── */}
+      <div style={{ ...card, borderLeft: `4px solid ${F.pink}` }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
+          <span style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: "0.1em", padding: "3px 10px", borderRadius: 4, background: F.yellow, color: F.plum, textTransform: "uppercase" }}>📊 Market Insights</span>
+          <span style={{ fontSize: 11.5, color: F.muted2, fontStyle: "italic" }}>Live visualizations from the validation data{filter !== "All" ? ` · ${filter}` : ""}</span>
+        </div>
+
+        {filtered.length === 0 && (
+          <div style={{ fontSize: 13, color: F.muted, fontStyle: "italic" }}>No validations {filter !== "All" ? `for ${filter} ` : ""}yet — add one below and insights will appear here.</div>
+        )}
+
+        {filtered.length > 0 && (
+          <div style={{ display: "grid", gridTemplateColumns: survey ? "minmax(0,1fr) minmax(0,1fr)" : "1fr", gap: 18, alignItems: "start" }} className="mkt-viz-grid">
+            {/* Pipeline (always available) */}
+            <div style={{ background: F.bg, border: `1px solid ${F.border}`, borderRadius: 10, padding: "14px 16px" }}>
+              <div style={{ ...sectionTitle, marginBottom: 12 }}>Validation pipeline</div>
+              <VizDonut segments={pipelineSegs} centerLabel={filtered.length} centerSub="LOGGED" />
+            </div>
+
+            {survey && sentimentChart && (
+              <div style={{ background: F.bg, border: `1px solid ${F.border}`, borderRadius: 10, padding: "14px 16px" }}>
+                <div style={{ ...sectionTitle, marginBottom: 12 }}>Sentiment toward AI <span style={{ color: F.green }}>· {positivePct}% positive</span></div>
+                <VizDonut segments={withColors(sentimentChart, SENTIMENT_COLORS)} centerLabel={`${positivePct}%`} centerSub="POSITIVE" />
+              </div>
+            )}
+          </div>
+        )}
+
+        {survey && (
+          <>
+            {/* Headline strip */}
+            <div style={{ marginTop: 18, marginBottom: 4, display: "flex", flexWrap: "wrap", gap: "6px 10px", alignItems: "center", fontSize: 12, color: F.muted }}>
+              <span style={{ fontWeight: 800, color: F.plum }}>{survey.event}</span>
+              {[`${survey.participants} schools`, survey.location, "12 Jun 2026", `${positivePct}% positive`, `0 "unlikely to be approved"`].map((s, i) => (
+                <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: 8 }}><span style={{ color: F.borderStrong }}>·</span>{s}</span>
+              ))}
+            </div>
+
+            {/* Pain → Demand alignment */}
+            {painsChart && featuresChart && (
+              <div style={{ background: F.bg, border: `1px solid ${F.border}`, borderRadius: 10, padding: "14px 16px", marginTop: 14 }}>
+                <div style={{ ...sectionTitle, marginBottom: 4 }}>Pain → demand alignment</div>
+                <p style={{ margin: "0 0 12px", fontSize: 11.5, color: F.muted, fontStyle: "italic" }}>What costs the most time lines up with what schools most want AI to do.</p>
+                <VizAlignment
+                  leftTitle="Biggest time-sinks"
+                  left={[...painsChart.data].filter(d => d.value > 0).slice(0, 4).map(d => ({ label: d.label, value: d.value }))}
+                  rightTitle="Most-wanted AI"
+                  right={featuresChart.data.slice(0, 4).map(d => ({ label: d.label, value: d.value }))}
+                />
+              </div>
+            )}
+
+            {/* Feature demand + sell-readiness */}
+            <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: 18, marginTop: 14 }} className="mkt-viz-grid">
+              {featuresChart && (
+                <div style={{ background: F.bg, border: `1px solid ${F.border}`, borderRadius: 10, padding: "14px 16px" }}>
+                  <div style={{ ...sectionTitle, marginBottom: 12 }}>Most-wanted AI features <span style={{ color: F.muted2, fontWeight: 600, textTransform: "none", letterSpacing: 0 }}>· {featuresChart.sub}</span></div>
+                  <VizBars data={featuresChart.data} accent={F.lightPlum} highlightTop />
+                </div>
+              )}
+              {sellChart && (
+                <div style={{ background: F.bg, border: `1px solid ${F.border}`, borderRadius: 10, padding: "14px 16px" }}>
+                  <div style={{ ...sectionTitle, marginBottom: 12 }}>Easy or hard sell?</div>
+                  <VizMeter segments={withColors(sellChart, SELL_COLORS)} />
+                  {painsChart && (
+                    <>
+                      <div style={{ ...sectionTitle, margin: "18px 0 12px" }}>Where teams lose the most time <span style={{ color: F.muted2, fontWeight: 600, textTransform: "none", letterSpacing: 0 }}>· ranked #1</span></div>
+                      <VizBars data={painsChart.data.filter(d => d.value > 0)} accent={F.orange} highlightTop />
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Trust barriers */}
+            {trustChart && (
+              <div style={{ background: F.bg, border: `1px solid ${F.border}`, borderRadius: 10, padding: "14px 16px", marginTop: 14 }}>
+                <div style={{ ...sectionTitle, marginBottom: 12 }}>Trust barriers to design around <span style={{ color: F.muted2, fontWeight: 600, textTransform: "none", letterSpacing: 0 }}>· {trustChart.sub}</span></div>
+                <VizTags data={trustChart.data} tail={trustChart.tail} />
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
       <div style={card}>
         <div style={sectionTitle}>Summary by product</div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10 }}>
@@ -2311,10 +2671,32 @@ function MonzMarketPage() {
             <div onClick={() => toggle(v.id)} style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", userSelect: "none", flexWrap: "wrap" }}>
               <span style={{ color: F.plum, fontSize: 11, transform: open ? "rotate(90deg)" : "none", transition: "transform 0.15s" }}>▶</span>
               <div style={{ flex: 1, minWidth: 200, fontSize: 15, fontWeight: 700, color: F.plum }}>{v.schoolName || <span style={{ color: F.muted2, fontStyle: "italic", fontWeight: 500 }}>(unnamed school)</span>}</div>
+              {v.survey && <span style={{ fontSize: 10, fontWeight: 800, padding: "2px 9px", borderRadius: 4, background: F.yellow, color: F.plum, textTransform: "uppercase", letterSpacing: "0.05em" }}>📊 Survey · {v.survey.participants} schools</span>}
               <span style={{ fontSize: 10.5, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: F.bg, color: F.muted, textTransform: "uppercase", letterSpacing: "0.05em", border: `1px solid ${F.border}` }}>{v.product}</span>
               {v.region && <span style={{ fontSize: 11, color: F.muted }}>{v.region}</span>}
               <span style={{ fontSize: 10.5, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: stageColor(v.stage), color: "#fff", textTransform: "uppercase", letterSpacing: "0.05em" }}>{v.stage}</span>
             </div>
+
+            {open && v.survey && (
+              <div style={{ marginTop: 16, background: F.bg, border: `1px solid ${F.border}`, borderRadius: 10, padding: "14px 16px" }}>
+                <div style={{ ...sectionTitle, marginBottom: 10 }}>Key findings</div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10 }}>
+                  {[
+                    { k: "Top time-sinks", v: "Chasing docs · family inquiries" },
+                    { k: "Top ask", v: "Draft family replies (33/49)" },
+                    { k: "Sentiment", v: "~90% positive" },
+                    { k: "Sell", v: "0 \"unlikely to be approved\"" },
+                    { k: "Top barrier", v: "Security · impersonality" },
+                  ].map((s, i) => (
+                    <div key={i} style={{ background: F.surface, border: `1px solid ${F.border}`, borderRadius: 8, padding: "9px 11px" }}>
+                      <div style={{ fontSize: 9.5, fontWeight: 800, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 3 }}>{s.k}</div>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: F.plum, lineHeight: 1.3 }}>{s.v}</div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ marginTop: 10, fontSize: 11.5, color: F.muted, fontStyle: "italic" }}>Full charts in <strong style={{ color: F.pink, fontStyle: "normal" }}>📊 Market Insights ↑</strong></div>
+              </div>
+            )}
 
             {open && (
               <div style={{ marginTop: 16, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 14 }}>

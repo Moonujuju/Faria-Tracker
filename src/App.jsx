@@ -4013,6 +4013,8 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
           detail: { who: "Auto-generated for Product leadership.", what: "A continuously-updated, region-aware list of opportunities scored by revenue impact × adoption gap.", when: "Continuous — always current; reviewed at the product day and QBR.", how: "An AI job over the Salesforce + Pendo + Planhat feeds, with a plain-language rationale per item.", why: "Start from evidence, not the loudest voice in the room." } },
         { ic: "💬", nm: "WhatsApp user-group feedback", cad: "Continuous", d: "Quick, on-the-fly feedback from schools on design choices and what we're building.",
           detail: { who: "Product + core user-group schools.", what: "Fast reactions to design choices, prototypes and ideas — in the flow of work.", when: "Continuous / on the fly.", how: "Always-on WhatsApp user-group chats with admissions leaders.", why: "Cheap, instant signal to course-correct before committing build effort." } },
+        { ic: "📋", nm: "Feature request board", cad: "Continuous", d: "A custom board every stakeholder — internal and schools — uses to log and upvote requests.",
+          detail: { who: "All stakeholders — internal teams and schools (external).", what: "A custom-built feature-request board where anyone logs, upvotes and comments on requests.", when: "Continuous / always open.", how: "One shared board, open internally and to schools; feeds the signal pool and the AI digest.", why: "One front door for demand — nothing gets lost in inboxes or chats." } },
       ],
       build_tools: "Tools to build: an automated prioritisation dashboard that unifies Salesforce + Pendo + Planhat into one revenue-ranked, region-aware monthly digest — see the breakdown below.",
       digest: {
@@ -4412,6 +4414,41 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
           </div>
         </div>
 
+        {/* Who's involved — moved up, directly under the schools banner */}
+        <div style={{ ...card, ...stg(1) }}>
+          <div style={sectionTitle}>Who's involved</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {lanes.map(lane => (
+              <div key={lane.key} className="plc-lane" style={{ display: "grid", gridTemplateColumns: "112px 1fr", gap: 12, alignItems: "center" }}>
+                <div style={{ borderLeft: `3px solid ${lane.dot}`, paddingLeft: 10 }}>
+                  <div style={{ fontSize: 12.5, fontWeight: 800, color: F.plum, lineHeight: 1.1 }}>{lane.label}</div>
+                  <div style={{ fontSize: 10, color: F.muted2, fontWeight: 600 }}>{lane.sub}</div>
+                </div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
+                  {lane.items.map((s, i) => {
+                    const isSchool = lane.key === "school";
+                    return (
+                      <span key={i} style={{
+                        display: "inline-flex", alignItems: "center", gap: 7, padding: "5px 13px 5px 5px", borderRadius: 999,
+                        fontSize: 12, fontWeight: 700, color: F.plum,
+                        background: isSchool ? d.accentSoft : F.bg,
+                        border: `1.5px ${isSchool ? "dashed" : "solid"} ${isSchool ? d.accent : F.border}`,
+                      }}>
+                        <span style={{ width: 24, height: 24, borderRadius: "50%", background: F.surface, border: `1px solid ${F.border}`, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 13, flexShrink: 0 }}>{s.ic}</span>
+                        {s.n}
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Activities (left) + From signal to roadmap (right) side by side; single column when there's no synthesis */}
+        <div className="plc-prio-grid" style={{ display: "grid", gridTemplateColumns: d.synthesis ? "minmax(0, 1.7fr) minmax(0, 1fr)" : "1fr", gap: 18, alignItems: "start" }}>
+        <div style={{ minWidth: 0 }}>
+
         {/* Activities — mapped onto a frequency timeline */}
         {(() => {
         const hasDetail = d.activities.some(a => a.detail);
@@ -4524,82 +4561,54 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
         </>
         );
         })()}
+        </div>{/* /left column (activities) */}
 
-        {/* From signal to roadmap — how discovery is synthesised, distilled & turned into the plan */}
+        {/* From signal to roadmap — vertical pipeline on the right; deliberately distinct from the cadence timeline */}
         {d.synthesis && (
-          <div style={{ ...card, ...stg(4) }}>
+          <div style={{ ...card, marginBottom: 18, borderTop: `4px solid ${F.plum}` }}>
             <div style={sectionTitle}>From signal to roadmap</div>
-            <p style={{ margin: "0 0 16px", fontSize: 12.5, color: F.muted, lineHeight: 1.55 }}>{d.synthesis.intro}</p>
+            <p style={{ margin: "0 0 14px", fontSize: 11.5, color: F.muted, lineHeight: 1.5 }}>{d.synthesis.intro}</p>
 
-            {/* Funnel: Capture → Synthesise → Distill & decide */}
-            <div style={{ display: "flex", alignItems: "stretch", gap: 8, flexWrap: "wrap" }}>
+            {/* Vertical numbered pipeline with a left rail */}
+            <div>
               {d.synthesis.steps.map((s, i) => (
-                <div key={i} style={{ display: "flex", alignItems: "stretch", gap: 8, flex: "1 1 220px" }}>
-                  {i > 0 && <span style={{ color: F.borderStrong, fontSize: 18, fontWeight: 800, alignSelf: "center" }}>→</span>}
-                  <div style={{ flex: 1, background: F.bg, border: `1px solid ${F.border}`, borderTop: `3px solid ${d.accent}`, borderRadius: 10, padding: "13px 14px" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6, flexWrap: "wrap" }}>
-                      <span style={{ width: 30, height: 30, borderRadius: 8, background: d.accentSoft, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0 }}>{s.ic}</span>
-                      <span style={{ fontSize: 13.5, fontWeight: 800, color: F.plum }}>{s.stage}</span>
+                <div key={i} style={{ display: "grid", gridTemplateColumns: "26px 1fr", gap: 11 }}>
+                  <div style={{ position: "relative", display: "flex", justifyContent: "center" }}>
+                    <span style={{ width: 24, height: 24, borderRadius: "50%", background: F.plum, color: F.paper, fontSize: 11, fontWeight: 800, display: "inline-flex", alignItems: "center", justifyContent: "center", zIndex: 1, flexShrink: 0 }}>{i + 1}</span>
+                    {i < d.synthesis.steps.length - 1 && <span style={{ position: "absolute", top: 24, bottom: -4, width: 2, background: F.border }} />}
+                  </div>
+                  <div style={{ paddingBottom: 16 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 3, flexWrap: "wrap" }}>
+                      <span style={{ fontSize: 14 }}>{s.ic}</span>
+                      <span style={{ fontSize: 13, fontWeight: 800, color: F.plum }}>{s.stage}</span>
                       {s.ai && <span style={{ fontSize: 8.5, fontWeight: 800, letterSpacing: "0.06em", background: d.accent, color: F.plum, padding: "2px 6px", borderRadius: 4 }}>AI</span>}
                     </div>
-                    <div style={{ fontSize: 9.5, fontWeight: 800, color: d.accentDark, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 6 }}>{s.cadence}</div>
+                    <div style={{ fontSize: 9, fontWeight: 800, color: d.accentDark, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>{s.cadence}</div>
                     <div style={{ fontSize: 11.5, color: F.muted, lineHeight: 1.5 }}>{s.what}</div>
                   </div>
                 </div>
               ))}
             </div>
 
-            <div style={{ textAlign: "center", fontSize: 12, fontWeight: 800, color: F.muted2, margin: "12px 0" }}>↓ produces &amp; updates the roadmap</div>
-
-            {/* Roadmap horizons: Now / Next / Later, each on its own cadence */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12 }}>
-              {d.synthesis.roadmap.map((r, i) => {
-                const tone = i === 0 ? { bg: d.accentSoft, bar: d.accent } : i === 1 ? { bg: F.bg, bar: d.accent } : { bg: F.bg, bar: F.borderStrong };
-                return (
-                  <div key={i} style={{ background: tone.bg, border: `1px solid ${F.border}`, borderLeft: `4px solid ${tone.bar}`, borderRadius: 10, padding: "13px 15px" }}>
-                    <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 2, flexWrap: "wrap" }}>
-                      <span style={{ fontSize: 16, fontWeight: 800, color: F.plum }}>{r.horizon}</span>
-                      <span style={{ fontSize: 10.5, color: F.muted2, fontWeight: 600 }}>{r.sub}</span>
+            {/* Roadmap output — plum block, Now/Next/Later stacked */}
+            <div style={{ background: F.plum, borderRadius: 10, padding: "14px 16px", marginTop: 2 }}>
+              <div style={{ fontSize: 9.5, fontWeight: 800, color: F.yellow, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 12 }}>↓ updates the roadmap</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {d.synthesis.roadmap.map((r, i) => (
+                  <div key={i} style={{ borderLeft: `3px solid ${i === 0 ? F.yellow : "rgba(250,246,246,0.3)"}`, paddingLeft: 11 }}>
+                    <div style={{ display: "flex", alignItems: "baseline", gap: 7, flexWrap: "wrap" }}>
+                      <span style={{ fontSize: 14, fontWeight: 800, color: F.paper }}>{r.horizon}</span>
+                      <span style={{ fontSize: 9.5, color: F.lightPink, fontWeight: 700 }}>{r.sub}</span>
                     </div>
-                    <span style={{ display: "inline-block", fontSize: 9.5, fontWeight: 800, color: d.accentDark, background: F.surface, border: `1px solid ${F.border}`, padding: "2px 9px", borderRadius: 999, marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.04em" }}>🕑 {r.cadence}</span>
-                    <div style={{ fontSize: 11.5, color: F.muted, lineHeight: 1.5 }}>{r.note}</div>
+                    <div style={{ fontSize: 9, fontWeight: 800, color: F.yellow, textTransform: "uppercase", letterSpacing: "0.04em", margin: "3px 0" }}>🕑 {r.cadence}</div>
+                    <div style={{ fontSize: 11, color: F.paper, opacity: 0.82, lineHeight: 1.45 }}>{r.note}</div>
                   </div>
-                );
-              })}
+                ))}
+              </div>
             </div>
           </div>
         )}
-
-        {/* Who's involved — mapped into role lanes with recurring icons */}
-        <div style={{ ...card, ...stg(4) }}>
-          <div style={sectionTitle}>Who's involved</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {lanes.map(lane => (
-              <div key={lane.key} className="plc-lane" style={{ display: "grid", gridTemplateColumns: "112px 1fr", gap: 12, alignItems: "center" }}>
-                <div style={{ borderLeft: `3px solid ${lane.dot}`, paddingLeft: 10 }}>
-                  <div style={{ fontSize: 12.5, fontWeight: 800, color: F.plum, lineHeight: 1.1 }}>{lane.label}</div>
-                  <div style={{ fontSize: 10, color: F.muted2, fontWeight: 600 }}>{lane.sub}</div>
-                </div>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
-                  {lane.items.map((s, i) => {
-                    const isSchool = lane.key === "school";
-                    return (
-                      <span key={i} style={{
-                        display: "inline-flex", alignItems: "center", gap: 7, padding: "5px 13px 5px 5px", borderRadius: 999,
-                        fontSize: 12, fontWeight: 700, color: F.plum,
-                        background: isSchool ? d.accentSoft : F.bg,
-                        border: `1.5px ${isSchool ? "dashed" : "solid"} ${isSchool ? d.accent : F.border}`,
-                      }}>
-                        <span style={{ width: 24, height: 24, borderRadius: "50%", background: F.surface, border: `1px solid ${F.border}`, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 13, flexShrink: 0 }}>{s.ic}</span>
-                        {s.n}
-                      </span>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        </div>{/* /plc-prio-grid */}
 
         {/* Old way → AI-first */}
         <div style={{ ...card, ...stg(4) }}>
@@ -4657,6 +4666,7 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
         .plc-detailfade { animation: plc-soft-in 0.2s ease both; }
         @media (max-width: 620px) { .plc-tab-label { display: none; } }
         @media (max-width: 560px) { .plc-lane { grid-template-columns: 1fr !important; gap: 6px !important; } }
+        @media (max-width: 900px) { .plc-prio-grid { grid-template-columns: 1fr !important; } }
       `}</style>
       {open
         ? <div key={"phase-" + open} style={{ animation: "plc-soft-in 0.22s ease both" }}><PhaseView phase={open} /></div>

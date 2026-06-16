@@ -3966,6 +3966,8 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
   const [stageSel, setStageSel] = useState(0);
   // Which activity tile is hovered (drives the who/what/when/how/why panel). Reset per phase.
   const [actDetail, setActDetail] = useState(null);
+  // Which "From signal to roadmap" step is selected (capture → activities, synthesise → tool, distill → steps).
+  const [signalStep, setSignalStep] = useState("capture");
   const topRef = useRef(null);
   const didMount = useRef(false);
 
@@ -3980,6 +3982,7 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
   useEffect(() => {
     setStageSel(0);
     setActDetail(null);
+    setSignalStep("capture");
     if (!didMount.current) { didMount.current = true; return; }
     // Jump to the very top of the page (the topbar is sticky, so nothing is hidden
     // behind it). Instant, not smooth — a slow animated scroll read as a "refresh".
@@ -4405,51 +4408,49 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
           <div style={{ position: "relative", flexShrink: 0, width: 58, height: 58, borderRadius: "50%", background: F.paper, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, boxShadow: `0 0 0 4px ${F.yellow}66` }}>🏫</div>
           <div style={{ position: "relative", flex: 1, minWidth: 240 }}>
             <div style={{ fontSize: 10, fontWeight: 800, color: F.yellow, textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 6 }}>★ Schools at this phase · the core of the loop</div>
-            <h3 style={{ fontSize: 17.5, fontWeight: 800, color: F.paper, margin: "0 0 12px", lineHeight: 1.25 }}>{d.school}</h3>
-            {/* How we engage → outcome (chips, not prose) */}
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
-              {d.schoolChips.map((c, i) => (
-                <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(250,246,246,0.12)", border: "1px solid rgba(250,246,246,0.2)", borderRadius: 999, padding: "5px 12px", fontSize: 11.5, fontWeight: 700, color: F.paper }}>
-                  <span style={{ fontSize: 13 }}>{c.ic}</span>{c.t}
-                </span>
-              ))}
-              <span style={{ fontSize: 15, color: F.lightPink, fontWeight: 800, margin: "0 2px" }}>→</span>
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 6, background: F.yellow, borderRadius: 999, padding: "5px 13px", fontSize: 12, fontWeight: 800, color: F.plum }}>{d.schoolOutcome}</span>
-            </div>
+            <h3 style={{ fontSize: 18, fontWeight: 800, color: F.paper, margin: 0, lineHeight: 1.25 }}>{d.school}</h3>
           </div>
         </div>
 
-        {/* Who's involved — moved up, directly under the schools banner */}
-        <div style={{ ...card, ...stg(1) }}>
-          <div style={sectionTitle}>Who's involved</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {lanes.map(lane => (
-              <div key={lane.key} className="plc-lane" style={{ display: "grid", gridTemplateColumns: "112px 1fr", gap: 12, alignItems: "center" }}>
-                <div style={{ borderLeft: `3px solid ${lane.dot}`, paddingLeft: 10 }}>
-                  <div style={{ fontSize: 12.5, fontWeight: 800, color: F.plum, lineHeight: 1.1 }}>{lane.label}</div>
-                  <div style={{ fontSize: 10, color: F.muted2, fontWeight: 600 }}>{lane.sub}</div>
-                </div>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
-                  {lane.items.map((s, i) => {
-                    const isSchool = lane.key === "school";
-                    return (
-                      <span key={i} style={{
-                        display: "inline-flex", alignItems: "center", gap: 7, padding: "5px 13px 5px 5px", borderRadius: 999,
-                        fontSize: 12, fontWeight: 700, color: F.plum,
-                        background: isSchool ? d.accentSoft : F.bg,
-                        border: `1.5px ${isSchool ? "dashed" : "solid"} ${isSchool ? d.accent : F.border}`,
-                      }}>
-                        <span style={{ width: 24, height: 24, borderRadius: "50%", background: F.surface, border: `1px solid ${F.border}`, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 13, flexShrink: 0 }}>{s.ic}</span>
-                        {s.n}
-                      </span>
-                    );
-                  })}
-                </div>
+        {/* From signal to roadmap — horizontal step selector (Prioritise only) */}
+        {d.synthesis && (() => {
+          const tabs = d.synthesis.steps;
+          return (
+            <div style={{ ...card, ...stg(1) }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
+                <div style={{ ...sectionTitle, marginBottom: 0 }}>From signal to roadmap</div>
+                <div style={{ fontSize: 10.5, color: F.muted2, fontWeight: 700 }}>Pick a step to see how it works ↓</div>
               </div>
-            ))}
-          </div>
-        </div>
+              <div style={{ display: "flex", alignItems: "stretch", gap: 8, flexWrap: "wrap" }}>
+                {tabs.map((s, i) => {
+                  const key = i === 0 ? "capture" : i === 1 ? "synthesise" : "distill";
+                  const on = signalStep === key;
+                  return (
+                    <div key={key} style={{ display: "flex", alignItems: "stretch", gap: 8, flex: "1 1 210px" }}>
+                      {i > 0 && <span style={{ color: F.borderStrong, fontSize: 18, fontWeight: 800, alignSelf: "center" }}>→</span>}
+                      <button onClick={() => setSignalStep(key)} className="plc-act" style={{
+                        flex: 1, textAlign: "left", cursor: "pointer", fontFamily: "inherit",
+                        background: on ? d.accent : F.bg, border: `1px solid ${on ? d.accent : F.border}`,
+                        borderRadius: 11, padding: "12px 14px", boxShadow: on ? F.shadowSm : "none",
+                      }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
+                          <span style={{ width: 26, height: 26, borderRadius: "50%", background: on ? F.surface : d.accentSoft, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 14, flexShrink: 0 }}>{s.ic}</span>
+                          <span style={{ fontSize: 13.5, fontWeight: 800, color: F.plum }}>{s.stage}</span>
+                          {s.build && <span style={{ fontSize: 8, fontWeight: 800, background: F.plum, color: F.paper, padding: "2px 6px", borderRadius: 999, textTransform: "uppercase", letterSpacing: "0.04em" }}>🔧 Build</span>}
+                        </div>
+                        <div style={{ fontSize: 9, fontWeight: 800, color: d.accentDark, textTransform: "uppercase", letterSpacing: "0.05em" }}>{s.cadence}</div>
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })()}
 
+        {/* Capture → the activities cadence timeline (always shown on phases without a synthesis selector) */}
+        {(!d.synthesis || signalStep === "capture") && (
+        <>
         {/* Activities — mapped onto a frequency timeline (full width) */}
         {(() => {
         const hasDetail = d.activities.some(a => a.detail);
@@ -4524,60 +4525,27 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
         </div>
         );
         })()}
+        </>
+        )}
 
-        {/* From signal to roadmap — full-width: capture → synthesise (build) → distill & decide, + what we need to build */}
-        {d.synthesis && (
-          <div style={{ ...card, ...stg(3), borderTop: `4px solid ${F.plum}` }}>
-            <div style={sectionTitle}>From signal to roadmap</div>
-            <p style={{ margin: "0 0 18px", fontSize: 12.5, color: F.muted, lineHeight: 1.55, maxWidth: 760 }}>{d.synthesis.intro}</p>
-
-            {/* Vertical numbered pipeline — each step a full-width card on a left rail */}
-            <div>
-              {d.synthesis.steps.map((s, i) => (
-                <div key={i} style={{ display: "grid", gridTemplateColumns: "32px 1fr", gap: 14 }}>
-                  <div style={{ position: "relative", display: "flex", justifyContent: "center" }}>
-                    <span style={{ width: 30, height: 30, borderRadius: "50%", background: s.build ? d.accent : F.plum, color: s.build ? F.plum : F.paper, fontSize: 13, fontWeight: 800, display: "inline-flex", alignItems: "center", justifyContent: "center", zIndex: 1, flexShrink: 0 }}>{s.n}</span>
-                    {i < d.synthesis.steps.length - 1 && <span style={{ position: "absolute", top: 30, bottom: -18, width: 2, background: F.border }} />}
-                  </div>
-                  <div style={{ background: s.build ? d.accentSoft : F.bg, border: `1px solid ${s.build ? d.accent : F.border}`, borderRadius: 11, padding: "14px 16px", marginBottom: 18 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 7, flexWrap: "wrap" }}>
-                      <span style={{ fontSize: 17 }}>{s.ic}</span>
-                      <span style={{ fontSize: 15, fontWeight: 800, color: F.plum }}>{s.stage}</span>
-                      <span style={{ fontSize: 9.5, fontWeight: 800, color: d.accentDark, background: F.surface, border: `1px solid ${F.border}`, padding: "2px 9px", borderRadius: 999, textTransform: "uppercase", letterSpacing: "0.04em" }}>{s.cadence}</span>
-                      {s.build && <span style={{ fontSize: 9.5, fontWeight: 800, background: F.plum, color: F.paper, padding: "3px 9px", borderRadius: 999, textTransform: "uppercase", letterSpacing: "0.05em" }}>🔧 To build</span>}
-                    </div>
-                    <p style={{ fontSize: 12.5, color: F.muted, lineHeight: 1.55, margin: "0 0 10px" }}>{s.what}</p>
-                    {s.inputs && (
-                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                        {s.inputs.map((ip, ii) => <span key={ii} style={{ fontSize: 10.5, fontWeight: 700, padding: "4px 10px", borderRadius: 999, background: F.surface, border: `1px solid ${F.border}`, color: F.plum }}>{ip}</span>)}
-                      </div>
-                    )}
-                    {s.how && (
-                      <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-                        {s.how.map((h, hi) => (
-                          <div key={hi} style={{ display: "flex", gap: 8, fontSize: 12, color: F.plum, lineHeight: 1.45 }}>
-                            <span style={{ color: d.accentDark, fontWeight: 800, flexShrink: 0 }}>›</span>{h}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    {s.decide && (
-                      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                        {s.decide.map((dstep, di) => (
-                          <div key={di} style={{ display: "flex", gap: 9, alignItems: "flex-start", fontSize: 12, color: F.plum, lineHeight: 1.45 }}>
-                            <span style={{ width: 18, height: 18, borderRadius: "50%", background: F.surface, border: `1px solid ${d.accent}`, color: F.plum, fontSize: 9.5, fontWeight: 800, display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>{String.fromCharCode(97 + di)}</span>
-                            {dstep}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+        {/* Synthesise → the AI synthesis tool we need to build */}
+        {d.synthesis && signalStep === "synthesise" && (() => { const s = d.synthesis.steps[1]; return (
+          <div className="plc-detailfade" style={{ ...card, borderTop: `4px solid ${F.plum}` }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
+              <span style={{ fontSize: 19 }}>{s.ic}</span>
+              <div style={{ ...sectionTitle, marginBottom: 0 }}>Synthesise</div>
+              <span style={{ fontSize: 9.5, fontWeight: 800, color: d.accentDark, background: d.accentSoft, padding: "2px 9px", borderRadius: 999, textTransform: "uppercase", letterSpacing: "0.04em" }}>{s.cadence}</span>
+              <span style={{ fontSize: 9.5, fontWeight: 800, background: F.plum, color: F.paper, padding: "3px 9px", borderRadius: 999, textTransform: "uppercase", letterSpacing: "0.05em" }}>🔧 To build</span>
+            </div>
+            <p style={{ margin: "0 0 14px", fontSize: 13, color: F.muted, lineHeight: 1.6, maxWidth: 840 }}>{s.what}</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 7, marginBottom: 16 }}>
+              {s.how.map((h, hi) => (
+                <div key={hi} style={{ display: "flex", gap: 10, fontSize: 12.5, color: F.plum, lineHeight: 1.5 }}>
+                  <span style={{ width: 18, height: 18, borderRadius: "50%", background: d.accentSoft, color: F.plum, fontSize: 9.5, fontWeight: 800, display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>{hi + 1}</span>{h}
                 </div>
               ))}
             </div>
-
-            {/* What we need to build — pronounced plum block */}
-            <div style={{ background: F.plum, borderRadius: 12, padding: "16px 18px", marginTop: 2 }}>
+            <div style={{ background: F.plum, borderRadius: 12, padding: "16px 18px" }}>
               <div style={{ fontSize: 10.5, fontWeight: 800, color: F.yellow, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 12 }}>🔧 What we need to build</div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
                 {d.synthesis.build.map((b, i) => (
@@ -4593,7 +4561,27 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
               </div>
             </div>
           </div>
-        )}
+        ); })()}
+
+        {/* Distill & decide → the steps */}
+        {d.synthesis && signalStep === "distill" && (() => { const s = d.synthesis.steps[2]; return (
+          <div className="plc-detailfade" style={{ ...card, borderTop: `4px solid ${F.plum}` }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
+              <span style={{ fontSize: 19 }}>{s.ic}</span>
+              <div style={{ ...sectionTitle, marginBottom: 0 }}>Distill &amp; decide</div>
+              <span style={{ fontSize: 9.5, fontWeight: 800, color: d.accentDark, background: d.accentSoft, padding: "2px 9px", borderRadius: 999, textTransform: "uppercase", letterSpacing: "0.04em" }}>{s.cadence}</span>
+            </div>
+            <p style={{ margin: "0 0 14px", fontSize: 13, color: F.muted, lineHeight: 1.6, maxWidth: 840 }}>{s.what}</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {s.decide.map((dstep, di) => (
+                <div key={di} style={{ display: "flex", gap: 11, alignItems: "flex-start", background: F.bg, border: `1px solid ${F.border}`, borderLeft: `3px solid ${d.accent}`, borderRadius: 10, padding: "11px 14px" }}>
+                  <span style={{ width: 22, height: 22, borderRadius: "50%", background: d.accent, color: F.plum, fontSize: 11, fontWeight: 800, display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{di + 1}</span>
+                  <span style={{ fontSize: 12.5, color: F.plum, lineHeight: 1.5 }}>{dstep}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ); })()}
 
         {/* Old way → AI-first */}
         <div style={{ ...card, ...stg(4) }}>

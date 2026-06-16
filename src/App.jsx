@@ -4065,13 +4065,13 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
           { n: "3", ic: "🎯", stage: "Distill & Decide", cadence: "Monthly → Quarterly", build: false,
             what: "Leadership turns the ranked themes into committed, revenue-anchored bets.",
             decide: [
-              { short: "AI shortlist", who: "AI synthesis tool", text: "The AI tool surfaces a ranked, revenue-scored shortlist of candidate themes — the evidence-backed starting point, not the decision." },
-              { short: "Product review", who: "Product team", text: "The product team reviews and shapes the shortlist — sharpening scope, merging duplicates and pressure-testing feasibility before it goes wider." },
-              { short: "Product day", who: "Product · Sales · Support · CX", text: "Monthly product day: Product walks the revenue teams through the shortlist and gathers front-line feedback." },
-              { short: "Schools sign-off", who: "Schools · user groups", text: "Validate the distilled quarter with our schools — they sign off on the shortlist we've prioritised. (Discovery feedback runs continuously in Capture; this is the explicit check on what we've decided to build.)" },
-              { short: "SLT & ExCo", who: "SLT & ExCo", text: "Leadership reviews and ratifies the revenue-ranked priorities before they're presented at the QBR." },
-              { short: "QBR commit", who: "Product · Sales", text: "Present the signed-off, revenue-ranked plan at the Quarterly Business Review and commit the quarter's focus." },
-              { short: "Into Build", who: "Product → pods", text: "Product breaks the committed bets down into weekly-sized slices that feed the build cycle — the Build phase, next." },
+              { short: "AI shortlist", who: "AI synthesis tool", text: "The AI tool surfaces a ranked, revenue-scored shortlist of candidate themes — the evidence-backed starting point, not the decision.", artifact: "Ranked opportunity shortlist — each theme scored by revenue impact × adoption gap, with its evidence." },
+              { short: "Product review", who: "Product team", text: "The product team reviews and shapes the shortlist — sharpening scope, merging duplicates and pressure-testing feasibility before it goes wider.", artifact: "Shaped shortlist — scoped, de-duplicated, with a feasibility rating per theme." },
+              { short: "Product day", who: "Product · Sales · Support · CX", text: "Monthly product day: Product walks the revenue teams through the shortlist and gathers front-line feedback.", artifact: "Annotated shortlist + product-day feedback log from the revenue teams." },
+              { short: "Schools sign-off", who: "Schools · user groups", text: "Validate the distilled quarter with our schools — they sign off on the shortlist we've prioritised. (Discovery feedback runs continuously in Capture; this is the explicit check on what we've decided to build.)", artifact: "Schools-validated shortlist — advisory-panel sign-off notes per theme." },
+              { short: "SLT & ExCo", who: "SLT & ExCo", text: "Leadership reviews and ratifies the revenue-ranked priorities before they're presented at the QBR.", artifact: "Ratified priority list — a one-page decision memo." },
+              { short: "QBR commit", who: "Product · Sales", text: "Present the signed-off, revenue-ranked plan at the Quarterly Business Review and commit the quarter's focus.", artifact: "QBR deck + committed revenue-ranked quarter roadmap." },
+              { short: "Into Build", who: "Product → pods", text: "Product breaks the committed bets down into weekly-sized slices that feed the build cycle — the Build phase, next.", artifact: "Sliced backlog — weekly-sized build briefs handed to the pods." },
             ],
             artifacts: [
               { ic: "📊", t: "Prioritisation dashboard", note: "Revenue-ranked, region-aware view of the shortlist.", big: true },
@@ -4687,6 +4687,12 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
                 <span style={{ fontSize: 9.5, fontWeight: 800, color: F.paper, background: F.plum, padding: "3px 10px", borderRadius: 999, textTransform: "uppercase", letterSpacing: "0.05em" }}>{step.who}</span>
               </div>
               <div style={{ fontSize: 13.5, color: F.plum, lineHeight: 1.6 }}>{step.text}</div>
+              {step.artifact && (
+                <div style={{ marginTop: 12, display: "flex", gap: 9, alignItems: "flex-start", background: F.surface, border: `1px solid ${F.border}`, borderLeft: `3px solid ${d.accent}`, borderRadius: 8, padding: "9px 12px" }}>
+                  <span style={{ fontSize: 9, fontWeight: 800, color: d.accentDark, textTransform: "uppercase", letterSpacing: "0.06em", paddingTop: 2, flexShrink: 0 }}>📄 Artifact</span>
+                  <span style={{ fontSize: 12.5, color: F.plum, lineHeight: 1.5, fontWeight: 600 }}>{step.artifact}</span>
+                </div>
+              )}
             </div>
           </div>
         ); })()}

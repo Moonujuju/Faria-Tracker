@@ -4014,7 +4014,7 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
         { ic: "💼", nm: "Quarterly Business Review", cad: "Quarterly", d: "Re-rank themes against revenue signal; commit the next quarter.",
           detail: { who: "Product leadership, Sales, Client Experience, Finance / RevOps", what: "Re-rank themes by revenue impact and commit the next quarter's focus.", when: "Each quarter.", how: "Review the AI digest + QBR deck; weight by pipeline, expansion and churn risk.", why: "Kill bets that aren't moving revenue before they consume a pod." } },
         { ic: "🏫", nm: "School advisory panel", cad: "Quarterly", d: "Core user-group schools review and rank the theme shortlist.",
-          detail: { who: "Core user-group schools — Heads, Admissions Directors, Registrars.", what: "Review the theme shortlist and rank what matters to them.", when: "Quarterly, plus always-on WhatsApp user-group chats.", how: "Panel sessions, the user-group conference, and WhatsApp groups.", why: "Commit to what schools will actually adopt and pay for." } },
+          detail: { who: "Core user-group schools — school leaders and day-to-day users.", what: "Review the theme shortlist and rank what matters to them.", when: "Quarterly, plus always-on WhatsApp user-group chats.", how: "Panel sessions, the user-group conference, and WhatsApp groups.", why: "Commit to what schools will actually adopt and pay for." } },
         { ic: "📣", nm: "Monthly product day", cad: "Monthly", d: "Product shows what's shipping and gathers feedback from Sales, Support & CX.",
           detail: { who: "VP Product, Sales, Support, Client Experience.", what: "Product demos what's shipping and in-flight; the revenue teams feed back from the front line.", when: "Monthly.", how: "Live product walkthrough plus structured feedback captured straight into the prioritisation backlog.", why: "Two-way: keep the revenue teams current on the product, and pull their field signal into priorities." } },
         { ic: "📈", nm: "Salesforce", cad: "Continuous", d: "Pipeline, win/loss & revenue signal — always on.",
@@ -4024,11 +4024,11 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
         { ic: "💗", nm: "Planhat", cad: "Continuous", d: "Customer health & expansion signal — always on.",
           detail: { who: "Auto-fed for Product leadership & CS.", what: "Account health scores, renewal risk, expansion signals, engagement trends, CSM notes.", when: "Continuous.", how: "Piped into the AI synthesis tool.", why: "Tie themes to retention & expansion revenue and flag churn risk early." } },
         { ic: "💬", nm: "WhatsApp user-group feedback", cad: "Continuous", d: "Quick, on-the-fly feedback from schools on design choices and what we're building.",
-          detail: { who: "Product + core user-group schools.", what: "Fast reactions to design choices, prototypes and ideas — in the flow of work.", when: "Continuous / on the fly.", how: "Always-on WhatsApp user-group chats with admissions leaders.", why: "Cheap, instant signal to course-correct before committing build effort." } },
+          detail: { who: "Product + core user-group schools.", what: "Fast reactions to design choices, prototypes and ideas — in the flow of work.", when: "Continuous / on the fly.", how: "Always-on WhatsApp user-group chats with school users.", why: "Cheap, instant signal to course-correct before committing build effort." } },
         { ic: "📋", nm: "Feature request board", cad: "Continuous", d: "A custom board every stakeholder — internal and schools — uses to log and upvote requests.",
           detail: { who: "All stakeholders — internal teams and schools (external).", what: "A custom-built feature-request board where anyone logs, upvotes and comments on requests.", when: "Continuous / always open.", how: "One shared board, open internally and to schools; feeds the signal pool and the AI digest.", why: "One front door for demand — nothing gets lost in inboxes or chats." } },
-        { ic: "🎙️", nm: "Discovery interviews", cad: "Monthly", d: "Standing cadence of 1:1 discovery calls with admissions teams.",
-          detail: { who: "Product (PMs) + admissions teams across schools.", what: "Regular problem-discovery interviews — how schools actually work, where they struggle.", when: "A few every week, on a rolling roster.", how: "Scheduled calls; notes auto-clustered into the signal pool.", why: "The backbone of continuous discovery — talk to users every week, not just at events." } },
+        { ic: "🎙️", nm: "Discovery interviews", cad: "Monthly", d: "Standing cadence of 1:1 discovery calls with school teams.",
+          detail: { who: "Product (PMs) + school teams across the user base.", what: "Regular problem-discovery interviews — how schools actually work, where they struggle.", when: "A few every month, on a rolling roster.", how: "Scheduled calls; notes auto-clustered into the signal pool.", why: "The backbone of continuous discovery — talk to users regularly, not just at events." } },
         { ic: "🖥️", nm: "Usability testing", cad: "Monthly", d: "Test prototypes and shipped flows with real school users.",
           detail: { who: "Product, design + school users.", what: "Watch schools use prototypes and live features; capture friction.", when: "Weekly, per design / slice in flight.", how: "Moderated sessions or async recordings; findings fed back to the pod.", why: "See what people do, not just what they say — before and after we build." } },
         { ic: "🔁", nm: "Win/loss & churn calls", cad: "Continuous", d: "Talk to schools we just won, lost or that churned.",
@@ -4084,8 +4084,8 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
       stakeholders: [
         { n: "Product leadership", t: "lead", ic: "🧩" }, { n: "ExCo / SLT", t: "lead", ic: "👔" }, { n: "Finance", t: "lead", ic: "💰" },
         { n: "Sales", t: "", ic: "📈" }, { n: "Client Experience", t: "", ic: "💬" }, { n: "Product Marketing", t: "", ic: "📣" },
-        { n: "Heads / Principals", t: "school", ic: "🎓" }, { n: "Directors of Admissions", t: "school", ic: "🏫" },
-        { n: "Registrars", t: "school", ic: "🗂" }, { n: "Admissions officers", t: "school", ic: "🧑‍💼" },
+        { n: "Heads / Principals", t: "school", ic: "🎓" }, { n: "Department leads", t: "school", ic: "🏫" },
+        { n: "Coordinators & admins", t: "school", ic: "🗂" }, { n: "Day-to-day users", t: "school", ic: "🧑‍💼" },
         { n: "School marketing", t: "school", ic: "📢" },
       ],
       shift: [
@@ -4344,6 +4344,59 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
         <p style={{ textAlign: "center", color: F.paper, opacity: 0.7, fontSize: 12.5, margin: "24px auto 0", maxWidth: 560, lineHeight: 1.55 }}>
           One continuous loop. What schools <strong style={{ color: F.lightPink }}>adopt</strong> feeds straight back into what we <strong style={{ color: F.yellow }}>prioritise</strong> next — not a one-way pipeline, a working rhythm.
         </p>
+      </div>
+
+      {/* ── The problems we're fixing — keeps the change focused, not change for its own sake ── */}
+      <div style={{ ...card, borderLeft: `4px solid ${F.pink}` }}>
+        <div style={sectionTitle}>The problems we're fixing</div>
+        <p style={{ margin: "-4px 0 14px", fontSize: 12.5, color: F.muted, lineHeight: 1.5, maxWidth: 720 }}>Every change in this lifecycle exists to fix one of four core problems. If a change doesn't fix one of these, we don't make it — this isn't change for its own sake.</p>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 12 }}>
+          {[
+            { ic: "🗂", t: "Signal is scattered and lost", p: "Demand and feedback live in inboxes, calls and spreadsheets. We miss what matters and can't see the patterns.", fix: "Capture into one signal pool" },
+            { ic: "⚖️", t: "Prioritisation runs on gut feel", p: "The loudest voice wins; weeks are lost hand-pulling data; there's no consistent revenue lens.", fix: "AI synthesis + revenue ranking" },
+            { ic: "🏫", t: "Schools come in too late", p: "We build, then learn it wasn't quite what schools needed — weak adoption and wasted pod cycles.", fix: "Continuous discovery + schools sign-off" },
+            { ic: "🐢", t: "Roadmaps are slow, fixed & opaque", p: "Annual plans treated as fixed, big-bang releases, and decisions made in a black box.", fix: "Rolling roadmap, traceable path, weekly build" },
+          ].map((x, i) => (
+            <div key={i} style={{ background: F.bg, border: `1px solid ${F.border}`, borderTop: `3px solid ${F.pink}`, borderRadius: 10, padding: "13px 15px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                <span style={{ fontSize: 19 }}>{x.ic}</span>
+                <span style={{ fontSize: 13.5, fontWeight: 800, color: F.plum, lineHeight: 1.2 }}>{x.t}</span>
+              </div>
+              <p style={{ margin: "0 0 9px", fontSize: 12, color: F.muted, lineHeight: 1.5 }}>{x.p}</p>
+              <div style={{ fontSize: 11, fontWeight: 700, color: F.plum }}><span style={{ color: F.green }}>→</span> {x.fix}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Adopt at your own pace — maturity ladder so products aren't overwhelmed ── */}
+      <div style={card}>
+        <div style={sectionTitle}>Adopt at your own pace</div>
+        <p style={{ margin: "-4px 0 16px", fontSize: 12.5, color: F.muted, lineHeight: 1.5, maxWidth: 760 }}>Products are at different maturity and have different bandwidth — you don't have to do everything at once. Find where your product is today and take the next step. Already running some of this? Great — focus where you're not.</p>
+        <div style={{ display: "flex", alignItems: "stretch", gap: 10, flexWrap: "wrap" }}>
+          {[
+            { lvl: "Level 1", name: "Foundations", sub: "zero → one", tone: { bar: F.muted2, bg: F.bg }, moves: ["Start one signal pool — even a shared board or doc.", "Stand up a user-group channel (e.g. WhatsApp).", "Hold a monthly product + revenue check-in.", "Talk to a handful of schools every month."] },
+            { lvl: "Level 2", name: "Operating", sub: "running the rhythm", tone: { bar: F.orange, bg: "rgba(247,139,67,0.08)" }, moves: ["Connect Salesforce / Pendo / Planhat feeds.", "Run discovery interviews & usability tests monthly.", "Schools sign off the plan before you commit.", "Re-rank the roadmap at a quarterly review."] },
+            { lvl: "Level 3", name: "AI-accelerated", sub: "the full model", tone: { bar: F.green, bg: "rgba(26,122,62,0.08)" }, moves: ["AI synthesis tool ranks themes automatically.", "Always-on win/loss, churn & support signal.", "Rolling Now / Next / Later roadmap, tuned monthly.", "Full traceable decide path → weekly build cycle."] },
+          ].map((L, i) => (
+            <div key={i} style={{ display: "flex", alignItems: "stretch", gap: 10, flex: "1 1 240px" }}>
+              {i > 0 && <span style={{ color: F.borderStrong, fontSize: 20, fontWeight: 800, alignSelf: "center" }}>→</span>}
+              <div style={{ flex: 1, background: L.tone.bg, border: `1px solid ${F.border}`, borderTop: `3px solid ${L.tone.bar}`, borderRadius: 11, padding: "14px 15px" }}>
+                <div style={{ fontSize: 9.5, fontWeight: 800, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.08em" }}>{L.lvl}</div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: F.plum, lineHeight: 1.1, margin: "2px 0 1px" }}>{L.name}</div>
+                <div style={{ fontSize: 10.5, color: F.muted2, fontWeight: 600, marginBottom: 10 }}>{L.sub}</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {L.moves.map((m, mi) => (
+                    <div key={mi} style={{ display: "flex", gap: 7, fontSize: 11.5, color: F.plum, lineHeight: 1.45 }}>
+                      <span style={{ color: L.tone.bar, fontWeight: 800, flexShrink: 0 }}>✓</span>{m}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <p style={{ margin: "14px 0 0", fontSize: 11.5, color: F.muted2, fontStyle: "italic" }}>Maturity is per step, not per product — you might be Level 3 on Capture and Level 1 on Synthesise. Move the weakest step up one level at a time.</p>
       </div>
 
       <div style={{ marginTop: 22, textAlign: "center", fontSize: 11, color: F.muted2, fontStyle: "italic" }}>

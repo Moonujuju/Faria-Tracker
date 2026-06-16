@@ -4034,7 +4034,13 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
         steps: [
           { n: "1", ic: "📥", stage: "Capture", cadence: "Continuous", build: false,
             what: "Everything on the activities timeline above feeds one signal pool — across every cadence, structured and unstructured.",
-            inputs: ["Strategy offsite", "Quarterly Business Review", "Monthly product day", "Advisory panels", "WhatsApp groups", "Feature request board", "Salesforce", "Pendo", "Planhat", "Surveys"] },
+            inputs: ["Strategy offsite", "Quarterly Business Review", "Monthly product day", "Advisory panels", "WhatsApp groups", "Feature request board", "Salesforce", "Pendo", "Planhat", "Surveys"],
+            artifacts: [
+              { ic: "🔌", t: "Source connectors", note: "Read-only feeds from Salesforce, Pendo & Planhat into one store." },
+              { ic: "📋", t: "Feature request board", note: "Custom board — internal teams + schools log and upvote requests." },
+              { ic: "📨", t: "Survey program", note: "Annual & semi-annual user-base surveys (SurveyMonkey)." },
+              { ic: "💬", t: "WhatsApp feedback channels", note: "Always-on user-group chats wired into the signal pool." },
+            ] },
           { n: "2", ic: "🧠", stage: "Synthesise", cadence: "Continuous → Monthly", build: true,
             what: "A custom AI synthesis tool ingests every input — structured signal (Salesforce, Pendo, Planhat) and unstructured signal (WhatsApp, feature-request board, call notes, surveys) — then clusters, de-duplicates and scores candidate themes by revenue impact × adoption gap × strategic fit, with a plain-language rationale.",
             how: [
@@ -4042,6 +4048,11 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
               "AI clusters & de-duplicates raw signal into candidate themes.",
               "Each theme scored: revenue impact × adoption gap × strategic fit.",
               "Outputs a ranked, region-aware digest with a rationale per theme.",
+            ],
+            artifacts: [
+              { ic: "🧠", t: "AI synthesis tool", note: "Ingests all signal and produces ranked, scored themes with a rationale.", big: true },
+              { ic: "🗂", t: "Normalised signal store", note: "One common schema — account, region, segment, feature, revenue." },
+              { ic: "🤖", t: "Theme scoring model", note: "Scores revenue impact × adoption gap × strategic fit." },
             ] },
           { n: "3", ic: "🎯", stage: "Distill & Decide", cadence: "Monthly → Quarterly", build: false,
             what: "Leadership turns the ranked themes into committed, revenue-anchored bets.",
@@ -4053,12 +4064,13 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
               { short: "SLT & ExCo sign-off", who: "SLT & ExCo", text: "Leadership reviews and ratifies the revenue-ranked priorities — signed off before they're presented at the QBR." },
               { short: "QBR commit", who: "Product · Sales", text: "Present the signed-off, revenue-ranked plan at the Quarterly Business Review and commit the quarter's focus." },
               { short: "Into Build", who: "Product → pods", text: "Product breaks the committed bets down into weekly-sized slices that feed the build cycle — the Build phase, next. (Not taken straight to weekly builds; sliced first.)" },
+            ],
+            artifacts: [
+              { ic: "📊", t: "Prioritisation dashboard", note: "Revenue-ranked, region-aware view of the shortlist.", big: true },
+              { ic: "🗺", t: "Rolling roadmap", note: "Committed Now / Next / Later plan, re-cut quarterly." },
+              { ic: "📑", t: "QBR / board deck", note: "Auto-generated revenue-ranked plan for sign-off & the QBR." },
+              { ic: "📦", t: "Pod-ready brief", note: "The sliced, revenue-anchored brief handed to the build pods." },
             ] },
-        ],
-        build: [
-          { ic: "🧠", t: "AI synthesis tool", note: "The big build — ingests all discovery signal (structured + unstructured) and produces ranked, scored themes with a rationale.", big: true },
-          { ic: "📋", t: "Feature request board", note: "Custom board, open internally and to schools, feeding the synthesis tool." },
-          { ic: "📊", t: "Prioritisation dashboard", note: "Unifies Salesforce + Pendo + Planhat into one revenue-ranked, region-aware view." },
         ],
       },
       stakeholders: [
@@ -4349,6 +4361,24 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
     const wrapNext = idx === 2, wrapPrev = idx === 0;
     // (Per-block stagger removed — the single soft crossfade on the view wrapper is calmer.)
     const stg = () => ({});
+    // Reusable "Artifacts we're building" block — used in each From-signal-to-roadmap step panel.
+    const artifactsBlock = (list) => !list ? null : (
+      <div style={{ background: F.plum, borderRadius: 12, padding: "16px 18px", marginTop: 16 }}>
+        <div style={{ fontSize: 10.5, fontWeight: 800, color: F.yellow, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 12 }}>🧱 Artifacts we're building</div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12 }}>
+          {list.map((b, i) => (
+            <div key={i} style={{ background: b.big ? "rgba(247,211,95,0.16)" : "rgba(250,246,246,0.08)", border: `1px solid ${b.big ? F.yellow : "rgba(250,246,246,0.18)"}`, borderRadius: 10, padding: "13px 14px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5, flexWrap: "wrap" }}>
+                <span style={{ fontSize: 18 }}>{b.ic}</span>
+                <span style={{ fontSize: 13, fontWeight: 800, color: F.paper }}>{b.t}</span>
+                {b.big && <span style={{ fontSize: 8.5, fontWeight: 800, background: F.yellow, color: F.plum, padding: "2px 7px", borderRadius: 999, textTransform: "uppercase", letterSpacing: "0.04em" }}>Priority</span>}
+              </div>
+              <div style={{ fontSize: 11.5, color: F.paper, opacity: 0.82, lineHeight: 1.5 }}>{b.note}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
     const sel = Math.min(stageSel, d.stages.length - 1);
     const selStage = d.stages[sel];
     // Group stakeholders into role lanes for the "Who's involved" map.
@@ -4534,6 +4564,7 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
         </div>
         );
         })()}
+        {d.synthesis && artifactsBlock(d.synthesis.steps[0].artifacts)}
         </>
         )}
 
@@ -4553,21 +4584,7 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
                 </div>
               ))}
             </div>
-            <div style={{ background: F.plum, borderRadius: 12, padding: "16px 18px" }}>
-              <div style={{ fontSize: 10.5, fontWeight: 800, color: F.yellow, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 12 }}>🔧 What we need to build</div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
-                {d.synthesis.build.map((b, i) => (
-                  <div key={i} style={{ background: b.big ? "rgba(247,211,95,0.16)" : "rgba(250,246,246,0.08)", border: `1px solid ${b.big ? F.yellow : "rgba(250,246,246,0.18)"}`, borderRadius: 10, padding: "13px 14px" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5, flexWrap: "wrap" }}>
-                      <span style={{ fontSize: 18 }}>{b.ic}</span>
-                      <span style={{ fontSize: 13.5, fontWeight: 800, color: F.paper }}>{b.t}</span>
-                      {b.big && <span style={{ fontSize: 8.5, fontWeight: 800, background: F.yellow, color: F.plum, padding: "2px 7px", borderRadius: 999, textTransform: "uppercase", letterSpacing: "0.04em" }}>Priority</span>}
-                    </div>
-                    <div style={{ fontSize: 11.5, color: F.paper, opacity: 0.82, lineHeight: 1.5 }}>{b.note}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            {artifactsBlock(s.artifacts)}
           </div>
         ); })()}
 
@@ -4616,6 +4633,7 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
               </div>
               <div style={{ fontSize: 13.5, color: F.plum, lineHeight: 1.6 }}>{step.text}</div>
             </div>
+            {artifactsBlock(s.artifacts)}
           </div>
         ); })()}
 

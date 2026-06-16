@@ -4069,9 +4069,9 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
               { short: "Product review", who: "Product team", text: "The product team reviews and shapes the shortlist — sharpening scope, merging duplicates and pressure-testing feasibility before it goes wider." },
               { short: "Product day", who: "Product · Sales · Support · CX", text: "Monthly product day: Product walks the revenue teams through the shortlist and gathers front-line feedback." },
               { short: "Schools sign-off", who: "Schools · user groups", text: "Validate the distilled quarter with our schools — they sign off on the shortlist we've prioritised. (Discovery feedback runs continuously in Capture; this is the explicit check on what we've decided to build.)" },
-              { short: "SLT & ExCo sign-off", who: "SLT & ExCo", text: "Leadership reviews and ratifies the revenue-ranked priorities — signed off before they're presented at the QBR." },
+              { short: "SLT & ExCo", who: "SLT & ExCo", text: "Leadership reviews and ratifies the revenue-ranked priorities before they're presented at the QBR." },
               { short: "QBR commit", who: "Product · Sales", text: "Present the signed-off, revenue-ranked plan at the Quarterly Business Review and commit the quarter's focus." },
-              { short: "Into Build", who: "Product → pods", text: "Product breaks the committed bets down into weekly-sized slices that feed the build cycle — the Build phase, next. (Not taken straight to weekly builds; sliced first.)" },
+              { short: "Into Build", who: "Product → pods", text: "Product breaks the committed bets down into weekly-sized slices that feed the build cycle — the Build phase, next." },
             ],
             artifacts: [
               { ic: "📊", t: "Prioritisation dashboard", note: "Revenue-ranked, region-aware view of the shortlist.", big: true },
@@ -4352,28 +4352,26 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
         </p>
       </div>
 
-      {/* ── Rolling this out fast — the 90-day adoption timeline (push, not self-paced) ── */}
+      {/* ── Rolling this out — the three phases of the loop, pulled from each phase's content ── */}
       <div style={card}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-          <div style={sectionTitle}>Rolling this out — fast</div>
-          <span style={{ fontSize: 10.5, fontWeight: 800, color: F.plum, background: F.lightYellow, border: `1px solid ${F.yellow}`, borderRadius: 999, padding: "4px 11px", textTransform: "uppercase", letterSpacing: "0.06em", whiteSpace: "nowrap" }}>Target · full model in 90 days</span>
-        </div>
-        <p style={{ margin: "-2px 0 18px", fontSize: 12.5, color: F.muted, lineHeight: 1.5, maxWidth: 780 }}>This isn't self-paced. Every product moves onto the new way of working on one shared, fast cadence — the 90-day path below. Stand up the basics in the first fortnight, get the rhythm running inside two months, and hit the full AI-accelerated model by day 90.</p>
+        <div style={sectionTitle}>Rolling this out</div>
+        <p style={{ margin: "-2px 0 18px", fontSize: 12.5, color: F.muted, lineHeight: 1.5, maxWidth: 780 }}>Rolling this out means standing up all three phases of the loop, in order. Here's what each one looks like in practice — drawn straight from the Prioritise, Build and Adopt phases.</p>
         <div style={{ display: "flex", alignItems: "stretch", gap: 0 }} className="plc-timeline">
           {[
-            { when: "Weeks 1–2", name: "Stand it up", tone: F.orange, moves: ["Open one signal pool — a shared board or doc, today.", "Spin up a user-group channel (e.g. WhatsApp).", "Put a monthly product + revenue check-in on the calendar.", "Book time with a handful of schools this month."] },
-            { when: "Month 1–2", name: "Get the rhythm running", tone: F.pink, moves: ["Connect Salesforce / Pendo / Planhat feeds.", "Run discovery interviews & usability tests every month.", "Schools sign off the plan before you commit.", "Re-rank the roadmap at the quarterly review."] },
-            { when: "By Day 90", name: "AI-accelerated", tone: F.green, moves: ["AI synthesis ranks themes automatically.", "Always-on win/loss, churn & support signal.", "Rolling Now / Next / Later roadmap, tuned monthly.", "Full traceable decide path → weekly build cycle."] },
+            { when: "Phase 01", name: "Prioritise", sub: "Set the revenue-driven direction", tone: F.yellow, moves: ["Pull every signal into one pool — Salesforce, Pendo, Planhat, WhatsApp, the request board & surveys.", "An AI synthesis tool clusters & scores it into revenue-ranked themes.", "Schools feed the loop and sign off what we commit to.", "A traceable path: AI shortlist → product → SLT/ExCo → QBR commit."] },
+            { when: "Phase 02", name: "Build", sub: "Small pods, a release every Monday", tone: F.orange, moves: ["Small, single-owner pods replace big shared-ownership teams.", "1-week dev cycles, a full QA week behind, a release every Monday.", "AI drafts the spec, prototype, tests & code review — humans decide.", "Schools react to the prototype Tue–Thu, before a line is built."] },
+            { when: "Phase 03", name: "Adopt", sub: "Land, expand, close the loop", tone: F.pink, moves: ["Enablement auto-generated at release — Sales & Support ready day one.", "Marketing runs AAA campaigns only; the rest rides automated collateral.", "Onboarding & guidance drive real adoption, not just access.", "Pendo + Salesforce adoption signal feeds the next Prioritise — loop closed."] },
           ].map((M, i, arr) => (
             <div key={i} style={{ flex: "1 1 0", display: "flex", flexDirection: "column", minWidth: 0 }} className="plc-tl-col">
-              {/* rail: node + connector to next milestone */}
+              {/* rail: node + connector to next phase */}
               <div style={{ display: "flex", alignItems: "center", marginBottom: 11 }}>
                 <span style={{ width: 16, height: 16, borderRadius: "50%", background: M.tone, border: `3px solid ${F.surface}`, boxShadow: `0 0 0 2px ${M.tone}`, flexShrink: 0 }} />
                 {i < arr.length - 1 && <span style={{ flex: 1, height: 3, background: `linear-gradient(90deg, ${M.tone}, ${arr[i + 1].tone})` }} />}
               </div>
               <div style={{ marginRight: i < arr.length - 1 ? 12 : 0, background: F.bg, border: `1px solid ${F.border}`, borderTop: `3px solid ${M.tone}`, borderRadius: 11, padding: "14px 15px", flex: 1 }}>
                 <div style={{ fontSize: 10, fontWeight: 800, color: M.tone, textTransform: "uppercase", letterSpacing: "0.07em" }}>{M.when}</div>
-                <div style={{ fontSize: 15, fontWeight: 800, color: F.plum, lineHeight: 1.15, margin: "2px 0 11px" }}>{M.name}</div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: F.plum, lineHeight: 1.15, margin: "2px 0 1px" }}>{M.name}</div>
+                <div style={{ fontSize: 10.5, color: F.muted2, fontWeight: 600, marginBottom: 11 }}>{M.sub}</div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                   {M.moves.map((m, mi) => (
                     <div key={mi} style={{ display: "flex", gap: 7, fontSize: 11.5, color: F.plum, lineHeight: 1.45 }}>
@@ -4385,7 +4383,7 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
             </div>
           ))}
         </div>
-        <p style={{ margin: "14px 0 0", fontSize: 11.5, color: F.muted2, fontStyle: "italic" }}>Already running parts of this? You're ahead — don't coast. Close the remaining gaps now so the whole portfolio is operating this way within the quarter.</p>
+        <p style={{ margin: "14px 0 0", fontSize: 11.5, color: F.muted2, fontStyle: "italic" }}>Click a phase in the loop above to go deeper into its rhythm, activities and the tools we need to build.</p>
       </div>
 
       <div style={{ marginTop: 22, textAlign: "center", fontSize: 11, color: F.muted2, fontStyle: "italic" }}>
@@ -4591,10 +4589,6 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
               </div>
             </div>
           )}
-
-          <div style={{ marginTop: 14, background: d.accentSoft, border: `1px solid ${d.accent}`, borderRadius: 10, padding: "11px 14px", fontSize: 12.5, fontWeight: 600, color: F.plum, display: "flex", gap: 10, alignItems: "flex-start", lineHeight: 1.5 }}>
-            <span style={{ fontSize: 16, flexShrink: 0 }}>🔧</span><span>{d.build_tools}</span>
-          </div>
         </div>
         );
         })()}

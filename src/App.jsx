@@ -4352,30 +4352,57 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
         </p>
       </div>
 
-      {/* ── Rolling this out — the three phases of the loop, pulled from each phase's content ── */}
+      {/* ── Rolling this out — a 90-day staged rollout; all three phases advance in parallel, easy wins first ── */}
+      {(() => {
+        const PHASE_C = { Prioritise: "#B07A0E", Build: "#E06A2E", Adopt: "#C42B94" };
+        const stages = [
+          { when: "By Day 30", name: "Foundations", note: "the easy wins", tone: F.muted2, moves: [
+            { ph: "Prioritise", text: "Open one signal pool and a WhatsApp user-group channel." },
+            { ph: "Build", text: "Pilot one single-owner pod; slice the next feature under a week." },
+            { ph: "Adopt", text: "Track Pendo adoption on whatever you ship." },
+          ] },
+          { when: "By Day 60", name: "Find the rhythm", note: "operating cadence", tone: F.plum, moves: [
+            { ph: "Prioritise", text: "Run a monthly AI opportunity digest and a monthly product day." },
+            { ph: "Build", text: "Move the pod to the staggered weekly rhythm — Monday releases." },
+            { ph: "Adopt", text: "Auto-generate an enablement drop at each release." },
+          ] },
+          { when: "By Day 90", name: "Full model", note: "the loop, running", tone: F.green, moves: [
+            { ph: "Prioritise", text: "AI ranks themes; schools sign off; QBR commits the quarter." },
+            { ph: "Build", text: "All pods weekly with AI across the SDLC; shock-absorber pod live." },
+            { ph: "Adopt", text: "AAA campaigns + auto-certs; adoption signal feeds Prioritise — loop closed." },
+          ] },
+        ];
+        return (
       <div style={card}>
-        <div style={sectionTitle}>Rolling this out</div>
-        <p style={{ margin: "-2px 0 18px", fontSize: 12.5, color: F.muted, lineHeight: 1.5, maxWidth: 780 }}>Rolling this out means standing up all three phases of the loop, in order. Here's what each one looks like in practice — drawn straight from the Prioritise, Build and Adopt phases.</p>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+          <div style={sectionTitle}>Rolling this out</div>
+          <span style={{ fontSize: 10.5, fontWeight: 800, color: F.plum, background: F.lightYellow, border: `1px solid ${F.yellow}`, borderRadius: 999, padding: "4px 11px", textTransform: "uppercase", letterSpacing: "0.06em", whiteSpace: "nowrap" }}>Target · full model in 90 days</span>
+        </div>
+        <p style={{ margin: "-2px 0 12px", fontSize: 12.5, color: F.muted, lineHeight: 1.5, maxWidth: 800 }}>We don't roll out one phase at a time — all three advance together in chunks. Start with the easy wins, then build up. Here's what good looks like at 30, 60 and 90 days.</p>
+        <div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginBottom: 18 }}>
+          {Object.entries(PHASE_C).map(([name, c]) => (
+            <span key={name} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 10.5, fontWeight: 700, color: F.muted }}>
+              <span style={{ width: 9, height: 9, borderRadius: "50%", background: c, flexShrink: 0 }} />{name}
+            </span>
+          ))}
+        </div>
         <div style={{ display: "flex", alignItems: "stretch", gap: 0 }} className="plc-timeline">
-          {[
-            { when: "Phase 01", name: "Prioritise", sub: "Set the revenue-driven direction", tone: F.yellow, moves: ["Pull every signal into one pool — Salesforce, Pendo, Planhat, WhatsApp, the request board & surveys.", "An AI synthesis tool clusters & scores it into revenue-ranked themes.", "Schools feed the loop and sign off what we commit to.", "A traceable path: AI shortlist → product → SLT/ExCo → QBR commit."] },
-            { when: "Phase 02", name: "Build", sub: "Small pods, a release every Monday", tone: F.orange, moves: ["Small, single-owner pods replace big shared-ownership teams.", "1-week dev cycles, a full QA week behind, a release every Monday.", "AI drafts the spec, prototype, tests & code review — humans decide.", "Schools react to the prototype Tue–Thu, before a line is built."] },
-            { when: "Phase 03", name: "Adopt", sub: "Land, expand, close the loop", tone: F.pink, moves: ["Enablement auto-generated at release — Sales & Support ready day one.", "Marketing runs AAA campaigns only; the rest rides automated collateral.", "Onboarding & guidance drive real adoption, not just access.", "Pendo + Salesforce adoption signal feeds the next Prioritise — loop closed."] },
-          ].map((M, i, arr) => (
+          {stages.map((M, i, arr) => (
             <div key={i} style={{ flex: "1 1 0", display: "flex", flexDirection: "column", minWidth: 0 }} className="plc-tl-col">
-              {/* rail: node + connector to next phase */}
+              {/* rail: node + connector to next milestone */}
               <div style={{ display: "flex", alignItems: "center", marginBottom: 11 }}>
                 <span style={{ width: 16, height: 16, borderRadius: "50%", background: M.tone, border: `3px solid ${F.surface}`, boxShadow: `0 0 0 2px ${M.tone}`, flexShrink: 0 }} />
                 {i < arr.length - 1 && <span style={{ flex: 1, height: 3, background: `linear-gradient(90deg, ${M.tone}, ${arr[i + 1].tone})` }} />}
               </div>
               <div style={{ marginRight: i < arr.length - 1 ? 12 : 0, background: F.bg, border: `1px solid ${F.border}`, borderTop: `3px solid ${M.tone}`, borderRadius: 11, padding: "14px 15px", flex: 1 }}>
-                <div style={{ fontSize: 10, fontWeight: 800, color: M.tone, textTransform: "uppercase", letterSpacing: "0.07em" }}>{M.when}</div>
+                <div style={{ fontSize: 10, fontWeight: 800, color: M.tone === F.muted2 ? F.muted : M.tone, textTransform: "uppercase", letterSpacing: "0.07em" }}>{M.when}</div>
                 <div style={{ fontSize: 15, fontWeight: 800, color: F.plum, lineHeight: 1.15, margin: "2px 0 1px" }}>{M.name}</div>
-                <div style={{ fontSize: 10.5, color: F.muted2, fontWeight: 600, marginBottom: 11 }}>{M.sub}</div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                <div style={{ fontSize: 10.5, color: F.muted2, fontWeight: 600, marginBottom: 12 }}>{M.note}</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
                   {M.moves.map((m, mi) => (
-                    <div key={mi} style={{ display: "flex", gap: 7, fontSize: 11.5, color: F.plum, lineHeight: 1.45 }}>
-                      <span style={{ color: M.tone, fontWeight: 800, flexShrink: 0 }}>✓</span>{m}
+                    <div key={mi} style={{ display: "flex", gap: 8, fontSize: 11.5, lineHeight: 1.4 }}>
+                      <span style={{ flexShrink: 0, width: 52, fontSize: 8.5, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.03em", color: PHASE_C[m.ph], paddingTop: 1 }}>{m.ph}</span>
+                      <span style={{ color: F.plum }}>{m.text}</span>
                     </div>
                   ))}
                 </div>
@@ -4383,8 +4410,10 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
             </div>
           ))}
         </div>
-        <p style={{ margin: "14px 0 0", fontSize: 11.5, color: F.muted2, fontStyle: "italic" }}>Click a phase in the loop above to go deeper into its rhythm, activities and the tools we need to build.</p>
+        <p style={{ margin: "14px 0 0", fontSize: 11.5, color: F.muted2, fontStyle: "italic" }}>Pick up the easy wins first — by day 90 all three phases are running together as one loop.</p>
       </div>
+        );
+      })()}
 
       <div style={{ marginTop: 22, textAlign: "center", fontSize: 11, color: F.muted2, fontStyle: "italic" }}>
         Product Lifecycle framework · draft for SLT review

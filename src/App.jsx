@@ -3995,7 +3995,7 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
       accent: F.yellow, accentDark: "#E2A800", accentSoft: "rgba(247,211,95,0.28)",
       eyebrow: "Phase 01 · Set the revenue-driven direction", title: "Prioritise",
       lede: "Where Product leadership turns live revenue signal into the few bets that will win the year — ranked by ARR impact, expansion and retention, then sharpened quarter by quarter with Sales, Client Experience and our schools in the room.",
-      horizon: "Annual vision · re-cut quarterly · tracked monthly",
+      horizon: "",
       parallel: null,
       stages: [
         { n: "Revenue-driven vision & themes", wk: "Annual → Monthly", p: "Product leadership, Sales and Client Experience agree the 3–5 themes that move ARR — new business, expansion and retention — then sharpen them each quarter and track monthly. Big revenue areas, not features yet.", tools: ["ARR targets", "Net revenue retention"] },
@@ -4038,14 +4038,16 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
               "Each theme scored: revenue impact × adoption gap × strategic fit.",
               "Outputs a ranked, region-aware digest with a rationale per theme.",
             ] },
-          { n: "3", ic: "🎯", stage: "Distill & decide", cadence: "Monthly → Quarterly", build: false,
+          { n: "3", ic: "🎯", stage: "Distill & Decide", cadence: "Monthly → Quarterly", build: false,
             what: "Leadership turns the ranked themes into committed, revenue-anchored bets.",
             decide: [
-              "AI proposes the ranked theme list (the opportunity digest).",
-              "Monthly product day — Product, Sales, Support & CX sense-check it against the field.",
-              "Weigh trade-offs against pod capacity and sequencing.",
-              "QBR — commit the quarter's focus, re-ranked by revenue.",
-              "Hand a revenue-anchored brief to the build pods.",
+              { who: "AI synthesis tool", text: "The AI tool surfaces a ranked, revenue-scored shortlist of candidate themes — the evidence-backed starting point, not the decision." },
+              { who: "Product team", text: "The product team reviews and shapes the shortlist — sharpening scope, merging duplicates and pressure-testing feasibility before it goes wider." },
+              { who: "Product · Sales · Support · CX", text: "Monthly product day: Product walks the revenue teams through the shortlist and gathers front-line feedback." },
+              { who: "Product team", text: "Weigh trade-offs against pod capacity and sequencing." },
+              { who: "Product · Sales (QBR)", text: "QBR: commit the quarter's focus, re-ranked by revenue." },
+              { who: "SLT & ExCo", text: "Leadership sign-off — review and ratify the committed priorities with SLT and ExCo." },
+              { who: "Product → pods", text: "The product team takes the committed bets into the weekly build cycle — the Build phase, next." },
             ] },
         ],
         build: [
@@ -4066,7 +4068,7 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
         { old: "Weeks pulling Salesforce, Pendo & Planhat together by hand", new: "A monthly AI digest unifies all three into one revenue-ranked view", ai: "AI DIGEST" },
         { old: "Annual roadmap treated as fixed", new: "Rolling vision, re-cut every quarter against revenue signal", ai: "ROLLING" },
       ],
-      school: "Schools tell us where to aim — and what they'll pay for.",
+      school: "Every school touchpoint becomes signal — captured continuously, synthesised by AI, and distilled into the roadmap.",
       schoolChips: [
         { ic: "💬", t: "WhatsApp user-group chats" },
         { ic: "🗂", t: "Advisory panels" },
@@ -4398,7 +4400,7 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
           <div style={{ fontSize: 10.5, fontWeight: 800, color: F.plum, opacity: 0.75, textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: 6 }}>{d.eyebrow}</div>
           <div style={{ display: "flex", alignItems: "baseline", gap: 14, flexWrap: "wrap" }}>
             <h1 style={{ fontSize: 32, fontWeight: 800, margin: 0, color: F.plum, lineHeight: 1.1 }}>{d.title}</h1>
-            <div style={{ fontSize: 11.5, fontWeight: 800, background: "rgba(55,2,60,0.16)", color: F.plum, padding: "5px 12px", borderRadius: 999 }}>⏱ {d.horizon}</div>
+            {d.horizon && <div style={{ fontSize: 11.5, fontWeight: 800, background: "rgba(55,2,60,0.16)", color: F.plum, padding: "5px 12px", borderRadius: 999 }}>⏱ {d.horizon}</div>}
           </div>
         </div>
 
@@ -4436,7 +4438,6 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
                         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
                           <span style={{ width: 26, height: 26, borderRadius: "50%", background: on ? F.surface : d.accentSoft, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 14, flexShrink: 0 }}>{s.ic}</span>
                           <span style={{ fontSize: 13.5, fontWeight: 800, color: F.plum }}>{s.stage}</span>
-                          {s.build && <span style={{ fontSize: 8, fontWeight: 800, background: F.plum, color: F.paper, padding: "2px 6px", borderRadius: 999, textTransform: "uppercase", letterSpacing: "0.04em" }}>🔧 Build</span>}
                         </div>
                         <div style={{ fontSize: 9, fontWeight: 800, color: d.accentDark, textTransform: "uppercase", letterSpacing: "0.05em" }}>{s.cadence}</div>
                       </button>
@@ -4471,7 +4472,7 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
                 {cadCols.map(col => (
                   <div key={col.rank} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 7 }}>
                     <span style={{ width: 16, height: 16, borderRadius: "50%", background: d.accent, border: `3px solid ${F.surface}`, boxShadow: `0 0 0 1px ${d.accent}` }} />
-                    <span style={{ fontSize: 11, fontWeight: 800, color: F.plum, background: d.accentSoft, padding: "3px 11px", borderRadius: 999, whiteSpace: "nowrap" }}>{col.label}</span>
+                    <span style={{ fontSize: 11, fontWeight: 800, color: F.plum, background: d.accentSoft, padding: "3px 11px", borderRadius: 999, whiteSpace: "nowrap" }}>{col.label} · {col.items.length}</span>
                   </div>
                 ))}
               </div>
@@ -4484,13 +4485,12 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
                       return (
                       <div key={i} className="plc-act"
                         onMouseEnter={() => a.detail && setActDetail(a.nm)}
-                        style={{ background: F.surface, border: `1px solid ${on ? d.accent : F.border}`, borderTop: `3px solid ${d.accent}`, borderRadius: 10, padding: "11px 12px", cursor: a.detail ? "pointer" : "default", boxShadow: on ? F.shadowSm : "none" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5 }}>
-                          <span style={{ width: 32, height: 32, borderRadius: 9, background: d.accentSoft, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0 }}>{a.ic}</span>
-                          <span style={{ fontSize: 12.5, fontWeight: 800, color: F.plum, lineHeight: 1.2 }}>{a.nm}</span>
+                        style={{ background: on ? d.accentSoft : F.surface, border: `1px solid ${on ? d.accent : F.border}`, borderTop: `3px solid ${d.accent}`, borderRadius: 10, padding: "9px 11px", cursor: a.detail ? "pointer" : "default", boxShadow: on ? F.shadowSm : "none", display: "flex", alignItems: "center", gap: 9 }}>
+                        <span style={{ width: 28, height: 28, borderRadius: 8, background: d.accentSoft, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 15, flexShrink: 0 }}>{a.ic}</span>
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontSize: 12.5, fontWeight: 800, color: F.plum, lineHeight: 1.25 }}>{a.nm}</div>
+                          {a.cad !== col.label && <div style={{ fontSize: 9, fontWeight: 800, color: d.accentDark, textTransform: "uppercase", letterSpacing: "0.04em", marginTop: 2 }}>{a.cad}</div>}
                         </div>
-                        {a.cad !== col.label && <div style={{ fontSize: 9, fontWeight: 800, color: d.accentDark, textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 4 }}>{a.cad}</div>}
-                        <div style={{ fontSize: 11.5, color: F.muted, lineHeight: 1.45 }}>{a.d}</div>
                       </div>
                       );
                     })}
@@ -4503,11 +4503,12 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
           {/* Hover detail — who / what / when / how / why for the focused activity */}
           {shownAct && shownAct.detail && (
             <div key={shownAct.nm} className="plc-detailfade" style={{ background: F.bg, border: `1px solid ${F.border}`, borderLeft: `4px solid ${d.accent}`, borderRadius: 11, padding: "14px 16px", marginTop: 4 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 12 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 4 }}>
                 <span style={{ width: 30, height: 30, borderRadius: 8, background: d.accentSoft, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0 }}>{shownAct.ic}</span>
                 <span style={{ fontSize: 14.5, fontWeight: 800, color: F.plum }}>{shownAct.nm}</span>
                 <span style={{ fontSize: 9.5, fontWeight: 800, color: d.accentDark, background: d.accentSoft, padding: "3px 9px", borderRadius: 999, textTransform: "uppercase", letterSpacing: "0.04em" }}>{shownAct.cad}</span>
               </div>
+              {shownAct.d && <p style={{ fontSize: 12, color: F.muted, lineHeight: 1.5, margin: "0 0 12px" }}>{shownAct.d}</p>}
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 10 }}>
                 {[["Who", shownAct.detail.who], ["What", shownAct.detail.what], ["When", shownAct.detail.when], ["How", shownAct.detail.how], ["Why", shownAct.detail.why]].map(([k, v], i) => (
                   <div key={i} style={{ background: F.surface, border: `1px solid ${F.border}`, borderRadius: 8, padding: "9px 11px" }}>
@@ -4535,7 +4536,6 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
               <span style={{ fontSize: 19 }}>{s.ic}</span>
               <div style={{ ...sectionTitle, marginBottom: 0 }}>Synthesise</div>
               <span style={{ fontSize: 9.5, fontWeight: 800, color: d.accentDark, background: d.accentSoft, padding: "2px 9px", borderRadius: 999, textTransform: "uppercase", letterSpacing: "0.04em" }}>{s.cadence}</span>
-              <span style={{ fontSize: 9.5, fontWeight: 800, background: F.plum, color: F.paper, padding: "3px 9px", borderRadius: 999, textTransform: "uppercase", letterSpacing: "0.05em" }}>🔧 To build</span>
             </div>
             <p style={{ margin: "0 0 14px", fontSize: 13, color: F.muted, lineHeight: 1.6, maxWidth: 840 }}>{s.what}</p>
             <div style={{ display: "flex", flexDirection: "column", gap: 7, marginBottom: 16 }}>
@@ -4575,8 +4575,11 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {s.decide.map((dstep, di) => (
                 <div key={di} style={{ display: "flex", gap: 11, alignItems: "flex-start", background: F.bg, border: `1px solid ${F.border}`, borderLeft: `3px solid ${d.accent}`, borderRadius: 10, padding: "11px 14px" }}>
-                  <span style={{ width: 22, height: 22, borderRadius: "50%", background: d.accent, color: F.plum, fontSize: 11, fontWeight: 800, display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{di + 1}</span>
-                  <span style={{ fontSize: 12.5, color: F.plum, lineHeight: 1.5 }}>{dstep}</span>
+                  <span style={{ width: 22, height: 22, borderRadius: "50%", background: d.accent, color: F.plum, fontSize: 11, fontWeight: 800, display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>{di + 1}</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <span style={{ display: "inline-block", fontSize: 9, fontWeight: 800, color: d.accentDark, background: d.accentSoft, padding: "2px 8px", borderRadius: 999, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>{dstep.who}</span>
+                    <div style={{ fontSize: 12.5, color: F.plum, lineHeight: 1.5 }}>{dstep.text}</div>
+                  </div>
                 </div>
               ))}
             </div>

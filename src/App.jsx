@@ -4032,12 +4032,11 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
         ],
       },
       stakeholders: [
-        { n: "Product leadership", t: "lead", ic: "🧩" },
-        { n: "Sales", t: "", ic: "📈" }, { n: "Client Experience", t: "", ic: "💬" },
-        { n: "Finance / RevOps", t: "", ic: "💰" }, { n: "ExCo / SLT (sponsors)", t: "", ic: "👔" },
+        { n: "Product leadership", t: "lead", ic: "🧩" }, { n: "ExCo / SLT", t: "lead", ic: "👔" }, { n: "Finance", t: "lead", ic: "💰" },
+        { n: "Sales", t: "", ic: "📈" }, { n: "Client Experience", t: "", ic: "💬" }, { n: "Product Marketing", t: "", ic: "📣" },
         { n: "Heads / Principals", t: "school", ic: "🎓" }, { n: "Directors of Admissions", t: "school", ic: "🏫" },
         { n: "Registrars", t: "school", ic: "🗂" }, { n: "Admissions officers", t: "school", ic: "🧑‍💼" },
-        { n: "Marketing leads", t: "school", ic: "📣" },
+        { n: "School marketing", t: "school", ic: "📢" },
       ],
       shift: [
         { old: "Planning off gut feel and the loudest voice", new: "Opportunities ranked by revenue impact before the room meets", ai: "AI SCAN" },
@@ -4388,64 +4387,14 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
           </div>
         </div>
 
-        {/* Stages → interactive cadence plotline (light at a glance, click a beat for detail) */}
-        <div style={{ ...card, ...stg(1) }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: 8, marginBottom: 4 }}>
-            <div style={{ ...sectionTitle, marginBottom: 0 }}>The rhythm · {d.stages.length} beats</div>
-            <div style={{ fontSize: 11, color: F.muted2, fontWeight: 600 }}>Tap a beat for detail ↓</div>
-          </div>
-          {d.parallel && (
-            <div style={{ background: d.accentSoft, border: `1.5px dashed ${d.accent}`, borderRadius: 10, padding: "9px 13px", fontSize: 12, fontWeight: 600, color: F.plum, margin: "10px 0 14px", display: "flex", gap: 9, alignItems: "center", lineHeight: 1.45 }}>
-              <span style={{ fontSize: 15, flexShrink: 0 }}>⚡</span>{d.parallel}
-            </div>
-          )}
-
-          {/* Beat ribbon (horizontal, scrolls on narrow) */}
-          <div style={{ overflowX: "auto", padding: "6px 2px 12px", marginBottom: 4 }}>
-            <div style={{ display: "flex", alignItems: "stretch", minWidth: "min-content" }}>
-              {d.stages.map((s, i) => {
-                const on = sel === i;
-                return (
-                  <div key={i} style={{ display: "flex", alignItems: "center" }}>
-                    {i > 0 && <span style={{ color: F.borderStrong, fontSize: 17, fontWeight: 800, padding: "0 4px", alignSelf: "center" }}>›</span>}
-                    <button className="plc-beat" onClick={() => setStageSel(i)} style={{
-                      width: 158, textAlign: "left", cursor: "pointer", fontFamily: "inherit",
-                      background: on ? d.accentSoft : F.bg,
-                      border: `1px solid ${on ? d.accent : F.border}`,
-                      borderRadius: 11, padding: "11px 12px", boxShadow: on ? F.shadowSm : "none",
-                    }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 7 }}>
-                        <span style={{ width: 20, height: 20, borderRadius: "50%", background: on ? d.accent : F.surface, border: `1.5px solid ${d.accent}`, color: F.plum, fontSize: 10, fontWeight: 800, display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{i + 1}</span>
-                        <span style={{ fontSize: 9, fontWeight: 800, color: d.accentDark, textTransform: "uppercase", letterSpacing: "0.04em", lineHeight: 1.2 }}>{s.wk}</span>
-                      </div>
-                      <div style={{ fontSize: 12.5, fontWeight: on ? 800 : 600, color: F.plum, lineHeight: 1.3 }}>{s.n}</div>
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Selected beat detail */}
-          <div key={sel} className="plc-detailfade" style={{ background: F.bg, border: `1px solid ${F.border}`, borderLeft: `4px solid ${d.accent}`, borderRadius: 11, padding: "14px 16px" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12, marginBottom: 6, flexWrap: "wrap" }}>
-              <h4 style={{ fontSize: 15, fontWeight: 800, color: F.plum, margin: 0 }}>{selStage.n}</h4>
-              <span style={{ fontSize: 10.5, fontWeight: 800, color: d.accentDark, background: d.accentSoft, padding: "3px 10px", borderRadius: 999, whiteSpace: "nowrap" }}>{selStage.wk}</span>
-            </div>
-            <p style={{ fontSize: 13.5, color: F.muted, margin: "0 0 10px", lineHeight: 1.6 }}>{selStage.p}</p>
-            {selStage.tools.length > 0 && (
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                {selStage.tools.map((t, ti) => <span key={ti} style={{ fontSize: 10.5, fontWeight: 700, padding: "4px 10px", borderRadius: 6, background: d.accentSoft, color: F.plum }}>{t}</span>)}
-              </div>
-            )}
-          </div>
-        </div>
-
         {/* Activities — mapped onto a frequency timeline */}
         {(() => {
         const hasDetail = d.activities.some(a => a.detail);
-        const shownAct = (actDetail && d.activities.includes(actDetail)) ? actDetail : (hasDetail ? d.activities.find(a => a.detail) : null);
+        // Match by name, not object ref — DATA is rebuilt every render so refs never match.
+        const shownAct = d.activities.find(a => a.detail && a.nm === actDetail) || (hasDetail ? d.activities.find(a => a.detail) : null);
+        const showDigest = d.digest && shownAct && shownAct.nm === "AI opportunity digest";
         return (
+        <>
         <div style={{ ...card, ...stg(2) }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: 8, marginBottom: 4 }}>
             <div style={{ ...sectionTitle, marginBottom: 0 }}>Activities on a cadence timeline</div>
@@ -4472,7 +4421,7 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
                       const on = a.detail && shownAct === a;
                       return (
                       <div key={i} className="plc-act"
-                        onMouseEnter={() => a.detail && setActDetail(a)}
+                        onMouseEnter={() => a.detail && setActDetail(a.nm)}
                         style={{ background: F.surface, border: `1px solid ${on ? d.accent : F.border}`, borderTop: `3px solid ${d.accent}`, borderRadius: 10, padding: "11px 12px", cursor: a.detail ? "pointer" : "default", boxShadow: on ? F.shadowSm : "none" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5 }}>
                           <span style={{ width: 32, height: 32, borderRadius: 9, background: d.accentSoft, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0 }}>{a.ic}</span>
@@ -4480,6 +4429,7 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
                         </div>
                         {a.cad !== col.label && <div style={{ fontSize: 9, fontWeight: 800, color: d.accentDark, textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 4 }}>{a.cad}</div>}
                         <div style={{ fontSize: 11.5, color: F.muted, lineHeight: 1.45 }}>{a.d}</div>
+                        {a.nm === "AI opportunity digest" && d.digest && <div style={{ marginTop: 6, fontSize: 10.5, fontWeight: 800, color: F.pink }}>↓ source breakdown</div>}
                       </div>
                       );
                     })}
@@ -4512,12 +4462,10 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
             <span style={{ fontSize: 16, flexShrink: 0 }}>🔧</span><span>{d.build_tools}</span>
           </div>
         </div>
-        );
-        })()}
 
-        {/* AI opportunity digest — source breakdown + how we'll build it */}
-        {d.digest && (
-          <div style={{ ...card, ...stg(3) }}>
+        {/* AI opportunity digest — source breakdown + how we'll build it · shown when its activity tile is selected */}
+        {showDigest && (
+          <div className="plc-detailfade" style={{ ...card }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 4 }}>
               <div style={{ ...sectionTitle, marginBottom: 0 }}>AI opportunity digest</div>
               <span style={{ fontSize: 9.5, fontWeight: 800, color: F.plum, background: d.accentSoft, padding: "3px 9px", borderRadius: 999, textTransform: "uppercase", letterSpacing: "0.04em" }}>🤖 {d.digest.cadence}</span>
@@ -4549,6 +4497,9 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
             </div>
           </div>
         )}
+        </>
+        );
+        })()}
 
         {/* Who's involved — mapped into role lanes with recurring icons */}
         <div style={{ ...card, ...stg(4) }}>

@@ -4088,6 +4088,12 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
         { n: "Coordinators & admins", t: "school", ic: "🗂" }, { n: "Day-to-day users", t: "school", ic: "🧑‍💼" },
         { n: "School marketing", t: "school", ic: "📢" },
       ],
+      problems: [
+        { ic: "🗂", t: "Signal is scattered and lost", p: "Demand lives in inboxes, calls and spreadsheets, so the patterns never surface and good ideas die in someone's notes.", fix: "One signal pool, captured continuously" },
+        { ic: "⚖️", t: "The loudest voice sets the roadmap", p: "No consistent revenue lens; weeks lost hand-pulling data for a deck; we plan off gut feel.", fix: "AI synthesis ranked by revenue impact × adoption gap" },
+        { ic: "🏫", t: "Schools aren't in the decision", p: "We commit to bets without the people who'll use them, then find out we backed the wrong things.", fix: "Schools sign off the plan before we commit" },
+        { ic: "🐢", t: "The roadmap is fixed and opaque", p: "Annual plans treated as set in stone; priorities decided in a black box no one can trace.", fix: "A rolling roadmap with a traceable path from signal to commit" },
+      ],
       shift: [
         { old: "Signal scattered across inboxes, calls and spreadsheets", new: "One signal pool — Salesforce, Pendo, Planhat, WhatsApp, the feature board & surveys", ai: "CAPTURED" },
         { old: "Weeks hand-synthesising data for a strategy deck", new: "A custom AI tool clusters & scores it into ranked themes, continuously", ai: "AI SYNTH" },
@@ -4346,49 +4352,32 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
         </p>
       </div>
 
-      {/* ── The problems we're fixing — keeps the change focused, not change for its own sake ── */}
-      <div style={{ ...card, borderLeft: `4px solid ${F.pink}` }}>
-        <div style={sectionTitle}>The problems we're fixing</div>
-        <p style={{ margin: "-4px 0 14px", fontSize: 12.5, color: F.muted, lineHeight: 1.5, maxWidth: 720 }}>Every change in this lifecycle exists to fix one of four core problems. If a change doesn't fix one of these, we don't make it — this isn't change for its own sake.</p>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 12 }}>
-          {[
-            { ic: "🗂", t: "Signal is scattered and lost", p: "Demand and feedback live in inboxes, calls and spreadsheets. We miss what matters and can't see the patterns.", fix: "Capture into one signal pool" },
-            { ic: "⚖️", t: "Prioritisation runs on gut feel", p: "The loudest voice wins; weeks are lost hand-pulling data; there's no consistent revenue lens.", fix: "AI synthesis + revenue ranking" },
-            { ic: "🏫", t: "Schools come in too late", p: "We build, then learn it wasn't quite what schools needed — weak adoption and wasted pod cycles.", fix: "Continuous discovery + schools sign-off" },
-            { ic: "🐢", t: "Roadmaps are slow, fixed & opaque", p: "Annual plans treated as fixed, big-bang releases, and decisions made in a black box.", fix: "Rolling roadmap, traceable path, weekly build" },
-          ].map((x, i) => (
-            <div key={i} style={{ background: F.bg, border: `1px solid ${F.border}`, borderTop: `3px solid ${F.pink}`, borderRadius: 10, padding: "13px 15px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                <span style={{ fontSize: 19 }}>{x.ic}</span>
-                <span style={{ fontSize: 13.5, fontWeight: 800, color: F.plum, lineHeight: 1.2 }}>{x.t}</span>
-              </div>
-              <p style={{ margin: "0 0 9px", fontSize: 12, color: F.muted, lineHeight: 1.5 }}>{x.p}</p>
-              <div style={{ fontSize: 11, fontWeight: 700, color: F.plum }}><span style={{ color: F.green }}>→</span> {x.fix}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* ── Adopt at your own pace — maturity ladder so products aren't overwhelmed ── */}
+      {/* ── Rolling this out fast — the 90-day adoption timeline (push, not self-paced) ── */}
       <div style={card}>
-        <div style={sectionTitle}>Adopt at your own pace</div>
-        <p style={{ margin: "-4px 0 16px", fontSize: 12.5, color: F.muted, lineHeight: 1.5, maxWidth: 760 }}>Products are at different maturity and have different bandwidth — you don't have to do everything at once. Find where your product is today and take the next step. Already running some of this? Great — focus where you're not.</p>
-        <div style={{ display: "flex", alignItems: "stretch", gap: 10, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+          <div style={sectionTitle}>Rolling this out — fast</div>
+          <span style={{ fontSize: 10.5, fontWeight: 800, color: F.plum, background: F.lightYellow, border: `1px solid ${F.yellow}`, borderRadius: 999, padding: "4px 11px", textTransform: "uppercase", letterSpacing: "0.06em", whiteSpace: "nowrap" }}>Target · full model in 90 days</span>
+        </div>
+        <p style={{ margin: "-2px 0 18px", fontSize: 12.5, color: F.muted, lineHeight: 1.5, maxWidth: 780 }}>This isn't self-paced. Every product moves onto the new way of working on one shared, fast cadence — the 90-day path below. Stand up the basics in the first fortnight, get the rhythm running inside two months, and hit the full AI-accelerated model by day 90.</p>
+        <div style={{ display: "flex", alignItems: "stretch", gap: 0 }} className="plc-timeline">
           {[
-            { lvl: "Level 1", name: "Foundations", sub: "zero → one", tone: { bar: F.muted2, bg: F.bg }, moves: ["Start one signal pool — even a shared board or doc.", "Stand up a user-group channel (e.g. WhatsApp).", "Hold a monthly product + revenue check-in.", "Talk to a handful of schools every month."] },
-            { lvl: "Level 2", name: "Operating", sub: "running the rhythm", tone: { bar: F.orange, bg: "rgba(247,139,67,0.08)" }, moves: ["Connect Salesforce / Pendo / Planhat feeds.", "Run discovery interviews & usability tests monthly.", "Schools sign off the plan before you commit.", "Re-rank the roadmap at a quarterly review."] },
-            { lvl: "Level 3", name: "AI-accelerated", sub: "the full model", tone: { bar: F.green, bg: "rgba(26,122,62,0.08)" }, moves: ["AI synthesis tool ranks themes automatically.", "Always-on win/loss, churn & support signal.", "Rolling Now / Next / Later roadmap, tuned monthly.", "Full traceable decide path → weekly build cycle."] },
-          ].map((L, i) => (
-            <div key={i} style={{ display: "flex", alignItems: "stretch", gap: 10, flex: "1 1 240px" }}>
-              {i > 0 && <span style={{ color: F.borderStrong, fontSize: 20, fontWeight: 800, alignSelf: "center" }}>→</span>}
-              <div style={{ flex: 1, background: L.tone.bg, border: `1px solid ${F.border}`, borderTop: `3px solid ${L.tone.bar}`, borderRadius: 11, padding: "14px 15px" }}>
-                <div style={{ fontSize: 9.5, fontWeight: 800, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.08em" }}>{L.lvl}</div>
-                <div style={{ fontSize: 15, fontWeight: 800, color: F.plum, lineHeight: 1.1, margin: "2px 0 1px" }}>{L.name}</div>
-                <div style={{ fontSize: 10.5, color: F.muted2, fontWeight: 600, marginBottom: 10 }}>{L.sub}</div>
+            { when: "Weeks 1–2", name: "Stand it up", tone: F.orange, moves: ["Open one signal pool — a shared board or doc, today.", "Spin up a user-group channel (e.g. WhatsApp).", "Put a monthly product + revenue check-in on the calendar.", "Book time with a handful of schools this month."] },
+            { when: "Month 1–2", name: "Get the rhythm running", tone: F.pink, moves: ["Connect Salesforce / Pendo / Planhat feeds.", "Run discovery interviews & usability tests every month.", "Schools sign off the plan before you commit.", "Re-rank the roadmap at the quarterly review."] },
+            { when: "By Day 90", name: "AI-accelerated", tone: F.green, moves: ["AI synthesis ranks themes automatically.", "Always-on win/loss, churn & support signal.", "Rolling Now / Next / Later roadmap, tuned monthly.", "Full traceable decide path → weekly build cycle."] },
+          ].map((M, i, arr) => (
+            <div key={i} style={{ flex: "1 1 0", display: "flex", flexDirection: "column", minWidth: 0 }} className="plc-tl-col">
+              {/* rail: node + connector to next milestone */}
+              <div style={{ display: "flex", alignItems: "center", marginBottom: 11 }}>
+                <span style={{ width: 16, height: 16, borderRadius: "50%", background: M.tone, border: `3px solid ${F.surface}`, boxShadow: `0 0 0 2px ${M.tone}`, flexShrink: 0 }} />
+                {i < arr.length - 1 && <span style={{ flex: 1, height: 3, background: `linear-gradient(90deg, ${M.tone}, ${arr[i + 1].tone})` }} />}
+              </div>
+              <div style={{ marginRight: i < arr.length - 1 ? 12 : 0, background: F.bg, border: `1px solid ${F.border}`, borderTop: `3px solid ${M.tone}`, borderRadius: 11, padding: "14px 15px", flex: 1 }}>
+                <div style={{ fontSize: 10, fontWeight: 800, color: M.tone, textTransform: "uppercase", letterSpacing: "0.07em" }}>{M.when}</div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: F.plum, lineHeight: 1.15, margin: "2px 0 11px" }}>{M.name}</div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                  {L.moves.map((m, mi) => (
+                  {M.moves.map((m, mi) => (
                     <div key={mi} style={{ display: "flex", gap: 7, fontSize: 11.5, color: F.plum, lineHeight: 1.45 }}>
-                      <span style={{ color: L.tone.bar, fontWeight: 800, flexShrink: 0 }}>✓</span>{m}
+                      <span style={{ color: M.tone, fontWeight: 800, flexShrink: 0 }}>✓</span>{m}
                     </div>
                   ))}
                 </div>
@@ -4396,17 +4385,19 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
             </div>
           ))}
         </div>
-        <p style={{ margin: "14px 0 0", fontSize: 11.5, color: F.muted2, fontStyle: "italic" }}>Maturity is per step, not per product — you might be Level 3 on Capture and Level 1 on Synthesise. Move the weakest step up one level at a time.</p>
+        <p style={{ margin: "14px 0 0", fontSize: 11.5, color: F.muted2, fontStyle: "italic" }}>Already running parts of this? You're ahead — don't coast. Close the remaining gaps now so the whole portfolio is operating this way within the quarter.</p>
       </div>
 
       <div style={{ marginTop: 22, textAlign: "center", fontSize: 11, color: F.muted2, fontStyle: "italic" }}>
         Product Lifecycle framework · draft for SLT review
       </div>
 
-      {/* Stack the cycle grid on narrow viewports */}
+      {/* Stack the cycle grid + rollout timeline on narrow viewports */}
       <style>{`
         @media (max-width: 880px) {
           .plc-cycle-grid { grid-template-columns: 1fr !important; }
+          .plc-timeline { flex-direction: column !important; gap: 14px !important; }
+          .plc-timeline .plc-tl-col > div:last-child { margin-right: 0 !important; }
         }
       `}</style>
     </>
@@ -4676,6 +4667,26 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
             </div>
           </div>
         ); })()}
+
+        {/* The problems we're fixing in this phase — keeps the change focused, not change for its own sake */}
+        {d.problems && (
+          <div style={{ ...card, ...stg(4), borderLeft: `4px solid ${d.accent}` }}>
+            <div style={sectionTitle}>The problems we're fixing</div>
+            <p style={{ margin: "-4px 0 14px", fontSize: 12.5, color: F.muted, lineHeight: 1.5, maxWidth: 720 }}>Everything above exists to fix one of these four problems with how we prioritise. If a change doesn't fix one of them, we don't make it — this isn't change for its own sake.</p>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 12 }}>
+              {d.problems.map((x, i) => (
+                <div key={i} style={{ background: F.bg, border: `1px solid ${F.border}`, borderTop: `3px solid ${d.accent}`, borderRadius: 10, padding: "13px 15px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                    <span style={{ fontSize: 19 }}>{x.ic}</span>
+                    <span style={{ fontSize: 13.5, fontWeight: 800, color: F.plum, lineHeight: 1.2 }}>{x.t}</span>
+                  </div>
+                  <p style={{ margin: "0 0 9px", fontSize: 12, color: F.muted, lineHeight: 1.5 }}>{x.p}</p>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: F.plum }}><span style={{ color: F.green }}>→</span> {x.fix}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Old way → AI-first */}
         <div style={{ ...card, ...stg(4) }}>

@@ -4031,6 +4031,19 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
           "Human-in-the-loop: leadership reviews, adjusts the weighting, and commits.",
         ],
       },
+      synthesis: {
+        intro: "The activities above are how we gather signal. This is how that signal becomes the plan — captured continuously, synthesised monthly, and committed to a roadmap that updates on three different cadences.",
+        steps: [
+          { ic: "📥", stage: "Capture", cadence: "Continuous", ai: false, what: "Every discovery activity drops into one signal pool — AI opportunity digest, WhatsApp groups, advisory panels, the monthly product day, CX tickets, surveys and product usage." },
+          { ic: "🧮", stage: "Synthesise", cadence: "Monthly", ai: true, what: "AI clusters and de-duplicates the raw signal into candidate themes, then scores each by revenue impact × adoption gap × strategic fit, with a plain-language rationale." },
+          { ic: "🎯", stage: "Distill & decide", cadence: "Monthly → Quarterly", ai: false, what: "Product leadership reviews the ranked themes at the monthly product day and the QBR, weighs trade-offs against pod capacity, and commits." },
+        ],
+        roadmap: [
+          { horizon: "Now", sub: "this quarter · in build", cadence: "Tuned monthly", note: "Committed bets handed to the pods; adjusted from live signal at the monthly product day." },
+          { horizon: "Next", sub: "next quarter", cadence: "Re-cut each QBR", note: "The re-ranked shortlist for the next cycle, weighed against revenue signal." },
+          { horizon: "Later", sub: "this year", cadence: "Set at annual offsite", note: "The 3–5 annual revenue themes; refreshed yearly and nudged quarterly as the market shifts." },
+        ],
+      },
       stakeholders: [
         { n: "Product leadership", t: "lead", ic: "🧩" }, { n: "ExCo / SLT", t: "lead", ic: "👔" }, { n: "Finance", t: "lead", ic: "💰" },
         { n: "Sales", t: "", ic: "📈" }, { n: "Client Experience", t: "", ic: "💬" }, { n: "Product Marketing", t: "", ic: "📣" },
@@ -4511,6 +4524,51 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
         </>
         );
         })()}
+
+        {/* From signal to roadmap — how discovery is synthesised, distilled & turned into the plan */}
+        {d.synthesis && (
+          <div style={{ ...card, ...stg(4) }}>
+            <div style={sectionTitle}>From signal to roadmap</div>
+            <p style={{ margin: "0 0 16px", fontSize: 12.5, color: F.muted, lineHeight: 1.55 }}>{d.synthesis.intro}</p>
+
+            {/* Funnel: Capture → Synthesise → Distill & decide */}
+            <div style={{ display: "flex", alignItems: "stretch", gap: 8, flexWrap: "wrap" }}>
+              {d.synthesis.steps.map((s, i) => (
+                <div key={i} style={{ display: "flex", alignItems: "stretch", gap: 8, flex: "1 1 220px" }}>
+                  {i > 0 && <span style={{ color: F.borderStrong, fontSize: 18, fontWeight: 800, alignSelf: "center" }}>→</span>}
+                  <div style={{ flex: 1, background: F.bg, border: `1px solid ${F.border}`, borderTop: `3px solid ${d.accent}`, borderRadius: 10, padding: "13px 14px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6, flexWrap: "wrap" }}>
+                      <span style={{ width: 30, height: 30, borderRadius: 8, background: d.accentSoft, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0 }}>{s.ic}</span>
+                      <span style={{ fontSize: 13.5, fontWeight: 800, color: F.plum }}>{s.stage}</span>
+                      {s.ai && <span style={{ fontSize: 8.5, fontWeight: 800, letterSpacing: "0.06em", background: d.accent, color: F.plum, padding: "2px 6px", borderRadius: 4 }}>AI</span>}
+                    </div>
+                    <div style={{ fontSize: 9.5, fontWeight: 800, color: d.accentDark, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 6 }}>{s.cadence}</div>
+                    <div style={{ fontSize: 11.5, color: F.muted, lineHeight: 1.5 }}>{s.what}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ textAlign: "center", fontSize: 12, fontWeight: 800, color: F.muted2, margin: "12px 0" }}>↓ produces &amp; updates the roadmap</div>
+
+            {/* Roadmap horizons: Now / Next / Later, each on its own cadence */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12 }}>
+              {d.synthesis.roadmap.map((r, i) => {
+                const tone = i === 0 ? { bg: d.accentSoft, bar: d.accent } : i === 1 ? { bg: F.bg, bar: d.accent } : { bg: F.bg, bar: F.borderStrong };
+                return (
+                  <div key={i} style={{ background: tone.bg, border: `1px solid ${F.border}`, borderLeft: `4px solid ${tone.bar}`, borderRadius: 10, padding: "13px 15px" }}>
+                    <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 2, flexWrap: "wrap" }}>
+                      <span style={{ fontSize: 16, fontWeight: 800, color: F.plum }}>{r.horizon}</span>
+                      <span style={{ fontSize: 10.5, color: F.muted2, fontWeight: 600 }}>{r.sub}</span>
+                    </div>
+                    <span style={{ display: "inline-block", fontSize: 9.5, fontWeight: 800, color: d.accentDark, background: F.surface, border: `1px solid ${F.border}`, padding: "2px 9px", borderRadius: 999, marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.04em" }}>🕑 {r.cadence}</span>
+                    <div style={{ fontSize: 11.5, color: F.muted, lineHeight: 1.5 }}>{r.note}</div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Who's involved — mapped into role lanes with recurring icons */}
         <div style={{ ...card, ...stg(4) }}>

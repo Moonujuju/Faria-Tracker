@@ -3964,6 +3964,8 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
   const [hover, setHover] = useState(null);
   // Which cadence beat is expanded in the stages plotline (reset to 0 per phase).
   const [stageSel, setStageSel] = useState(0);
+  // Which activity tile is hovered (drives the who/what/when/how/why panel). Reset per phase.
+  const [actDetail, setActDetail] = useState(null);
   const topRef = useRef(null);
   const didMount = useRef(false);
 
@@ -3977,6 +3979,7 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
   // (skip the very first render so a deep-linked phase doesn't yank the page).
   useEffect(() => {
     setStageSel(0);
+    setActDetail(null);
     if (!didMount.current) { didMount.current = true; return; }
     // Jump to the very top of the page (the topbar is sticky, so nothing is hidden
     // behind it). Instant, not smooth — a slow animated scroll read as a "refresh".
@@ -3987,43 +3990,70 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
   const DATA = {
     prioritise: {
       accent: F.yellow, accentDark: "#E2A800", accentSoft: "rgba(247,211,95,0.28)",
-      eyebrow: "Phase 01 · Set the direction", title: "Prioritise",
-      lede: "Where leadership sets a revenue-driven vision. ExCo, SLT and Sales align on the few bets that will win the year, then sharpen them quarter by quarter from live signal.",
+      eyebrow: "Phase 01 · Set the revenue-driven direction", title: "Prioritise",
+      lede: "Where Product leadership turns live revenue signal into the few bets that will win the year — ranked by ARR impact, expansion and retention, then sharpened quarter by quarter with Sales, Client Experience and our schools in the room.",
       horizon: "Annual vision · re-cut quarterly · tracked monthly",
       parallel: null,
       stages: [
-        { n: "Vision & strategic themes", wk: "Annual · Quarterly · Monthly", p: "ExCo, SLT and Sales agree the 3–5 themes for the year, refine them each quarter, and check progress monthly. Big areas, not features yet.", tools: [] },
-        { n: "Revenue & sales-signal review", wk: "Quarterly", p: "Pressure-test each theme against pipeline, churn risk and expansion. If a bet doesn't move revenue, it doesn't make the cut.", tools: ["Salesforce", "Planhat"] },
-        { n: "AI-assisted opportunity scan", wk: "Always-on", p: "AI pulls from Salesforce (pipeline / win-loss), Pendo (product usage) and Planhat (health / expansion) and ranks opportunities — including by region — so the room starts from evidence, not opinion.", tools: ["Salesforce", "Pendo", "Planhat", "Regional growth"] },
-        { n: "Quarter re-cut & commit", wk: "Per quarter", p: "Themes move up or down as the market shifts. Commit the next quarter's focus and hand a clear brief to the build pods.", tools: [] },
+        { n: "Revenue-driven vision & themes", wk: "Annual → Monthly", p: "Product leadership, Sales and Client Experience agree the 3–5 themes that move ARR — new business, expansion and retention — then sharpen them each quarter and track monthly. Big revenue areas, not features yet.", tools: ["ARR targets", "Net revenue retention"] },
+        { n: "Revenue & sales-signal review", wk: "Quarterly", p: "Pressure-test each theme against pipeline value, win/loss reasons, churn risk and expansion. If a bet doesn't move revenue, it doesn't make the cut.", tools: ["Salesforce", "Planhat"] },
+        { n: "AI opportunity digest", wk: "Monthly", p: "A monthly AI digest unifies Salesforce (pipeline / win-loss), Pendo (product usage) and Planhat (health / expansion), scores opportunities by revenue impact × adoption gap, and ranks them by region — so the room starts from evidence, not opinion.", tools: ["Salesforce", "Pendo", "Planhat"] },
+        { n: "Quarter re-cut & commit", wk: "Quarterly", p: "Themes move up or down by expected revenue impact. Commit the next quarter's focus and hand a clear, revenue-anchored brief to the build pods.", tools: ["Revenue-ranked roadmap"] },
       ],
       activities: [
-        { ic: "📊", nm: "Annual strategy offsite", cad: "Yearly", d: "ExCo + SLT set the year's themes and revenue targets." },
-        { ic: "💼", nm: "Quarterly Business Review", cad: "Quarterly", d: "Re-cut themes against revenue signal; commit the next quarter." },
-        { ic: "📞", nm: "Monthly product–revenue call", cad: "Monthly", d: "Product + Sales review pipeline and pull-through on committed bets." },
-        { ic: "🤖", nm: "AI opportunity digest", cad: "Continuous", d: "Auto-generated ranked opportunities from Salesforce, Pendo, Planhat." },
-        { ic: "🏫", nm: "School advisory panel", cad: "Quarterly", d: "Core user-group schools review the theme shortlist and rank what matters to them." },
-        { ic: "🔔", nm: "Top-request review", cad: "Monthly", d: "Sort the biggest school feature requests by segment and revenue impact." },
+        { ic: "📊", nm: "Annual strategy offsite", cad: "Yearly", d: "ExCo + Product leadership set the year's revenue targets and 3–5 themes.",
+          detail: { who: "ExCo, Product leadership, VP Sales", what: "Set the annual ARR target and the 3–5 strategic themes to hit it.", when: "Once a year, at the start of the financial year.", how: "Workshop off trailing-year revenue, win/loss and the AI opportunity digest.", why: "Anchor every downstream bet to a revenue number." } },
+        { ic: "💼", nm: "Quarterly Business Review", cad: "Quarterly", d: "Re-rank themes against revenue signal; commit the next quarter.",
+          detail: { who: "Product leadership, Sales, Client Experience, Finance / RevOps", what: "Re-rank themes by revenue impact and commit the next quarter's focus.", when: "Each quarter.", how: "Review the AI digest + QBR deck; weight by pipeline, expansion and churn risk.", why: "Kill bets that aren't moving revenue before they consume a pod." } },
+        { ic: "📞", nm: "Monthly product–revenue call", cad: "Monthly", d: "Track pull-through of committed bets on pipeline and expansion.",
+          detail: { who: "Product leadership, Sales, Client Experience", what: "Track how committed bets are converting in pipeline and expansion.", when: "Monthly.", how: "Walk the prioritisation dashboard; compare actuals against the revenue thesis.", why: "Catch drift early instead of waiting for the QBR." } },
+        { ic: "🤖", nm: "AI opportunity digest", cad: "Monthly", d: "Auto-ranked opportunities from Salesforce, Pendo & Planhat.",
+          detail: { who: "Auto-generated for Product leadership.", what: "A ranked, region-aware list of opportunities scored by revenue impact × adoption gap.", when: "Monthly — feeds the product–revenue call and the QBR.", how: "An AI job over the Salesforce + Pendo + Planhat feeds, with a plain-language rationale per item.", why: "Start from evidence, not the loudest voice in the room." } },
+        { ic: "🏫", nm: "School advisory panel", cad: "Quarterly", d: "Core user-group schools review and rank the theme shortlist.",
+          detail: { who: "Core user-group schools — Heads, Admissions Directors, Registrars.", what: "Review the theme shortlist and rank what matters to them.", when: "Quarterly, plus always-on WhatsApp user-group chats.", how: "Panel sessions, the user-group conference, and WhatsApp groups.", why: "Commit to what schools will actually adopt and pay for." } },
+        { ic: "🔔", nm: "Top-request review", cad: "Monthly", d: "Rank the biggest school requests by segment and revenue.",
+          detail: { who: "Product leadership + Client Experience.", what: "Sort the biggest feature requests by segment and revenue at stake.", when: "Monthly.", how: "Aggregate CX tickets, WhatsApp groups, in-app feedback and surveys.", why: "Tie qualitative asks to the revenue they unlock." } },
       ],
-      build_tools: "Tools to build: an automated prioritisation dashboard that unifies Salesforce + Pendo + Planhat into one ranked, region-aware view, refreshed monthly and quarterly.",
+      build_tools: "Tools to build: an automated prioritisation dashboard that unifies Salesforce + Pendo + Planhat into one revenue-ranked, region-aware monthly digest — see the breakdown below.",
+      digest: {
+        intro: "The monthly AI opportunity digest turns three systems into one revenue-ranked view. Each source answers a different question; an AI job scores and ranks across all three.",
+        cadence: "Monthly",
+        sources: [
+          { ic: "📈", name: "Salesforce", role: "Pipeline & revenue", brings: "Open pipeline by stage, region & deal size; win/loss reasons; sales-cycle length; lost-deal feature gaps.", use: "Rank opportunities by revenue at stake and surface why deals are won or lost." },
+          { ic: "📊", name: "Pendo", role: "Product usage & adoption", brings: "Feature adoption & frequency, drop-off points, unused features, time-in-app by role, in-app feedback & NPS.", use: "See what's actually used vs ignored, and exactly where users get stuck." },
+          { ic: "💗", name: "Planhat", role: "Health & expansion", brings: "Account health scores, renewal risk, expansion signals, engagement trends and CSM notes.", use: "Tie themes to retention & expansion revenue and flag churn risk early." },
+        ],
+        implementation: [
+          "Pipe read-only feeds from Salesforce, Pendo & Planhat into the Faria data layer.",
+          "Normalise to a common schema — account, region, segment, feature, revenue.",
+          "A monthly AI job scores each opportunity by revenue impact × adoption gap × strategic fit, with a plain-language rationale.",
+          "Publish a ranked, region-aware digest to the prioritisation dashboard, plus a monthly summary to Product leadership.",
+          "Human-in-the-loop: leadership reviews, adjusts the weighting, and commits.",
+        ],
+      },
       stakeholders: [
-        { n: "ExCo", t: "lead", ic: "👔" }, { n: "SLT", t: "lead", ic: "🧭" }, { n: "VP Sales", t: "lead", ic: "📈" },
-        { n: "Product leadership", t: "", ic: "🧩" }, { n: "Finance / RevOps", t: "", ic: "💰" },
-        { n: "Core user groups (schools)", t: "school", ic: "🏫" },
+        { n: "Product leadership", t: "lead", ic: "🧩" },
+        { n: "Sales", t: "", ic: "📈" }, { n: "Client Experience", t: "", ic: "💬" },
+        { n: "Finance / RevOps", t: "", ic: "💰" }, { n: "ExCo / SLT (sponsors)", t: "", ic: "👔" },
+        { n: "Heads / Principals", t: "school", ic: "🎓" }, { n: "Directors of Admissions", t: "school", ic: "🏫" },
+        { n: "Registrars", t: "school", ic: "🗂" }, { n: "Admissions officers", t: "school", ic: "🧑‍💼" },
+        { n: "Marketing leads", t: "school", ic: "📣" },
       ],
       shift: [
-        { old: "Planning off gut feel and the loudest voice", new: "Evidence-ranked, region-aware opportunities before the room meets", ai: "AI SCAN" },
-        { old: "Weeks pulling data together for the strategy deck", new: "Live Salesforce + Pendo + Planhat synthesis on demand", ai: "AI SYNTH" },
+        { old: "Planning off gut feel and the loudest voice", new: "Opportunities ranked by revenue impact before the room meets", ai: "AI SCAN" },
+        { old: "Weeks pulling Salesforce, Pendo & Planhat together by hand", new: "A monthly AI digest unifies all three into one revenue-ranked view", ai: "AI DIGEST" },
         { old: "Annual roadmap treated as fixed", new: "Rolling vision, re-cut every quarter against revenue signal", ai: "ROLLING" },
       ],
-      school: "Schools tell us where to aim.",
+      school: "Schools tell us where to aim — and what they'll pay for.",
       schoolChips: [
+        { ic: "💬", t: "WhatsApp user-group chats" },
         { ic: "🗂", t: "Advisory panels" },
-        { ic: "📊", t: "Usage signal" },
-        { ic: "📝", t: "Top requests" },
+        { ic: "🎤", t: "User-group conferences" },
+        { ic: "📊", t: "In-app feedback (Pendo)" },
+        { ic: "📋", t: "Surveys" },
       ],
-      schoolOutcome: "shape the themes we commit to",
-      schoolHow: "How we engage: standing advisory panels across our core user groups (not just lighthouse schools), plus segment-level usage and request data. How it shapes priorities: their goals and pain points feed the opportunity scan, so the themes we commit to are the ones our schools are asking for.",
+      schoolOutcome: "shape the revenue-ranked themes we commit to",
+      schoolHow: "How we engage: standing advisory panels and always-on WhatsApp user-group chats across our core user groups, quarterly user-group conferences, in-app feedback (Pendo) and surveys. How it shapes priorities: their goals and pain points feed the opportunity digest, so the themes we commit to are the ones our schools are asking for — and willing to pay for.",
     },
     build: {
       accent: F.orange, accentDark: "#E06A2E", accentSoft: "rgba(247,139,67,0.24)",
@@ -4289,11 +4319,12 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
     const cadRank = (c) => {
       const s = (c || "").toLowerCase();
       if (s.includes("continuous") || s.includes("always") || s.includes("ongoing")) return 0;
-      if (s.includes("daily")) return 1;
-      if (s.includes("week") || s === "wed" || s.includes("thu") || s.includes("mon")) return 2;
+      // Check monthly/quarterly/yearly BEFORE the weekly check — "monthly" contains "mon".
       if (s.includes("monthly")) return 4;
       if (s.includes("quarterly")) return 5;
       if (s.includes("yearly") || s.includes("annual")) return 6;
+      if (s.includes("daily")) return 1;
+      if (s.includes("week") || s === "wed" || s.includes("thu") || s.includes("mon")) return 2;
       return 3; // per-release / per-slice / per-AAA / at each … → event-driven
     };
     const cadColMap = {};
@@ -4411,10 +4442,14 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
         </div>
 
         {/* Activities — mapped onto a frequency timeline */}
+        {(() => {
+        const hasDetail = d.activities.some(a => a.detail);
+        const shownAct = (actDetail && d.activities.includes(actDetail)) ? actDetail : (hasDetail ? d.activities.find(a => a.detail) : null);
+        return (
         <div style={{ ...card, ...stg(2) }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: 8, marginBottom: 4 }}>
             <div style={{ ...sectionTitle, marginBottom: 0 }}>Activities on a cadence timeline</div>
-            <div style={{ fontSize: 10.5, color: F.muted2, fontWeight: 700 }}>← more frequent · less frequent →</div>
+            <div style={{ fontSize: 10.5, color: F.muted2, fontWeight: 700 }}>{hasDetail ? "Hover a tile for who · what · when · how · why" : "← more frequent · less frequent →"}</div>
           </div>
           <div style={{ overflowX: "auto", padding: "14px 2px 4px" }}>
             <div style={{ position: "relative", minWidth: cadCols.length > 2 ? 640 : 420 }}>
@@ -4433,8 +4468,12 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
               <div style={{ display: "flex", alignItems: "flex-start" }}>
                 {cadCols.map(col => (
                   <div key={col.rank} style={{ flex: 1, padding: "0 6px", display: "flex", flexDirection: "column", gap: 8 }}>
-                    {col.items.map((a, i) => (
-                      <div key={i} className="plc-act" style={{ background: F.surface, border: `1px solid ${F.border}`, borderTop: `3px solid ${d.accent}`, borderRadius: 10, padding: "11px 12px" }}>
+                    {col.items.map((a, i) => {
+                      const on = a.detail && shownAct === a;
+                      return (
+                      <div key={i} className="plc-act"
+                        onMouseEnter={() => a.detail && setActDetail(a)}
+                        style={{ background: F.surface, border: `1px solid ${on ? d.accent : F.border}`, borderTop: `3px solid ${d.accent}`, borderRadius: 10, padding: "11px 12px", cursor: a.detail ? "pointer" : "default", boxShadow: on ? F.shadowSm : "none" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5 }}>
                           <span style={{ width: 32, height: 32, borderRadius: 9, background: d.accentSoft, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0 }}>{a.ic}</span>
                           <span style={{ fontSize: 12.5, fontWeight: 800, color: F.plum, lineHeight: 1.2 }}>{a.nm}</span>
@@ -4442,19 +4481,77 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
                         {a.cad !== col.label && <div style={{ fontSize: 9, fontWeight: 800, color: d.accentDark, textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 4 }}>{a.cad}</div>}
                         <div style={{ fontSize: 11.5, color: F.muted, lineHeight: 1.45 }}>{a.d}</div>
                       </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 ))}
               </div>
             </div>
           </div>
+
+          {/* Hover detail — who / what / when / how / why for the focused activity */}
+          {shownAct && shownAct.detail && (
+            <div key={shownAct.nm} className="plc-detailfade" style={{ background: F.bg, border: `1px solid ${F.border}`, borderLeft: `4px solid ${d.accent}`, borderRadius: 11, padding: "14px 16px", marginTop: 4 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 12 }}>
+                <span style={{ width: 30, height: 30, borderRadius: 8, background: d.accentSoft, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0 }}>{shownAct.ic}</span>
+                <span style={{ fontSize: 14.5, fontWeight: 800, color: F.plum }}>{shownAct.nm}</span>
+                <span style={{ fontSize: 9.5, fontWeight: 800, color: d.accentDark, background: d.accentSoft, padding: "3px 9px", borderRadius: 999, textTransform: "uppercase", letterSpacing: "0.04em" }}>{shownAct.cad}</span>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 10 }}>
+                {[["Who", shownAct.detail.who], ["What", shownAct.detail.what], ["When", shownAct.detail.when], ["How", shownAct.detail.how], ["Why", shownAct.detail.why]].map(([k, v], i) => (
+                  <div key={i} style={{ background: F.surface, border: `1px solid ${F.border}`, borderRadius: 8, padding: "9px 11px" }}>
+                    <div style={{ fontSize: 9.5, fontWeight: 800, color: d.accentDark, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 4 }}>{k}</div>
+                    <div style={{ fontSize: 12, color: F.plum, lineHeight: 1.45 }}>{v}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div style={{ marginTop: 14, background: d.accentSoft, border: `1px solid ${d.accent}`, borderRadius: 10, padding: "11px 14px", fontSize: 12.5, fontWeight: 600, color: F.plum, display: "flex", gap: 10, alignItems: "flex-start", lineHeight: 1.5 }}>
             <span style={{ fontSize: 16, flexShrink: 0 }}>🔧</span><span>{d.build_tools}</span>
           </div>
         </div>
+        );
+        })()}
+
+        {/* AI opportunity digest — source breakdown + how we'll build it */}
+        {d.digest && (
+          <div style={{ ...card, ...stg(3) }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 4 }}>
+              <div style={{ ...sectionTitle, marginBottom: 0 }}>AI opportunity digest</div>
+              <span style={{ fontSize: 9.5, fontWeight: 800, color: F.plum, background: d.accentSoft, padding: "3px 9px", borderRadius: 999, textTransform: "uppercase", letterSpacing: "0.04em" }}>🤖 {d.digest.cadence}</span>
+            </div>
+            <p style={{ margin: "0 0 14px", fontSize: 12.5, color: F.muted, lineHeight: 1.5 }}>{d.digest.intro}</p>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
+              {d.digest.sources.map((s, i) => (
+                <div key={i} style={{ background: F.bg, border: `1px solid ${F.border}`, borderTop: `3px solid ${d.accent}`, borderRadius: 10, padding: "13px 14px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 3 }}>
+                    <span style={{ width: 30, height: 30, borderRadius: 8, background: d.accentSoft, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0 }}>{s.ic}</span>
+                    <span style={{ fontSize: 14, fontWeight: 800, color: F.plum }}>{s.name}</span>
+                  </div>
+                  <div style={{ fontSize: 9.5, fontWeight: 800, color: d.accentDark, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 7 }}>{s.role}</div>
+                  <div style={{ fontSize: 11.5, color: F.plum, lineHeight: 1.45, marginBottom: 6 }}><strong style={{ color: F.muted2, fontWeight: 800, fontSize: 9.5, textTransform: "uppercase", letterSpacing: "0.05em" }}>Brings</strong><br />{s.brings}</div>
+                  <div style={{ fontSize: 11.5, color: F.muted, lineHeight: 1.45 }}><strong style={{ color: F.muted2, fontWeight: 800, fontSize: 9.5, textTransform: "uppercase", letterSpacing: "0.05em" }}>Used for</strong><br />{s.use}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ marginTop: 14, background: F.plum, borderRadius: 10, padding: "14px 16px" }}>
+              <div style={{ fontSize: 10, fontWeight: 800, color: F.yellow, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10 }}>How we'll implement it</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {d.digest.implementation.map((step, i) => (
+                  <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                    <span style={{ width: 20, height: 20, borderRadius: "50%", background: d.accent, color: F.plum, fontSize: 10.5, fontWeight: 800, display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>{i + 1}</span>
+                    <span style={{ fontSize: 12.5, color: F.paper, lineHeight: 1.5, opacity: 0.92 }}>{step}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Who's involved — mapped into role lanes with recurring icons */}
-        <div style={{ ...card, ...stg(3) }}>
+        <div style={{ ...card, ...stg(4) }}>
           <div style={sectionTitle}>Who's involved</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {lanes.map(lane => (

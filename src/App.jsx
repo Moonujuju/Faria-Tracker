@@ -4009,41 +4009,46 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
           detail: { who: "Core user-group schools — Heads, Admissions Directors, Registrars.", what: "Review the theme shortlist and rank what matters to them.", when: "Quarterly, plus always-on WhatsApp user-group chats.", how: "Panel sessions, the user-group conference, and WhatsApp groups.", why: "Commit to what schools will actually adopt and pay for." } },
         { ic: "📣", nm: "Monthly product day", cad: "Monthly", d: "Product shows what's shipping and gathers feedback from Sales, Support & CX.",
           detail: { who: "VP Product, Sales, Support, Client Experience.", what: "Product demos what's shipping and in-flight; the revenue teams feed back from the front line.", when: "Monthly.", how: "Live product walkthrough plus structured feedback captured straight into the prioritisation backlog.", why: "Two-way: keep the revenue teams current on the product, and pull their field signal into priorities." } },
-        { ic: "🤖", nm: "AI opportunity digest", cad: "Continuous", d: "Always-on, auto-ranked opportunities from Salesforce, Pendo & Planhat.",
-          detail: { who: "Auto-generated for Product leadership.", what: "A continuously-updated, region-aware list of opportunities scored by revenue impact × adoption gap.", when: "Continuous — always current; reviewed at the product day and QBR.", how: "An AI job over the Salesforce + Pendo + Planhat feeds, with a plain-language rationale per item.", why: "Start from evidence, not the loudest voice in the room." } },
+        { ic: "📈", nm: "Salesforce", cad: "Continuous", d: "Pipeline, win/loss & revenue signal — always on.",
+          detail: { who: "Auto-fed for Product leadership & RevOps.", what: "Open pipeline by stage / region / deal size, win-loss reasons, sales-cycle length, lost-deal feature gaps.", when: "Continuous.", how: "Piped into the AI synthesis tool (see From signal to roadmap).", why: "Rank opportunities by revenue at stake and see why deals are won or lost." } },
+        { ic: "📊", nm: "Pendo", cad: "Continuous", d: "Product usage & adoption signal — always on.",
+          detail: { who: "Auto-fed for Product leadership.", what: "Feature adoption & frequency, drop-off points, unused features, time-in-app by role, in-app feedback & NPS.", when: "Continuous.", how: "Piped into the AI synthesis tool.", why: "See what's actually used vs ignored, and where users get stuck." } },
+        { ic: "💗", nm: "Planhat", cad: "Continuous", d: "Customer health & expansion signal — always on.",
+          detail: { who: "Auto-fed for Product leadership & CS.", what: "Account health scores, renewal risk, expansion signals, engagement trends, CSM notes.", when: "Continuous.", how: "Piped into the AI synthesis tool.", why: "Tie themes to retention & expansion revenue and flag churn risk early." } },
         { ic: "💬", nm: "WhatsApp user-group feedback", cad: "Continuous", d: "Quick, on-the-fly feedback from schools on design choices and what we're building.",
           detail: { who: "Product + core user-group schools.", what: "Fast reactions to design choices, prototypes and ideas — in the flow of work.", when: "Continuous / on the fly.", how: "Always-on WhatsApp user-group chats with admissions leaders.", why: "Cheap, instant signal to course-correct before committing build effort." } },
         { ic: "📋", nm: "Feature request board", cad: "Continuous", d: "A custom board every stakeholder — internal and schools — uses to log and upvote requests.",
           detail: { who: "All stakeholders — internal teams and schools (external).", what: "A custom-built feature-request board where anyone logs, upvotes and comments on requests.", when: "Continuous / always open.", how: "One shared board, open internally and to schools; feeds the signal pool and the AI digest.", why: "One front door for demand — nothing gets lost in inboxes or chats." } },
       ],
-      build_tools: "Tools to build: an automated prioritisation dashboard that unifies Salesforce + Pendo + Planhat into one revenue-ranked, region-aware monthly digest — see the breakdown below.",
-      digest: {
-        intro: "The monthly AI opportunity digest turns three systems into one revenue-ranked view. Each source answers a different question; an AI job scores and ranks across all three.",
-        cadence: "Monthly",
-        sources: [
-          { ic: "📈", name: "Salesforce", role: "Pipeline & revenue", brings: "Open pipeline by stage, region & deal size; win/loss reasons; sales-cycle length; lost-deal feature gaps.", use: "Rank opportunities by revenue at stake and surface why deals are won or lost." },
-          { ic: "📊", name: "Pendo", role: "Product usage & adoption", brings: "Feature adoption & frequency, drop-off points, unused features, time-in-app by role, in-app feedback & NPS.", use: "See what's actually used vs ignored, and exactly where users get stuck." },
-          { ic: "💗", name: "Planhat", role: "Health & expansion", brings: "Account health scores, renewal risk, expansion signals, engagement trends and CSM notes.", use: "Tie themes to retention & expansion revenue and flag churn risk early." },
-        ],
-        implementation: [
-          "Pipe read-only feeds from Salesforce, Pendo & Planhat into the Faria data layer.",
-          "Normalise to a common schema — account, region, segment, feature, revenue.",
-          "A monthly AI job scores each opportunity by revenue impact × adoption gap × strategic fit, with a plain-language rationale.",
-          "Publish a ranked, region-aware digest to the prioritisation dashboard, plus a monthly summary to Product leadership.",
-          "Human-in-the-loop: leadership reviews, adjusts the weighting, and commits.",
-        ],
-      },
+      build_tools: "These activities are the inputs. How that signal becomes the roadmap — and the AI synthesis tool we need to build — is in \"From signal to roadmap\" below.",
       synthesis: {
-        intro: "The activities above are how we gather signal. This is how that signal becomes the plan — captured continuously, synthesised monthly, and committed to a roadmap that updates on three different cadences.",
+        intro: "The activities above are how we capture signal. This is how that signal becomes the plan — and the AI synthesis tool is the big thing we need to build to make it work.",
         steps: [
-          { ic: "📥", stage: "Capture", cadence: "Continuous", ai: false, what: "Every discovery activity drops into one signal pool — AI opportunity digest, WhatsApp groups, advisory panels, the monthly product day, CX tickets, surveys and product usage." },
-          { ic: "🧮", stage: "Synthesise", cadence: "Monthly", ai: true, what: "AI clusters and de-duplicates the raw signal into candidate themes, then scores each by revenue impact × adoption gap × strategic fit, with a plain-language rationale." },
-          { ic: "🎯", stage: "Distill & decide", cadence: "Monthly → Quarterly", ai: false, what: "Product leadership reviews the ranked themes at the monthly product day and the QBR, weighs trade-offs against pod capacity, and commits." },
+          { n: "1", ic: "📥", stage: "Capture", cadence: "Continuous", build: false,
+            what: "Everything on the activities timeline above feeds one signal pool — across every cadence, structured and unstructured.",
+            inputs: ["Strategy offsite", "Quarterly Business Review", "Monthly product day", "Advisory panels", "WhatsApp groups", "Feature request board", "Salesforce", "Pendo", "Planhat", "Surveys"] },
+          { n: "2", ic: "🧠", stage: "Synthesise", cadence: "Continuous → Monthly", build: true,
+            what: "A custom AI synthesis tool ingests every input — structured signal (Salesforce, Pendo, Planhat) and unstructured signal (WhatsApp, feature-request board, call notes, surveys) — then clusters, de-duplicates and scores candidate themes by revenue impact × adoption gap × strategic fit, with a plain-language rationale.",
+            how: [
+              "Connectors pull every source into one normalised store.",
+              "AI clusters & de-duplicates raw signal into candidate themes.",
+              "Each theme scored: revenue impact × adoption gap × strategic fit.",
+              "Outputs a ranked, region-aware digest with a rationale per theme.",
+            ] },
+          { n: "3", ic: "🎯", stage: "Distill & decide", cadence: "Monthly → Quarterly", build: false,
+            what: "Leadership turns the ranked themes into committed, revenue-anchored bets.",
+            decide: [
+              "AI proposes the ranked theme list (the opportunity digest).",
+              "Monthly product day — Product, Sales, Support & CX sense-check it against the field.",
+              "Weigh trade-offs against pod capacity and sequencing.",
+              "QBR — commit the quarter's focus, re-ranked by revenue.",
+              "Hand a revenue-anchored brief to the build pods.",
+            ] },
         ],
-        roadmap: [
-          { horizon: "Now", sub: "this quarter · in build", cadence: "Tuned monthly", note: "Committed bets handed to the pods; adjusted from live signal at the monthly product day." },
-          { horizon: "Next", sub: "next quarter", cadence: "Re-cut each QBR", note: "The re-ranked shortlist for the next cycle, weighed against revenue signal." },
-          { horizon: "Later", sub: "this year", cadence: "Set at annual offsite", note: "The 3–5 annual revenue themes; refreshed yearly and nudged quarterly as the market shifts." },
+        build: [
+          { ic: "🧠", t: "AI synthesis tool", note: "The big build — ingests all discovery signal (structured + unstructured) and produces ranked, scored themes with a rationale.", big: true },
+          { ic: "📋", t: "Feature request board", note: "Custom board, open internally and to schools, feeding the synthesis tool." },
+          { ic: "📊", t: "Prioritisation dashboard", note: "Unifies Salesforce + Pendo + Planhat into one revenue-ranked, region-aware view." },
         ],
       },
       stakeholders: [
@@ -4445,18 +4450,12 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
           </div>
         </div>
 
-        {/* Activities (left) + From signal to roadmap (right) side by side; single column when there's no synthesis */}
-        <div className="plc-prio-grid" style={{ display: "grid", gridTemplateColumns: d.synthesis ? "minmax(0, 1.7fr) minmax(0, 1fr)" : "1fr", gap: 18, alignItems: "start" }}>
-        <div style={{ minWidth: 0 }}>
-
-        {/* Activities — mapped onto a frequency timeline */}
+        {/* Activities — mapped onto a frequency timeline (full width) */}
         {(() => {
         const hasDetail = d.activities.some(a => a.detail);
         // Match by name, not object ref — DATA is rebuilt every render so refs never match.
         const shownAct = d.activities.find(a => a.detail && a.nm === actDetail) || (hasDetail ? d.activities.find(a => a.detail) : null);
-        const showDigest = d.digest && shownAct && shownAct.nm === "AI opportunity digest";
         return (
-        <>
         <div style={{ ...card, ...stg(2) }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: 8, marginBottom: 4 }}>
             <div style={{ ...sectionTitle, marginBottom: 0 }}>Activities on a cadence timeline</div>
@@ -4523,92 +4522,78 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
             <span style={{ fontSize: 16, flexShrink: 0 }}>🔧</span><span>{d.build_tools}</span>
           </div>
         </div>
-
-        {/* AI opportunity digest — source breakdown + how we'll build it · shown when its activity tile is selected */}
-        {showDigest && (
-          <div className="plc-detailfade" style={{ ...card }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 4 }}>
-              <div style={{ ...sectionTitle, marginBottom: 0 }}>AI opportunity digest</div>
-              <span style={{ fontSize: 9.5, fontWeight: 800, color: F.plum, background: d.accentSoft, padding: "3px 9px", borderRadius: 999, textTransform: "uppercase", letterSpacing: "0.04em" }}>🤖 {d.digest.cadence}</span>
-            </div>
-            <p style={{ margin: "0 0 14px", fontSize: 12.5, color: F.muted, lineHeight: 1.5 }}>{d.digest.intro}</p>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
-              {d.digest.sources.map((s, i) => (
-                <div key={i} style={{ background: F.bg, border: `1px solid ${F.border}`, borderTop: `3px solid ${d.accent}`, borderRadius: 10, padding: "13px 14px" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 3 }}>
-                    <span style={{ width: 30, height: 30, borderRadius: 8, background: d.accentSoft, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0 }}>{s.ic}</span>
-                    <span style={{ fontSize: 14, fontWeight: 800, color: F.plum }}>{s.name}</span>
-                  </div>
-                  <div style={{ fontSize: 9.5, fontWeight: 800, color: d.accentDark, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 7 }}>{s.role}</div>
-                  <div style={{ fontSize: 11.5, color: F.plum, lineHeight: 1.45, marginBottom: 6 }}><strong style={{ color: F.muted2, fontWeight: 800, fontSize: 9.5, textTransform: "uppercase", letterSpacing: "0.05em" }}>Brings</strong><br />{s.brings}</div>
-                  <div style={{ fontSize: 11.5, color: F.muted, lineHeight: 1.45 }}><strong style={{ color: F.muted2, fontWeight: 800, fontSize: 9.5, textTransform: "uppercase", letterSpacing: "0.05em" }}>Used for</strong><br />{s.use}</div>
-                </div>
-              ))}
-            </div>
-            <div style={{ marginTop: 14, background: F.plum, borderRadius: 10, padding: "14px 16px" }}>
-              <div style={{ fontSize: 10, fontWeight: 800, color: F.yellow, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10 }}>How we'll implement it</div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {d.digest.implementation.map((step, i) => (
-                  <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-                    <span style={{ width: 20, height: 20, borderRadius: "50%", background: d.accent, color: F.plum, fontSize: 10.5, fontWeight: 800, display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>{i + 1}</span>
-                    <span style={{ fontSize: 12.5, color: F.paper, lineHeight: 1.5, opacity: 0.92 }}>{step}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-        </>
         );
         })()}
-        </div>{/* /left column (activities) */}
 
-        {/* From signal to roadmap — vertical pipeline on the right; deliberately distinct from the cadence timeline */}
+        {/* From signal to roadmap — full-width: capture → synthesise (build) → distill & decide, + what we need to build */}
         {d.synthesis && (
-          <div style={{ ...card, marginBottom: 18, borderTop: `4px solid ${F.plum}` }}>
+          <div style={{ ...card, ...stg(3), borderTop: `4px solid ${F.plum}` }}>
             <div style={sectionTitle}>From signal to roadmap</div>
-            <p style={{ margin: "0 0 14px", fontSize: 11.5, color: F.muted, lineHeight: 1.5 }}>{d.synthesis.intro}</p>
+            <p style={{ margin: "0 0 18px", fontSize: 12.5, color: F.muted, lineHeight: 1.55, maxWidth: 760 }}>{d.synthesis.intro}</p>
 
-            {/* Vertical numbered pipeline with a left rail */}
+            {/* Vertical numbered pipeline — each step a full-width card on a left rail */}
             <div>
               {d.synthesis.steps.map((s, i) => (
-                <div key={i} style={{ display: "grid", gridTemplateColumns: "26px 1fr", gap: 11 }}>
+                <div key={i} style={{ display: "grid", gridTemplateColumns: "32px 1fr", gap: 14 }}>
                   <div style={{ position: "relative", display: "flex", justifyContent: "center" }}>
-                    <span style={{ width: 24, height: 24, borderRadius: "50%", background: F.plum, color: F.paper, fontSize: 11, fontWeight: 800, display: "inline-flex", alignItems: "center", justifyContent: "center", zIndex: 1, flexShrink: 0 }}>{i + 1}</span>
-                    {i < d.synthesis.steps.length - 1 && <span style={{ position: "absolute", top: 24, bottom: -4, width: 2, background: F.border }} />}
+                    <span style={{ width: 30, height: 30, borderRadius: "50%", background: s.build ? d.accent : F.plum, color: s.build ? F.plum : F.paper, fontSize: 13, fontWeight: 800, display: "inline-flex", alignItems: "center", justifyContent: "center", zIndex: 1, flexShrink: 0 }}>{s.n}</span>
+                    {i < d.synthesis.steps.length - 1 && <span style={{ position: "absolute", top: 30, bottom: -18, width: 2, background: F.border }} />}
                   </div>
-                  <div style={{ paddingBottom: 16 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 3, flexWrap: "wrap" }}>
-                      <span style={{ fontSize: 14 }}>{s.ic}</span>
-                      <span style={{ fontSize: 13, fontWeight: 800, color: F.plum }}>{s.stage}</span>
-                      {s.ai && <span style={{ fontSize: 8.5, fontWeight: 800, letterSpacing: "0.06em", background: d.accent, color: F.plum, padding: "2px 6px", borderRadius: 4 }}>AI</span>}
+                  <div style={{ background: s.build ? d.accentSoft : F.bg, border: `1px solid ${s.build ? d.accent : F.border}`, borderRadius: 11, padding: "14px 16px", marginBottom: 18 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 7, flexWrap: "wrap" }}>
+                      <span style={{ fontSize: 17 }}>{s.ic}</span>
+                      <span style={{ fontSize: 15, fontWeight: 800, color: F.plum }}>{s.stage}</span>
+                      <span style={{ fontSize: 9.5, fontWeight: 800, color: d.accentDark, background: F.surface, border: `1px solid ${F.border}`, padding: "2px 9px", borderRadius: 999, textTransform: "uppercase", letterSpacing: "0.04em" }}>{s.cadence}</span>
+                      {s.build && <span style={{ fontSize: 9.5, fontWeight: 800, background: F.plum, color: F.paper, padding: "3px 9px", borderRadius: 999, textTransform: "uppercase", letterSpacing: "0.05em" }}>🔧 To build</span>}
                     </div>
-                    <div style={{ fontSize: 9, fontWeight: 800, color: d.accentDark, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>{s.cadence}</div>
-                    <div style={{ fontSize: 11.5, color: F.muted, lineHeight: 1.5 }}>{s.what}</div>
+                    <p style={{ fontSize: 12.5, color: F.muted, lineHeight: 1.55, margin: "0 0 10px" }}>{s.what}</p>
+                    {s.inputs && (
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                        {s.inputs.map((ip, ii) => <span key={ii} style={{ fontSize: 10.5, fontWeight: 700, padding: "4px 10px", borderRadius: 999, background: F.surface, border: `1px solid ${F.border}`, color: F.plum }}>{ip}</span>)}
+                      </div>
+                    )}
+                    {s.how && (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                        {s.how.map((h, hi) => (
+                          <div key={hi} style={{ display: "flex", gap: 8, fontSize: 12, color: F.plum, lineHeight: 1.45 }}>
+                            <span style={{ color: d.accentDark, fontWeight: 800, flexShrink: 0 }}>›</span>{h}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {s.decide && (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                        {s.decide.map((dstep, di) => (
+                          <div key={di} style={{ display: "flex", gap: 9, alignItems: "flex-start", fontSize: 12, color: F.plum, lineHeight: 1.45 }}>
+                            <span style={{ width: 18, height: 18, borderRadius: "50%", background: F.surface, border: `1px solid ${d.accent}`, color: F.plum, fontSize: 9.5, fontWeight: 800, display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>{String.fromCharCode(97 + di)}</span>
+                            {dstep}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
             </div>
 
-            {/* Roadmap output — plum block, Now/Next/Later stacked */}
-            <div style={{ background: F.plum, borderRadius: 10, padding: "14px 16px", marginTop: 2 }}>
-              <div style={{ fontSize: 9.5, fontWeight: 800, color: F.yellow, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 12 }}>↓ updates the roadmap</div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                {d.synthesis.roadmap.map((r, i) => (
-                  <div key={i} style={{ borderLeft: `3px solid ${i === 0 ? F.yellow : "rgba(250,246,246,0.3)"}`, paddingLeft: 11 }}>
-                    <div style={{ display: "flex", alignItems: "baseline", gap: 7, flexWrap: "wrap" }}>
-                      <span style={{ fontSize: 14, fontWeight: 800, color: F.paper }}>{r.horizon}</span>
-                      <span style={{ fontSize: 9.5, color: F.lightPink, fontWeight: 700 }}>{r.sub}</span>
+            {/* What we need to build — pronounced plum block */}
+            <div style={{ background: F.plum, borderRadius: 12, padding: "16px 18px", marginTop: 2 }}>
+              <div style={{ fontSize: 10.5, fontWeight: 800, color: F.yellow, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 12 }}>🔧 What we need to build</div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
+                {d.synthesis.build.map((b, i) => (
+                  <div key={i} style={{ background: b.big ? "rgba(247,211,95,0.16)" : "rgba(250,246,246,0.08)", border: `1px solid ${b.big ? F.yellow : "rgba(250,246,246,0.18)"}`, borderRadius: 10, padding: "13px 14px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5, flexWrap: "wrap" }}>
+                      <span style={{ fontSize: 18 }}>{b.ic}</span>
+                      <span style={{ fontSize: 13.5, fontWeight: 800, color: F.paper }}>{b.t}</span>
+                      {b.big && <span style={{ fontSize: 8.5, fontWeight: 800, background: F.yellow, color: F.plum, padding: "2px 7px", borderRadius: 999, textTransform: "uppercase", letterSpacing: "0.04em" }}>Priority</span>}
                     </div>
-                    <div style={{ fontSize: 9, fontWeight: 800, color: F.yellow, textTransform: "uppercase", letterSpacing: "0.04em", margin: "3px 0" }}>🕑 {r.cadence}</div>
-                    <div style={{ fontSize: 11, color: F.paper, opacity: 0.82, lineHeight: 1.45 }}>{r.note}</div>
+                    <div style={{ fontSize: 11.5, color: F.paper, opacity: 0.82, lineHeight: 1.5 }}>{b.note}</div>
                   </div>
                 ))}
               </div>
             </div>
           </div>
         )}
-        </div>{/* /plc-prio-grid */}
 
         {/* Old way → AI-first */}
         <div style={{ ...card, ...stg(4) }}>

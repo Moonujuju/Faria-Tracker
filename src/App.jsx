@@ -3968,6 +3968,8 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
   const [actDetail, setActDetail] = useState(null);
   // Which "From signal to roadmap" step is selected (capture → activities, synthesise → tool, distill → steps).
   const [signalStep, setSignalStep] = useState("capture");
+  // Which Distill & Decide step is focused (interactive stepper). Reset per phase.
+  const [decideSel, setDecideSel] = useState(0);
   const topRef = useRef(null);
   const didMount = useRef(false);
 
@@ -3983,6 +3985,7 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
     setStageSel(0);
     setActDetail(null);
     setSignalStep("capture");
+    setDecideSel(0);
     if (!didMount.current) { didMount.current = true; return; }
     // Jump to the very top of the page (the topbar is sticky, so nothing is hidden
     // behind it). Instant, not smooth — a slow animated scroll read as a "refresh".
@@ -4006,6 +4009,8 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
       activities: [
         { ic: "📊", nm: "Annual strategy offsite", cad: "Yearly", d: "ExCo + Product leadership set the year's revenue targets and 3–5 themes.",
           detail: { who: "ExCo, Product leadership, VP Sales", what: "Set the annual ARR target and the 3–5 strategic themes to hit it.", when: "Once a year, at the start of the financial year.", how: "Workshop off trailing-year revenue, win/loss and the AI opportunity digest.", why: "Anchor every downstream bet to a revenue number." } },
+        { ic: "📋", nm: "User-base survey", cad: "Annual / Semi-annual", d: "Structured survey across the user base, twice a year.",
+          detail: { who: "Product + the wider school user base.", what: "A structured annual and semi-annual survey — quantified demand, sentiment and willingness-to-pay across the whole base, not just user-group schools.", when: "Annually, with a semi-annual pulse.", how: "SurveyMonkey survey sent to the user base (e.g. the UK user-group survey), results fed into the synthesis tool.", why: "Statistically meaningful demand signal to balance the always-on qualitative feedback." } },
         { ic: "💼", nm: "Quarterly Business Review", cad: "Quarterly", d: "Re-rank themes against revenue signal; commit the next quarter.",
           detail: { who: "Product leadership, Sales, Client Experience, Finance / RevOps", what: "Re-rank themes by revenue impact and commit the next quarter's focus.", when: "Each quarter.", how: "Review the AI digest + QBR deck; weight by pipeline, expansion and churn risk.", why: "Kill bets that aren't moving revenue before they consume a pod." } },
         { ic: "🏫", nm: "School advisory panel", cad: "Quarterly", d: "Core user-group schools review and rank the theme shortlist.",
@@ -4041,13 +4046,13 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
           { n: "3", ic: "🎯", stage: "Distill & Decide", cadence: "Monthly → Quarterly", build: false,
             what: "Leadership turns the ranked themes into committed, revenue-anchored bets.",
             decide: [
-              { who: "AI synthesis tool", text: "The AI tool surfaces a ranked, revenue-scored shortlist of candidate themes — the evidence-backed starting point, not the decision." },
-              { who: "Product team", text: "The product team reviews and shapes the shortlist — sharpening scope, merging duplicates and pressure-testing feasibility before it goes wider." },
-              { who: "Product · Sales · Support · CX", text: "Monthly product day: Product walks the revenue teams through the shortlist and gathers front-line feedback." },
-              { who: "Product team", text: "Weigh trade-offs against pod capacity and sequencing." },
-              { who: "Product · Sales (QBR)", text: "QBR: commit the quarter's focus, re-ranked by revenue." },
-              { who: "SLT & ExCo", text: "Leadership sign-off — review and ratify the committed priorities with SLT and ExCo." },
-              { who: "Product → pods", text: "The product team takes the committed bets into the weekly build cycle — the Build phase, next." },
+              { short: "AI shortlist", who: "AI synthesis tool", text: "The AI tool surfaces a ranked, revenue-scored shortlist of candidate themes — the evidence-backed starting point, not the decision." },
+              { short: "Product review", who: "Product team", text: "The product team reviews and shapes the shortlist — sharpening scope, merging duplicates and pressure-testing feasibility before it goes wider." },
+              { short: "Product day", who: "Product · Sales · Support · CX", text: "Monthly product day: Product walks the revenue teams through the shortlist and gathers front-line feedback." },
+              { short: "Trade-offs", who: "Product team", text: "Weigh trade-offs against pod capacity and sequencing to shape a committable plan." },
+              { short: "SLT & ExCo sign-off", who: "SLT & ExCo", text: "Leadership reviews and ratifies the revenue-ranked priorities — signed off before they're presented at the QBR." },
+              { short: "QBR commit", who: "Product · Sales", text: "Present the signed-off, revenue-ranked plan at the Quarterly Business Review and commit the quarter's focus." },
+              { short: "Into Build", who: "Product → pods", text: "Product breaks the committed bets down into weekly-sized slices that feed the build cycle — the Build phase, next. (Not taken straight to weekly builds; sliced first.)" },
             ] },
         ],
         build: [
@@ -4064,9 +4069,12 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
         { n: "School marketing", t: "school", ic: "📢" },
       ],
       shift: [
-        { old: "Planning off gut feel and the loudest voice", new: "Opportunities ranked by revenue impact before the room meets", ai: "AI SCAN" },
-        { old: "Weeks pulling Salesforce, Pendo & Planhat together by hand", new: "A monthly AI digest unifies all three into one revenue-ranked view", ai: "AI DIGEST" },
-        { old: "Annual roadmap treated as fixed", new: "Rolling vision, re-cut every quarter against revenue signal", ai: "ROLLING" },
+        { old: "Signal scattered across inboxes, calls and spreadsheets", new: "One signal pool — Salesforce, Pendo, Planhat, WhatsApp, the feature board & surveys", ai: "CAPTURED" },
+        { old: "Weeks hand-synthesising data for a strategy deck", new: "A custom AI tool clusters & scores it into ranked themes, continuously", ai: "AI SYNTH" },
+        { old: "Planning off gut feel and the loudest voice", new: "Themes ranked by revenue impact × adoption gap before the room meets", ai: "EVIDENCE" },
+        { old: "Schools consulted late, if at all", new: "Schools feed the loop continuously and shape what we commit to", ai: "SCHOOLS" },
+        { old: "Priorities decided in a black box", new: "A clear path: AI shortlist → product → SLT/ExCo sign-off → QBR commit", ai: "TRACEABLE" },
+        { old: "Annual roadmap treated as fixed", new: "Rolling vision — re-cut quarterly, tuned monthly against revenue", ai: "ROLLING" },
       ],
       school: "Every school touchpoint becomes signal — captured continuously, synthesised by AI, and distilled into the roadmap.",
       schoolChips: [
@@ -4563,25 +4571,50 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
           </div>
         ); })()}
 
-        {/* Distill & decide → the steps */}
-        {d.synthesis && signalStep === "distill" && (() => { const s = d.synthesis.steps[2]; return (
+        {/* Distill & Decide → interactive stepper (hover/tap a step for detail) */}
+        {d.synthesis && signalStep === "distill" && (() => {
+          const s = d.synthesis.steps[2];
+          const sel = Math.min(decideSel, s.decide.length - 1);
+          const step = s.decide[sel];
+          return (
           <div className="plc-detailfade" style={{ ...card, borderTop: `4px solid ${F.plum}` }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
               <span style={{ fontSize: 19 }}>{s.ic}</span>
-              <div style={{ ...sectionTitle, marginBottom: 0 }}>Distill &amp; decide</div>
+              <div style={{ ...sectionTitle, marginBottom: 0 }}>Distill &amp; Decide</div>
               <span style={{ fontSize: 9.5, fontWeight: 800, color: d.accentDark, background: d.accentSoft, padding: "2px 9px", borderRadius: 999, textTransform: "uppercase", letterSpacing: "0.04em" }}>{s.cadence}</span>
+              <span style={{ marginLeft: "auto", fontSize: 10.5, color: F.muted2, fontWeight: 700 }}>Hover a step for detail →</span>
             </div>
-            <p style={{ margin: "0 0 14px", fontSize: 13, color: F.muted, lineHeight: 1.6, maxWidth: 840 }}>{s.what}</p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {s.decide.map((dstep, di) => (
-                <div key={di} style={{ display: "flex", gap: 11, alignItems: "flex-start", background: F.bg, border: `1px solid ${F.border}`, borderLeft: `3px solid ${d.accent}`, borderRadius: 10, padding: "11px 14px" }}>
-                  <span style={{ width: 22, height: 22, borderRadius: "50%", background: d.accent, color: F.plum, fontSize: 11, fontWeight: 800, display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>{di + 1}</span>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <span style={{ display: "inline-block", fontSize: 9, fontWeight: 800, color: d.accentDark, background: d.accentSoft, padding: "2px 8px", borderRadius: 999, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>{dstep.who}</span>
-                    <div style={{ fontSize: 12.5, color: F.plum, lineHeight: 1.5 }}>{dstep.text}</div>
-                  </div>
-                </div>
-              ))}
+            <p style={{ margin: "0 0 14px", fontSize: 12.5, color: F.muted, lineHeight: 1.55, maxWidth: 840 }}>{s.what}</p>
+
+            {/* Horizontal stepper */}
+            <div style={{ overflowX: "auto", padding: "2px 2px 10px" }}>
+              <div style={{ display: "flex", alignItems: "stretch", minWidth: "min-content" }}>
+                {s.decide.map((st, i) => {
+                  const on = sel === i;
+                  return (
+                    <div key={i} style={{ display: "flex", alignItems: "center" }}>
+                      {i > 0 && <span style={{ color: F.borderStrong, fontSize: 15, fontWeight: 800, padding: "0 3px", alignSelf: "center" }}>→</span>}
+                      <button className="plc-beat" onMouseEnter={() => setDecideSel(i)} onClick={() => setDecideSel(i)} style={{
+                        width: 116, cursor: "pointer", fontFamily: "inherit", textAlign: "center",
+                        background: on ? d.accent : F.bg, border: `1px solid ${on ? d.accent : F.border}`,
+                        borderRadius: 10, padding: "9px 8px", boxShadow: on ? F.shadowSm : "none",
+                      }}>
+                        <div style={{ width: 22, height: 22, borderRadius: "50%", margin: "0 auto 5px", background: on ? F.plum : F.surface, color: on ? F.paper : F.plum, border: `1.5px solid ${F.plum}`, fontSize: 11, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center" }}>{i + 1}</div>
+                        <div style={{ fontSize: 10.5, fontWeight: 800, color: F.plum, lineHeight: 1.2 }}>{st.short}</div>
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Detail for the focused step */}
+            <div key={sel} className="plc-detailfade" style={{ background: F.bg, border: `1px solid ${F.border}`, borderLeft: `4px solid ${d.accent}`, borderRadius: 11, padding: "14px 16px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 8, flexWrap: "wrap" }}>
+                <span style={{ width: 24, height: 24, borderRadius: "50%", background: d.accent, color: F.plum, fontSize: 11, fontWeight: 800, display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{sel + 1}</span>
+                <span style={{ fontSize: 9.5, fontWeight: 800, color: F.paper, background: F.plum, padding: "3px 10px", borderRadius: 999, textTransform: "uppercase", letterSpacing: "0.05em" }}>{step.who}</span>
+              </div>
+              <div style={{ fontSize: 13.5, color: F.plum, lineHeight: 1.6 }}>{step.text}</div>
             </div>
           </div>
         ); })()}

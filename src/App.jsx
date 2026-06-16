@@ -4005,14 +4005,14 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
           detail: { who: "ExCo, Product leadership, VP Sales", what: "Set the annual ARR target and the 3–5 strategic themes to hit it.", when: "Once a year, at the start of the financial year.", how: "Workshop off trailing-year revenue, win/loss and the AI opportunity digest.", why: "Anchor every downstream bet to a revenue number." } },
         { ic: "💼", nm: "Quarterly Business Review", cad: "Quarterly", d: "Re-rank themes against revenue signal; commit the next quarter.",
           detail: { who: "Product leadership, Sales, Client Experience, Finance / RevOps", what: "Re-rank themes by revenue impact and commit the next quarter's focus.", when: "Each quarter.", how: "Review the AI digest + QBR deck; weight by pipeline, expansion and churn risk.", why: "Kill bets that aren't moving revenue before they consume a pod." } },
-        { ic: "📞", nm: "Monthly product–revenue call", cad: "Monthly", d: "Track pull-through of committed bets on pipeline and expansion.",
-          detail: { who: "Product leadership, Sales, Client Experience", what: "Track how committed bets are converting in pipeline and expansion.", when: "Monthly.", how: "Walk the prioritisation dashboard; compare actuals against the revenue thesis.", why: "Catch drift early instead of waiting for the QBR." } },
-        { ic: "🤖", nm: "AI opportunity digest", cad: "Monthly", d: "Auto-ranked opportunities from Salesforce, Pendo & Planhat.",
-          detail: { who: "Auto-generated for Product leadership.", what: "A ranked, region-aware list of opportunities scored by revenue impact × adoption gap.", when: "Monthly — feeds the product–revenue call and the QBR.", how: "An AI job over the Salesforce + Pendo + Planhat feeds, with a plain-language rationale per item.", why: "Start from evidence, not the loudest voice in the room." } },
         { ic: "🏫", nm: "School advisory panel", cad: "Quarterly", d: "Core user-group schools review and rank the theme shortlist.",
           detail: { who: "Core user-group schools — Heads, Admissions Directors, Registrars.", what: "Review the theme shortlist and rank what matters to them.", when: "Quarterly, plus always-on WhatsApp user-group chats.", how: "Panel sessions, the user-group conference, and WhatsApp groups.", why: "Commit to what schools will actually adopt and pay for." } },
-        { ic: "🔔", nm: "Top-request review", cad: "Monthly", d: "Rank the biggest school requests by segment and revenue.",
-          detail: { who: "Product leadership + Client Experience.", what: "Sort the biggest feature requests by segment and revenue at stake.", when: "Monthly.", how: "Aggregate CX tickets, WhatsApp groups, in-app feedback and surveys.", why: "Tie qualitative asks to the revenue they unlock." } },
+        { ic: "📣", nm: "Monthly product day", cad: "Monthly", d: "Product shows what's shipping and gathers feedback from Sales, Support & CX.",
+          detail: { who: "VP Product, Sales, Support, Client Experience.", what: "Product demos what's shipping and in-flight; the revenue teams feed back from the front line.", when: "Monthly.", how: "Live product walkthrough plus structured feedback captured straight into the prioritisation backlog.", why: "Two-way: keep the revenue teams current on the product, and pull their field signal into priorities." } },
+        { ic: "🤖", nm: "AI opportunity digest", cad: "Continuous", d: "Always-on, auto-ranked opportunities from Salesforce, Pendo & Planhat.",
+          detail: { who: "Auto-generated for Product leadership.", what: "A continuously-updated, region-aware list of opportunities scored by revenue impact × adoption gap.", when: "Continuous — always current; reviewed at the product day and QBR.", how: "An AI job over the Salesforce + Pendo + Planhat feeds, with a plain-language rationale per item.", why: "Start from evidence, not the loudest voice in the room." } },
+        { ic: "💬", nm: "WhatsApp user-group feedback", cad: "Continuous", d: "Quick, on-the-fly feedback from schools on design choices and what we're building.",
+          detail: { who: "Product + core user-group schools.", what: "Fast reactions to design choices, prototypes and ideas — in the flow of work.", when: "Continuous / on the fly.", how: "Always-on WhatsApp user-group chats with admissions leaders.", why: "Cheap, instant signal to course-correct before committing build effort." } },
       ],
       build_tools: "Tools to build: an automated prioritisation dashboard that unifies Salesforce + Pendo + Planhat into one revenue-ranked, region-aware monthly digest — see the breakdown below.",
       digest: {
@@ -4068,12 +4068,18 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
         { n: "Every Monday · Release", wk: "Weekly", p: "The week-before-last's signed-off slice ships to production. Sliced small (MVP → v1.0 → v1.1) so schools see progress and feed back within days, not weeks.", tools: ["Ticket slicing", "Monday release"] },
       ],
       activities: [
-        { ic: "🚢", nm: "Monday release", cad: "Weekly", d: "Every single Monday a signed-off slice goes to production." },
-        { ic: "🎯", nm: "Hypothesis review", cad: "Per cycle", d: "Owner reviews the last release's outcome and states the next belief + success metric." },
-        { ic: "📱", nm: "Prototype share (two audiences)", cad: "Wed", d: "Schools + internal teams react to the same prototype before build." },
-        { ic: "👥", nm: "PMT review & scope lock", cad: "Thu–Fri", d: "Align scope, lock Friday, hand off a QA-ready spec to dev." },
-        { ic: "✂️", nm: "Ticket slicing", cad: "Continuous", d: "Large features cut into <1-week slices so something ships every few days." },
-        { ic: "🛟", nm: "Shock-absorber triage", cad: "Continuous", d: "A dedicated pod catches bugs & interruptions so the others keep focus." },
+        { ic: "🚢", nm: "Monday release", cad: "Weekly", d: "Every single Monday a signed-off slice goes to production.",
+          detail: { who: "Pod dev + QA.", what: "Ship the week-before-last's QA-signed slice to production.", when: "Every Monday.", how: "Release the signed branch; publish release notes + in-app guides.", why: "A predictable weekly heartbeat schools can rely on." } },
+        { ic: "🎯", nm: "Hypothesis review", cad: "Per cycle", d: "Owner reviews the last release's outcome and states the next belief + success metric.",
+          detail: { who: "Pod owner (PM or Designer).", what: "Review how the last release performed and state the next belief + success metric.", when: "Start of each cycle (Monday).", how: "Read usage/adoption data; write a one-line hypothesis with a metric.", why: "Ship a hypothesis, not just a feature." } },
+        { ic: "📱", nm: "Prototype share (two audiences)", cad: "Wed", d: "Schools + internal teams react to the same prototype before build.",
+          detail: { who: "Pod owner, schools, Sales / Support / Implementation.", what: "Share the same prototype with schools and internal teams before any code.", when: "Wednesday — a week ahead of dev.", how: "Prototype + high-level requirements via WhatsApp and internal channels.", why: "Catch problems on a prototype, not on a shipped feature." } },
+        { ic: "👥", nm: "PMT review & scope lock", cad: "Thu–Fri", d: "Align scope, lock Friday, hand off a QA-ready spec to dev.",
+          detail: { who: "Product + pod owner.", what: "Align on scope, lock it Friday, hand a QA-ready spec to dev.", when: "Thursday–Friday.", how: "PMT review of folded-in feedback; freeze scope at the lock.", why: "A clean handoff protects QA's clean week." } },
+        { ic: "✂️", nm: "Ticket slicing", cad: "Continuous", d: "Large features cut into <1-week slices so something ships every few days.",
+          detail: { who: "Pod owner + dev.", what: "Cut large features into sub-one-week, independently shippable slices.", when: "Continuous (during shaping).", how: "MVP → v1.0 → v1.1 increments.", why: "Ship every few days; no carryover between cycles." } },
+        { ic: "🛟", nm: "Shock-absorber triage", cad: "Continuous", d: "A dedicated pod catches bugs & interruptions so the others keep focus.",
+          detail: { who: "Shock-absorber pod.", what: "Absorb incoming bugs, ad-hoc tasks and interruptions.", when: "Continuous.", how: "A dedicated pod takes the unplanned work off the others.", why: "Protect the other pods' focus and weekly commitments." } },
       ],
       build_tools: "Tools to build: an AI-in-the-SDLC toolchain (spec / prototype / test / code-review assists) so a single owner can prioritise, spec, estimate and prototype; plus a research-clustering tool that turns school calls and usage data into a grounded spec in hours.",
       stakeholders: [
@@ -4112,12 +4118,18 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
         { n: "Adoption signal → Prioritise", wk: "Continuous", p: "Activation, feature usage and expansion (Pendo) plus pipeline and win-loss (Salesforce) flow back as the freshest input to the next prioritisation cut. The loop closes.", tools: ["Pendo", "Salesforce"] },
       ],
       activities: [
-        { ic: "📦", nm: "Release enablement drop", cad: "At each release", d: "Auto-generated pitch + collateral pushed to Sales & Support." },
-        { ic: "📣", nm: "AAA campaign launch", cad: "Per AAA feature", d: "Marketing amplifies the marquee features only." },
-        { ic: "🎓", nm: "Enablement certification", cad: "Per AAA feature", d: "Sales/Support certified on AAA features via auto-built paths." },
-        { ic: "📡", nm: "Adoption signal review", cad: "Continuous", d: "Pendo + Salesforce signal reviewed and fed into Prioritise." },
-        { ic: "🏫", nm: "School onboarding & guidance", cad: "At each adoption", d: "In-product guidance and CS outreach walk schools into the new feature." },
-        { ic: "⭐", nm: "Reference & expansion calls", cad: "Ongoing", d: "Most-engaged schools join reference stories and expansion conversations." },
+        { ic: "📦", nm: "Release enablement drop", cad: "At each release", d: "Auto-generated pitch + collateral pushed to Sales & Support.",
+          detail: { who: "Product (auto) → Sales & Support.", what: "An auto-generated pitch + collateral for what shipped, pushed out at release.", when: "At each release.", how: "The release pipeline generates the what / who / pitch / collateral.", why: "Sales & Support ready day one, with no hand-off lag." } },
+        { ic: "📣", nm: "AAA campaign launch", cad: "Per AAA feature", d: "Marketing amplifies the marquee features only.",
+          detail: { who: "Marketing.", what: "Run a campaign for a marquee AAA feature.", when: "Per AAA feature.", how: "AI-assisted copy + campaign; everything else rides the automated collateral.", why: "Focus marketing effort only where it moves the needle." } },
+        { ic: "🎓", nm: "Enablement certification", cad: "Per AAA feature", d: "Sales/Support certified on AAA features via auto-built paths.",
+          detail: { who: "Sales enablement, Sales, Support.", what: "Certify Sales & Support on each AAA feature.", when: "Per AAA feature.", how: "Auto-built certification paths + assessments.", why: "Consistent, fast readiness across the team." } },
+        { ic: "📡", nm: "Adoption signal review", cad: "Continuous", d: "Pendo + Salesforce signal reviewed and fed into Prioritise.",
+          detail: { who: "Product + Client Experience.", what: "Review adoption signal and feed it back into Prioritise.", when: "Continuous.", how: "Pendo + Salesforce signal piped into the prioritisation digest.", why: "Close the loop — adoption drives the next cycle." } },
+        { ic: "🏫", nm: "School onboarding & guidance", cad: "At each adoption", d: "In-product guidance and CS outreach walk schools into the new feature.",
+          detail: { who: "Customer success, Implementation.", what: "Walk schools into each new feature so they actually adopt it.", when: "At each adoption.", how: "In-product guidance + CS outreach.", why: "Adoption, not just access — value has to land." } },
+        { ic: "⭐", nm: "Reference & expansion calls", cad: "Ongoing", d: "Most-engaged schools join reference stories and expansion conversations.",
+          detail: { who: "Sales, Customer success.", what: "Turn the most-engaged schools into references and expansion.", when: "Ongoing.", how: "Reference stories + expansion conversations.", why: "Convert adoption into revenue and proof." } },
       ],
       build_tools: "Tools to build: an enablement generator (collateral + certification paths per AAA feature) and an adoption-signal pipeline that routes Pendo + Salesforce data into the prioritisation dashboard.",
       stakeholders: [
@@ -4314,7 +4326,7 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
     ].map(l => ({ ...l, items: d.stakeholders.filter(s => s.t === l.key) })).filter(l => l.items.length);
 
     // Map activities onto a frequency timeline (most frequent → least frequent).
-    const RANK_LABEL = ["Always-on", "Daily", "Weekly", "Event-driven", "Monthly", "Quarterly", "Yearly"];
+    const RANK_LABEL = ["Continuous", "Daily", "Weekly", "Event-driven", "Monthly", "Quarterly", "Yearly"];
     const cadRank = (c) => {
       const s = (c || "").toLowerCase();
       if (s.includes("continuous") || s.includes("always") || s.includes("ongoing")) return 0;
@@ -4328,7 +4340,7 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
     };
     const cadColMap = {};
     d.activities.forEach(a => { const r = cadRank(a.cad); (cadColMap[r] = cadColMap[r] || []).push(a); });
-    const cadCols = Object.keys(cadColMap).map(Number).sort((x, y) => x - y).map(r => ({ rank: r, label: RANK_LABEL[r], items: cadColMap[r] }));
+    const cadCols = Object.keys(cadColMap).map(Number).sort((x, y) => y - x).map(r => ({ rank: r, label: RANK_LABEL[r], items: cadColMap[r] }));
 
     return (
       <>
@@ -4429,7 +4441,6 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
                         </div>
                         {a.cad !== col.label && <div style={{ fontSize: 9, fontWeight: 800, color: d.accentDark, textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 4 }}>{a.cad}</div>}
                         <div style={{ fontSize: 11.5, color: F.muted, lineHeight: 1.45 }}>{a.d}</div>
-                        {a.nm === "AI opportunity digest" && d.digest && <div style={{ marginTop: 6, fontSize: 10.5, fontWeight: 800, color: F.pink }}>↓ source breakdown</div>}
                       </div>
                       );
                     })}

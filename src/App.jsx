@@ -4031,10 +4031,10 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
           detail: { who: "Product (PMs) + school teams across the user base.", what: "Regular problem-discovery interviews — how schools actually work, where they struggle.", when: "A few every month, on a rolling roster.", how: "Scheduled calls; notes auto-clustered into the signal pool.", why: "The backbone of continuous discovery — talk to users regularly, not just at events." } },
         { ic: "🖥️", nm: "Usability testing", cad: "Monthly", d: "Test prototypes and shipped flows with real school users.",
           detail: { who: "Product, design + school users.", what: "Watch schools use prototypes and live features; capture friction.", when: "Weekly, per design / slice in flight.", how: "Moderated sessions or async recordings; findings fed back to the pod.", why: "See what people do, not just what they say — before and after we build." } },
-        { ic: "🔁", nm: "Win/loss & churn calls", cad: "Continuous", d: "Talk to schools we just won, lost or that churned.",
-          detail: { who: "Product + Sales / Client Experience.", what: "Short interviews with recently won, lost and churned schools.", when: "Continuous, triggered by each deal / churn event.", how: "Calls tied to Salesforce stage changes; themes into the signal pool.", why: "The sharpest signal on why we win, lose and lose-again." } },
-        { ic: "🎧", nm: "Support & CX signal", cad: "Continuous", d: "Mine support tickets and CX themes for product signal.",
-          detail: { who: "Product + Support / Client Experience.", what: "Recurring review of top support themes, bugs and CX escalations.", when: "Continuous, with a weekly digest.", how: "Tagged tickets + CX notes routed into the signal pool.", why: "The friction users hit every day is free, honest discovery." } },
+        { ic: "🔁", nm: "Win/loss & churn calls", cad: "Monthly", d: "Talk to schools we just won, lost or that churned.",
+          detail: { who: "Product + Sales / Client Experience.", what: "Short interviews with recently won, lost and churned schools.", when: "Monthly, reviewing the recent won / lost / churned deals.", how: "Calls tied to Salesforce stage changes; themes into the signal pool.", why: "The sharpest signal on why we win, lose and lose-again." } },
+        { ic: "🎧", nm: "Support & CX signal", cad: "Monthly", d: "Mine support tickets and CX themes for product signal.",
+          detail: { who: "Product + Support / Client Experience.", what: "Recurring review of top support themes, bugs and CX escalations.", when: "Monthly review of the top support & CX themes.", how: "Tagged tickets + CX notes routed into the signal pool.", why: "The friction users hit every day is free, honest discovery." } },
       ],
       build_tools: "These activities are the inputs. How that signal becomes the roadmap — and the AI synthesis tool we need to build — is in \"From signal to roadmap\" below.",
       synthesis: {
@@ -4544,7 +4544,7 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
                 {cadCols.map(col => (
                   <div key={col.rank} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 7 }}>
                     <span style={{ width: 16, height: 16, borderRadius: "50%", background: d.accent, border: `3px solid ${F.surface}`, boxShadow: `0 0 0 1px ${d.accent}` }} />
-                    <span style={{ fontSize: 11, fontWeight: 800, color: F.plum, background: d.accentSoft, padding: "3px 11px", borderRadius: 999, whiteSpace: "nowrap" }}>{col.label} · {col.items.length}</span>
+                    <span style={{ fontSize: 11, fontWeight: 800, color: F.plum, background: d.accentSoft, padding: "3px 11px", borderRadius: 999, whiteSpace: "nowrap" }}>{col.label}</span>
                   </div>
                 ))}
               </div>
@@ -4671,17 +4671,19 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
         {/* The problems we're fixing in this phase — keeps the change focused, not change for its own sake */}
         {d.problems && (
           <div style={{ ...card, ...stg(4), borderLeft: `4px solid ${d.accent}` }}>
-            <div style={sectionTitle}>The problems we're fixing</div>
-            <p style={{ margin: "-4px 0 14px", fontSize: 12.5, color: F.muted, lineHeight: 1.5, maxWidth: 720 }}>Everything above exists to fix one of these four problems with how we prioritise. If a change doesn't fix one of them, we don't make it — this isn't change for its own sake.</p>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 12 }}>
+            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 12 }}>
+              <div style={{ ...sectionTitle, marginBottom: 0 }}>The problems we're fixing</div>
+              <span style={{ fontSize: 10.5, color: F.muted2, fontStyle: "italic" }}>Hover any card for the detail ↓</span>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))", gap: 12 }}>
               {d.problems.map((x, i) => (
-                <div key={i} style={{ background: F.bg, border: `1px solid ${F.border}`, borderTop: `3px solid ${d.accent}`, borderRadius: 10, padding: "13px 15px" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                    <span style={{ fontSize: 19 }}>{x.ic}</span>
-                    <span style={{ fontSize: 13.5, fontWeight: 800, color: F.plum, lineHeight: 1.2 }}>{x.t}</span>
+                <div key={i} className="plc-prob" tabIndex={0} style={{ position: "relative", background: F.bg, border: `1px solid ${F.border}`, borderTop: `3px solid ${d.accent}`, borderRadius: 10, padding: "12px 14px", cursor: "help", outline: "none" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 7 }}>
+                    <span style={{ fontSize: 18 }}>{x.ic}</span>
+                    <span style={{ fontSize: 13, fontWeight: 800, color: F.plum, lineHeight: 1.2 }}>{x.t}</span>
                   </div>
-                  <p style={{ margin: "0 0 9px", fontSize: 12, color: F.muted, lineHeight: 1.5 }}>{x.p}</p>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: F.plum }}><span style={{ color: F.green }}>→</span> {x.fix}</div>
+                  <div style={{ fontSize: 11.5, fontWeight: 700, color: F.plum, display: "flex", gap: 6, alignItems: "flex-start" }}><span style={{ color: F.green, flexShrink: 0 }}>→</span><span style={{ lineHeight: 1.35 }}>{x.fix}</span></div>
+                  <div className="plc-prob-pop" style={{ position: "absolute", left: -1, right: -1, top: "calc(100% + 6px)", zIndex: 30, background: F.surface, border: `1px solid ${d.accent}`, borderRadius: 10, padding: "11px 13px", boxShadow: F.shadowMd, fontSize: 12, color: F.muted, lineHeight: 1.5 }}>{x.p}</div>
                 </div>
               ))}
             </div>
@@ -4742,6 +4744,10 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
         .plc-beat { transition: transform 0.15s ease, box-shadow 0.15s ease; }
         .plc-beat:hover { transform: translateY(-2px); }
         .plc-detailfade { animation: plc-soft-in 0.2s ease both; }
+        .plc-prob { transition: border-color 0.15s ease, box-shadow 0.15s ease; }
+        .plc-prob:hover, .plc-prob:focus-visible { box-shadow: 0 6px 18px rgba(55,2,60,0.10); }
+        .plc-prob-pop { opacity: 0; visibility: hidden; transform: translateY(-4px); transition: opacity 0.16s ease, transform 0.16s ease, visibility 0.16s ease; }
+        .plc-prob:hover .plc-prob-pop, .plc-prob:focus-within .plc-prob-pop { opacity: 1; visibility: visible; transform: none; }
         @media (max-width: 620px) { .plc-tab-label { display: none; } }
         @media (max-width: 560px) { .plc-lane { grid-template-columns: 1fr !important; gap: 6px !important; } }
         @media (max-width: 900px) { .plc-prio-grid { grid-template-columns: 1fr !important; } }

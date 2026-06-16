@@ -4027,6 +4027,14 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
           detail: { who: "Product + core user-group schools.", what: "Fast reactions to design choices, prototypes and ideas — in the flow of work.", when: "Continuous / on the fly.", how: "Always-on WhatsApp user-group chats with admissions leaders.", why: "Cheap, instant signal to course-correct before committing build effort." } },
         { ic: "📋", nm: "Feature request board", cad: "Continuous", d: "A custom board every stakeholder — internal and schools — uses to log and upvote requests.",
           detail: { who: "All stakeholders — internal teams and schools (external).", what: "A custom-built feature-request board where anyone logs, upvotes and comments on requests.", when: "Continuous / always open.", how: "One shared board, open internally and to schools; feeds the signal pool and the AI digest.", why: "One front door for demand — nothing gets lost in inboxes or chats." } },
+        { ic: "🎙️", nm: "Discovery interviews", cad: "Weekly", d: "Standing cadence of 1:1 discovery calls with admissions teams.",
+          detail: { who: "Product (PMs) + admissions teams across schools.", what: "Regular problem-discovery interviews — how schools actually work, where they struggle.", when: "A few every week, on a rolling roster.", how: "Scheduled calls; notes auto-clustered into the signal pool.", why: "The backbone of continuous discovery — talk to users every week, not just at events." } },
+        { ic: "🖥️", nm: "Usability testing", cad: "Weekly", d: "Test prototypes and shipped flows with real school users.",
+          detail: { who: "Product, design + school users.", what: "Watch schools use prototypes and live features; capture friction.", when: "Weekly, per design / slice in flight.", how: "Moderated sessions or async recordings; findings fed back to the pod.", why: "See what people do, not just what they say — before and after we build." } },
+        { ic: "🔁", nm: "Win/loss & churn calls", cad: "Continuous", d: "Talk to schools we just won, lost or that churned.",
+          detail: { who: "Product + Sales / Client Experience.", what: "Short interviews with recently won, lost and churned schools.", when: "Continuous, triggered by each deal / churn event.", how: "Calls tied to Salesforce stage changes; themes into the signal pool.", why: "The sharpest signal on why we win, lose and lose-again." } },
+        { ic: "🎧", nm: "Support & CX signal", cad: "Continuous", d: "Mine support tickets and CX themes for product signal.",
+          detail: { who: "Product + Support / Client Experience.", what: "Recurring review of top support themes, bugs and CX escalations.", when: "Continuous, with a weekly digest.", how: "Tagged tickets + CX notes routed into the signal pool.", why: "The friction users hit every day is free, honest discovery." } },
       ],
       build_tools: "These activities are the inputs. How that signal becomes the roadmap — and the AI synthesis tool we need to build — is in \"From signal to roadmap\" below.",
       synthesis: {
@@ -4060,6 +4068,7 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
               { short: "AI shortlist", who: "AI synthesis tool", text: "The AI tool surfaces a ranked, revenue-scored shortlist of candidate themes — the evidence-backed starting point, not the decision." },
               { short: "Product review", who: "Product team", text: "The product team reviews and shapes the shortlist — sharpening scope, merging duplicates and pressure-testing feasibility before it goes wider." },
               { short: "Product day", who: "Product · Sales · Support · CX", text: "Monthly product day: Product walks the revenue teams through the shortlist and gathers front-line feedback." },
+              { short: "Schools feedback", who: "Schools · user groups", text: "Take the planned quarter back to schools — via advisory panels and WhatsApp groups — to pressure-test what we intend to build before we commit." },
               { short: "Trade-offs", who: "Product team", text: "Weigh trade-offs against pod capacity and sequencing to shape a committable plan." },
               { short: "SLT & ExCo sign-off", who: "SLT & ExCo", text: "Leadership reviews and ratifies the revenue-ranked priorities — signed off before they're presented at the QBR." },
               { short: "QBR commit", who: "Product · Sales", text: "Present the signed-off, revenue-ranked plan at the Quarterly Business Review and commit the quarter's focus." },
@@ -4361,24 +4370,6 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
     const wrapNext = idx === 2, wrapPrev = idx === 0;
     // (Per-block stagger removed — the single soft crossfade on the view wrapper is calmer.)
     const stg = () => ({});
-    // Reusable "Artifacts we're building" block — used in each From-signal-to-roadmap step panel.
-    const artifactsBlock = (list) => !list ? null : (
-      <div style={{ background: F.plum, borderRadius: 12, padding: "16px 18px", marginTop: 16 }}>
-        <div style={{ fontSize: 10.5, fontWeight: 800, color: F.yellow, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 12 }}>🧱 Artifacts we're building</div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12 }}>
-          {list.map((b, i) => (
-            <div key={i} style={{ background: b.big ? "rgba(247,211,95,0.16)" : "rgba(250,246,246,0.08)", border: `1px solid ${b.big ? F.yellow : "rgba(250,246,246,0.18)"}`, borderRadius: 10, padding: "13px 14px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5, flexWrap: "wrap" }}>
-                <span style={{ fontSize: 18 }}>{b.ic}</span>
-                <span style={{ fontSize: 13, fontWeight: 800, color: F.paper }}>{b.t}</span>
-                {b.big && <span style={{ fontSize: 8.5, fontWeight: 800, background: F.yellow, color: F.plum, padding: "2px 7px", borderRadius: 999, textTransform: "uppercase", letterSpacing: "0.04em" }}>Priority</span>}
-              </div>
-              <div style={{ fontSize: 11.5, color: F.paper, opacity: 0.82, lineHeight: 1.5 }}>{b.note}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
     const sel = Math.min(stageSel, d.stages.length - 1);
     const selStage = d.stages[sel];
     // Group stakeholders into role lanes for the "Who's involved" map.
@@ -4564,7 +4555,6 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
         </div>
         );
         })()}
-        {d.synthesis && artifactsBlock(d.synthesis.steps[0].artifacts)}
         </>
         )}
 
@@ -4584,7 +4574,6 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
                 </div>
               ))}
             </div>
-            {artifactsBlock(s.artifacts)}
           </div>
         ); })()}
 
@@ -4625,15 +4614,14 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
               </div>
             </div>
 
-            {/* Detail for the focused step */}
-            <div key={sel} className="plc-detailfade" style={{ background: F.bg, border: `1px solid ${F.border}`, borderLeft: `4px solid ${d.accent}`, borderRadius: 11, padding: "14px 16px" }}>
+            {/* Detail for the focused step — updates in place (no keyed remount) so hovering is smooth */}
+            <div style={{ background: F.bg, border: `1px solid ${F.border}`, borderLeft: `4px solid ${d.accent}`, borderRadius: 11, padding: "14px 16px", transition: "border-color 0.15s ease" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 8, flexWrap: "wrap" }}>
                 <span style={{ width: 24, height: 24, borderRadius: "50%", background: d.accent, color: F.plum, fontSize: 11, fontWeight: 800, display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{sel + 1}</span>
                 <span style={{ fontSize: 9.5, fontWeight: 800, color: F.paper, background: F.plum, padding: "3px 10px", borderRadius: 999, textTransform: "uppercase", letterSpacing: "0.05em" }}>{step.who}</span>
               </div>
               <div style={{ fontSize: 13.5, color: F.plum, lineHeight: 1.6 }}>{step.text}</div>
             </div>
-            {artifactsBlock(s.artifacts)}
           </div>
         ); })()}
 

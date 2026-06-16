@@ -4027,9 +4027,9 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
           detail: { who: "Product + core user-group schools.", what: "Fast reactions to design choices, prototypes and ideas — in the flow of work.", when: "Continuous / on the fly.", how: "Always-on WhatsApp user-group chats with admissions leaders.", why: "Cheap, instant signal to course-correct before committing build effort." } },
         { ic: "📋", nm: "Feature request board", cad: "Continuous", d: "A custom board every stakeholder — internal and schools — uses to log and upvote requests.",
           detail: { who: "All stakeholders — internal teams and schools (external).", what: "A custom-built feature-request board where anyone logs, upvotes and comments on requests.", when: "Continuous / always open.", how: "One shared board, open internally and to schools; feeds the signal pool and the AI digest.", why: "One front door for demand — nothing gets lost in inboxes or chats." } },
-        { ic: "🎙️", nm: "Discovery interviews", cad: "Weekly", d: "Standing cadence of 1:1 discovery calls with admissions teams.",
+        { ic: "🎙️", nm: "Discovery interviews", cad: "Monthly", d: "Standing cadence of 1:1 discovery calls with admissions teams.",
           detail: { who: "Product (PMs) + admissions teams across schools.", what: "Regular problem-discovery interviews — how schools actually work, where they struggle.", when: "A few every week, on a rolling roster.", how: "Scheduled calls; notes auto-clustered into the signal pool.", why: "The backbone of continuous discovery — talk to users every week, not just at events." } },
-        { ic: "🖥️", nm: "Usability testing", cad: "Weekly", d: "Test prototypes and shipped flows with real school users.",
+        { ic: "🖥️", nm: "Usability testing", cad: "Monthly", d: "Test prototypes and shipped flows with real school users.",
           detail: { who: "Product, design + school users.", what: "Watch schools use prototypes and live features; capture friction.", when: "Weekly, per design / slice in flight.", how: "Moderated sessions or async recordings; findings fed back to the pod.", why: "See what people do, not just what they say — before and after we build." } },
         { ic: "🔁", nm: "Win/loss & churn calls", cad: "Continuous", d: "Talk to schools we just won, lost or that churned.",
           detail: { who: "Product + Sales / Client Experience.", what: "Short interviews with recently won, lost and churned schools.", when: "Continuous, triggered by each deal / churn event.", how: "Calls tied to Salesforce stage changes; themes into the signal pool.", why: "The sharpest signal on why we win, lose and lose-again." } },
@@ -4068,8 +4068,7 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
               { short: "AI shortlist", who: "AI synthesis tool", text: "The AI tool surfaces a ranked, revenue-scored shortlist of candidate themes — the evidence-backed starting point, not the decision." },
               { short: "Product review", who: "Product team", text: "The product team reviews and shapes the shortlist — sharpening scope, merging duplicates and pressure-testing feasibility before it goes wider." },
               { short: "Product day", who: "Product · Sales · Support · CX", text: "Monthly product day: Product walks the revenue teams through the shortlist and gathers front-line feedback." },
-              { short: "Schools feedback", who: "Schools · user groups", text: "Take the planned quarter back to schools — via advisory panels and WhatsApp groups — to pressure-test what we intend to build before we commit." },
-              { short: "Trade-offs", who: "Product team", text: "Weigh trade-offs against pod capacity and sequencing to shape a committable plan." },
+              { short: "Schools sign-off", who: "Schools · user groups", text: "Validate the distilled quarter with our schools — they sign off on the shortlist we've prioritised. (Discovery feedback runs continuously in Capture; this is the explicit check on what we've decided to build.)" },
               { short: "SLT & ExCo sign-off", who: "SLT & ExCo", text: "Leadership reviews and ratifies the revenue-ranked priorities — signed off before they're presented at the QBR." },
               { short: "QBR commit", who: "Product · Sales", text: "Present the signed-off, revenue-ranked plan at the Quarterly Business Review and commit the quarter's focus." },
               { short: "Into Build", who: "Product → pods", text: "Product breaks the committed bets down into weekly-sized slices that feed the build cycle — the Build phase, next. (Not taken straight to weekly builds; sliced first.)" },
@@ -4683,9 +4682,11 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
         @media (max-width: 560px) { .plc-lane { grid-template-columns: 1fr !important; gap: 6px !important; } }
         @media (max-width: 900px) { .plc-prio-grid { grid-template-columns: 1fr !important; } }
       `}</style>
+      {/* Call as functions (not <PhaseView/>) so hovering doesn't remount the subtree and replay animations.
+         The keyed wrapper still replays the soft-in once per phase switch. */}
       {open
-        ? <div key={"phase-" + open} style={{ animation: "plc-soft-in 0.22s ease both" }}><PhaseView phase={open} /></div>
-        : <div key="overview" style={{ animation: "plc-soft-in 0.22s ease both" }}><Overview /></div>}
+        ? <div key={"phase-" + open} style={{ animation: "plc-soft-in 0.22s ease both" }}>{PhaseView({ phase: open })}</div>
+        : <div key="overview" style={{ animation: "plc-soft-in 0.22s ease both" }}>{Overview()}</div>}
     </div>
   );
 }

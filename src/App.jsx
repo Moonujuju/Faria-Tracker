@@ -1907,7 +1907,7 @@ function AiMonetizationPage({ subRoute, setSubRoute, deepRoute, setDeepRoute }) 
           usage:       { t: "Usage & cost", s: "Model cost table + cap strategy. Pick a product to price each AI feature across models (free vs Pro) and see what a free-tier allowance buys." },
           competitive: { t: "Competitive Analysis", s: "Track how competitors are pricing and packaging AI. Use this to calibrate our Pro tier and bundle pricing." },
           market:      { t: "Market Validation", s: "Per-product school validation — pilots, willingness to pay, and which Pro outcomes schools have confirmed." },
-          finance:     { t: "Finance", s: "SKUs & pricing, cost model, breakeven analysis, uptake scenarios, and decision log for AI monetization." },
+          finance:     { t: "Finance", s: "Free-tier budget, SKUs & pricing, and per-product economics — net per school after AI cost (pulled from Usage) — plus uptake scenarios and a decision log." },
         };
         const cur = titles[view] || titles.plan;
         return (
@@ -3424,12 +3424,9 @@ function MonzFinancePage({ monz, setMonz }) {
       </div>
 
       <div style={card}>
-        <div style={sectionTitle}>Cost inputs</div>
+        <div style={sectionTitle}>Shared costs · spread per school</div>
+        <p style={{ margin: "-2px 0 12px", fontSize: 11.5, color: F.muted, fontStyle: "italic" }}>Non-AI overheads. Per-model AI cost is set on the <strong style={{ color: F.pink }}>Usage</strong> page now — this is just infra + support.</p>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 14 }}>
-          <div>
-            <div style={lb}>Token cost · per 1k tokens (USD)</div>
-            <input type="number" min="0" step="0.001" value={fin.costInputs.tokenCostPer1k || ""} placeholder="0" onChange={e => setCost("tokenCostPer1k", e.target.value)} style={numInp} />
-          </div>
           <div>
             <div style={lb}>Monthly infra cost (USD)</div>
             <input type="number" min="0" step="1" value={fin.costInputs.monthlyInfraCost || ""} placeholder="0" onChange={e => setCost("monthlyInfraCost", e.target.value)} style={numInp} />
@@ -3438,100 +3435,74 @@ function MonzFinancePage({ monz, setMonz }) {
             <div style={lb}>Support · per customer / year (USD)</div>
             <input type="number" min="0" step="1" value={fin.costInputs.supportCostPerCustomer || ""} placeholder="0" onChange={e => setCost("supportCostPerCustomer", e.target.value)} style={numInp} />
           </div>
+          <div style={{ alignSelf: "end" }}>
+            <div style={lb}>= Shared cost / school / mo</div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: F.plum }}>{fmtMoney(overheadPerSchoolMo)}</div>
+          </div>
         </div>
       </div>
 
-      <div style={card}>
-        <div style={sectionTitle}>Usage inputs · per product, per school, per month</div>
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12.5 }}>
+      {/* Per-product economics — the headline P&L: revenue vs AI cost (pulled from Usage) */}
+      <div style={{ ...card, borderLeft: `4px solid ${F.green}` }}>
+        <div style={sectionTitle}>Per-product economics · net per school after AI cost</div>
+        <p style={{ margin: "-2px 0 12px", fontSize: 12.5, color: F.muted, lineHeight: 1.5, maxWidth: 860 }}>What we net (or lose) per school at the current Pro price. <strong>AI cost is pulled live from Usage → cost lab</strong> — the avg cost/action across each product's features. Edit feature tokens & models on the Usage page; set the price in SKUs above; set expected actions/school/mo here.</p>
+        <div style={{ overflowX: "auto", border: `1px solid ${F.border}`, borderRadius: 8 }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12.5, minWidth: 820 }}>
             <thead>
               <tr style={{ background: F.bg }}>
-                <th style={{ textAlign: "left", padding: "8px 10px", fontSize: 10.5, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em" }}>Product</th>
-                <th style={{ textAlign: "right", padding: "8px 10px", fontSize: 10.5, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em" }}>Essential actions / school / mo</th>
-                <th style={{ textAlign: "right", padding: "8px 10px", fontSize: 10.5, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em" }}>Pro actions / school / mo</th>
-                <th style={{ textAlign: "right", padding: "8px 10px", fontSize: 10.5, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em" }}>Tokens / action</th>
-                <th style={{ textAlign: "left", padding: "8px 10px", fontSize: 10.5, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em" }}>Free (Ess) model</th>
-                <th style={{ textAlign: "left", padding: "8px 10px", fontSize: 10.5, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em" }}>Pro model</th>
-              </tr>
-            </thead>
-            <tbody>
-              {MONZ_PRODUCTS.map(p => {
-                const u = fin.usageInputs[p] || {};
-                const mOpts = (monz.modelCosts || []).map(m => <option key={m.id} value={m.id}>{m.name}</option>);
-                return (
-                  <tr key={p} style={{ borderBottom: `1px solid ${F.border}` }}>
-                    <td style={{ padding: "8px 10px", color: F.plum, fontWeight: 600 }}>{p}</td>
-                    <td style={{ padding: "6px 10px" }}><input type="number" min="0" value={u.essActionsPerSchoolMonth || ""} placeholder="0" onChange={e => setUsage(p, "essActionsPerSchoolMonth", e.target.value)} style={numInp} /></td>
-                    <td style={{ padding: "6px 10px" }}><input type="number" min="0" value={u.proActionsPerSchoolMonth || ""} placeholder="0" onChange={e => setUsage(p, "proActionsPerSchoolMonth", e.target.value)} style={numInp} /></td>
-                    <td style={{ padding: "6px 10px" }}><input type="number" min="0" value={u.tokensPerAction || ""} placeholder="0" onChange={e => setUsage(p, "tokensPerAction", e.target.value)} style={numInp} /></td>
-                    <td style={{ padding: "6px 10px" }}><select value={u.freeModelId || ""} onChange={e => setUsageModel(p, "freeModelId", e.target.value)} style={{ ...inp, width: "100%", cursor: "pointer", fontSize: 12 }}><option value="">flat rate</option>{mOpts}</select></td>
-                    <td style={{ padding: "6px 10px" }}><select value={u.proModelId || ""} onChange={e => setUsageModel(p, "proModelId", e.target.value)} style={{ ...inp, width: "100%", cursor: "pointer", fontSize: 12 }}><option value="">flat rate</option>{mOpts}</select></td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <div style={card}>
-        <div style={sectionTitle}>Computed · monthly cost per school</div>
-        <p style={{ margin: "0 0 12px", fontSize: 11.5, color: F.muted, fontStyle: "italic" }}>(actions/mo × tokens/action × the chosen model's $/1k ÷ 1000) + infra share + support / 12. Essential uses the free model, Pro the Pro model (per Usage inputs); blank model = flat token rate.</p>
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12.5 }}>
-            <thead>
-              <tr style={{ background: F.bg }}>
-                <th style={{ textAlign: "left", padding: "8px 10px", fontSize: 10.5, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em" }}>Product</th>
-                <th style={{ textAlign: "right", padding: "8px 10px", fontSize: 10.5, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em" }}>Essential cost / school / mo</th>
-                <th style={{ textAlign: "right", padding: "8px 10px", fontSize: 10.5, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em" }}>Pro cost / school / mo</th>
-              </tr>
-            </thead>
-            <tbody>
-              {MONZ_PRODUCTS.map(p => (
-                <tr key={p} style={{ borderBottom: `1px solid ${F.border}` }}>
-                  <td style={{ padding: "8px 10px", color: F.plum, fontWeight: 600 }}>{p}</td>
-                  <td style={{ padding: "8px 10px", textAlign: "right", color: F.plum, fontWeight: 700 }}>{fmtMoney(costPerSchool(p, "essential"))}</td>
-                  <td style={{ padding: "8px 10px", textAlign: "right", color: F.plum, fontWeight: 700 }}>{fmtMoney(costPerSchool(p, "pro"))}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <div style={card}>
-        <div style={sectionTitle}>Breakeven analysis · Pro SKU vs cost</div>
-        <p style={{ margin: "0 0 12px", fontSize: 11.5, color: F.muted, fontStyle: "italic" }}>Pulls Pro SKU price from the Plan view (per account / year ÷ 12). Margin % at current price.</p>
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12.5 }}>
-            <thead>
-              <tr style={{ background: F.bg }}>
-                {["Product", "Pro SKU price / yr", "Cost / school / mo (Pro)", "Revenue / school / mo (Pro)", "Margin / school / mo", "Margin %"].map(h => (
-                  <th key={h} style={{ textAlign: "right", padding: "8px 10px", fontSize: 10.5, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em" }}>{h}</th>
+                {[["Product", "left"], ["Revenue / school / mo", "right"], ["Pro actions / school / mo", "right"], ["Cost / action (Usage)", "right"], ["AI cost / school / mo", "right"], ["Net / school / mo", "right"], ["Margin %", "right"]].map(([h, a]) => (
+                  <th key={h} style={{ textAlign: a, padding: "8px 10px", fontSize: 10, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.05em", borderBottom: `1px solid ${F.border}`, whiteSpace: "nowrap" }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {MONZ_PRODUCTS.map(p => {
-                const price = (monz.products[p]?.price || 0);
-                const monthlyRev = price / 12;
-                const monthlyCost = costPerSchool(p, "pro");
-                const margin = monthlyRev - monthlyCost;
-                const marginPct = monthlyRev > 0 ? (margin / monthlyRev) * 100 : NaN;
+                const u = fin.usageInputs[p] || {};
+                const hasFeatures = labRows(p).length > 0;
+                const price = monz.products[p]?.price || 0;
+                const rev = price / 12;
+                const cpa = avgCostPerAction(p, "pro");
+                const aiCost = aiCostPerSchool(p, "pro");
+                const net = rev - aiCost - overheadPerSchoolMo;
+                const marginPct = rev > 0 ? (net / rev) * 100 : NaN;
                 return (
                   <tr key={p} style={{ borderBottom: `1px solid ${F.border}` }}>
-                    <td style={{ padding: "8px 10px", color: F.plum, fontWeight: 600, textAlign: "left" }}>{p}</td>
-                    <td style={{ padding: "8px 10px", textAlign: "right", color: F.muted }}>{fmtMoney(price)}</td>
-                    <td style={{ padding: "8px 10px", textAlign: "right", color: F.muted }}>{fmtMoney(monthlyCost)}</td>
-                    <td style={{ padding: "8px 10px", textAlign: "right", color: F.muted }}>{fmtMoney(monthlyRev)}</td>
-                    <td style={{ padding: "8px 10px", textAlign: "right", color: margin >= 0 ? F.green : F.pink, fontWeight: 700 }}>{fmtMoney(margin)}</td>
-                    <td style={{ padding: "8px 10px", textAlign: "right", color: marginPct >= 0 ? F.green : F.pink, fontWeight: 700 }}>{isFinite(marginPct) ? fmtPct(marginPct) : "—"}</td>
+                    <td style={{ padding: "7px 10px", color: F.plum, fontWeight: 700, whiteSpace: "nowrap" }}>{p}{!hasFeatures && <span style={{ fontSize: 10, color: F.muted2, fontWeight: 500 }}> · no features</span>}</td>
+                    <td style={{ padding: "7px 10px", textAlign: "right", color: F.muted }}>{fmtMoney(rev)}</td>
+                    <td style={{ padding: "5px 10px", textAlign: "right" }}><input type="number" min="0" value={u.proActionsPerSchoolMonth || ""} placeholder="0" onChange={e => setUsage(p, "proActionsPerSchoolMonth", e.target.value)} style={{ ...inp, width: 80, textAlign: "right", padding: "5px 7px", fontSize: 12 }} /></td>
+                    <td style={{ padding: "7px 10px", textAlign: "right", color: F.muted }}>{hasFeatures ? fmtMoney(cpa) : "—"}</td>
+                    <td style={{ padding: "7px 10px", textAlign: "right", color: F.plum, fontWeight: 700 }}>{fmtMoney(aiCost)}</td>
+                    <td style={{ padding: "7px 10px", textAlign: "right", color: net >= 0 ? F.green : F.pink, fontWeight: 800 }}>{fmtMoney(net)}</td>
+                    <td style={{ padding: "7px 10px", textAlign: "right", color: marginPct >= 0 ? F.green : F.pink, fontWeight: 800 }}>{isFinite(marginPct) ? fmtPct(marginPct) : "—"}</td>
                   </tr>
                 );
               })}
             </tbody>
           </table>
+        </div>
+        <p style={{ margin: "10px 0 0", fontSize: 11.5, color: F.muted2, fontStyle: "italic" }}>Net also subtracts the shared cost of {fmtMoney(overheadPerSchoolMo)}/school/mo (above). Green = profit, pink = loss at this price.</p>
+
+        {/* Free-tier giveaway cost */}
+        <div style={{ marginTop: 16, background: F.bg, border: `1px solid ${F.border}`, borderRadius: 10, padding: "13px 15px" }}>
+          <div style={{ ...sectionTitle, marginBottom: 8 }}>Free-tier giveaway · AI cost / school / mo</div>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {MONZ_PRODUCTS.filter(p => labRows(p).length > 0).map(p => {
+              const u = fin.usageInputs[p] || {};
+              const freeCost = aiCostPerSchool(p, "free");
+              const over = freeCost > ftbPerSchoolMo && ftbPerSchoolMo > 0;
+              return (
+                <div key={p} style={{ background: F.surface, border: `1px solid ${over ? F.pink : F.border}`, borderRadius: 9, padding: "9px 12px", minWidth: 150 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: F.plum, marginBottom: 4 }}>{p}</div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <input type="number" min="0" value={u.essActionsPerSchoolMonth || ""} placeholder="0" onChange={e => setUsage(p, "essActionsPerSchoolMonth", e.target.value)} style={{ ...inp, width: 56, textAlign: "right", padding: "4px 6px", fontSize: 12 }} />
+                    <span style={{ fontSize: 10.5, color: F.muted2 }}>free acts/mo</span>
+                  </div>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: over ? F.pink : F.green, marginTop: 5 }}>{fmtMoney(freeCost)}<span style={{ fontSize: 10, color: F.muted2, fontWeight: 600 }}> /school/mo</span></div>
+                </div>
+              );
+            })}
+          </div>
+          <p style={{ margin: "10px 0 0", fontSize: 11.5, color: F.muted2, fontStyle: "italic" }}>Compare against the free-tier allowance of {fmtMoney(ftbPerSchoolMo)}/school/mo (top). <span style={{ color: F.pink }}>Pink</span> = the giveaway exceeds the allowance — push those features to cheaper models or smaller caps.</p>
         </div>
       </div>
 

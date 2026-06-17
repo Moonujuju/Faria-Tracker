@@ -1189,6 +1189,94 @@ function mergeFinance(saved) {
   };
 }
 
+/* ── Product Vision (per-product 12-section framework) ─────────
+   Each product owns its OWN vision record. Stored in faria-vision-v1. */
+const visionRowId = () => "vr-" + Date.now().toString(36) + Math.floor(Math.random() * 1e4).toString(36);
+const PROFILE_TEMPLATE = () => ({ id: visionRowId(), name: "", role: "", jtbd: "" });
+const BASELINE_TEMPLATE = () => ({ id: visionRowId(), metric: "", value: "" });
+const BET_TEMPLATE = () => ({ id: visionRowId(), choice: "", tradeoff: "", dependency: "" });
+const GOAL_TEMPLATE = () => ({ id: visionRowId(), kind: "product", metric: "", baseline: "", target: "", window: "now" });
+const INITIATIVE_TEMPLATE = () => ({ id: visionRowId(), program: "", deliversBet: "", team: "", budget: "", buildBuy: "build" });
+function BLANK_VISION() {
+  return {
+    who: { segment: "", buyer: "", payer: "", profiles: [] },
+    current: { position: "", baselines: [], working: [], notWorking: [] },
+    vision: { now: "", next: "", outer: "" },
+    northStar: { value: "", commercial: "" },
+    why: { whyNow: "", whyUs: "" },
+    whatTrue: { assumptions: [], risks: [], watching: [], doubleDown: "", pivot: "", kill: "" },
+    bets: [],
+    model: { packaging: "", pricing: "", expansion: "" },
+    goals: [],
+    horizon: { now: [], next: [], outer: [] },
+    initiatives: [],
+    alive: { owner: "", cadence: "" },
+    updatedAt: "",
+  };
+}
+const DEFAULT_VISION = { products: Object.fromEntries(MONZ_PRODUCTS.map(p => [p, BLANK_VISION()])) };
+// Deep-merge a saved product over a blank template so new fields forward-fill without losing edits.
+function mergeVisionProduct(saved) {
+  const b = BLANK_VISION();
+  if (!saved) return b;
+  return {
+    who: { ...b.who, ...(saved.who || {}), profiles: saved.who?.profiles || [] },
+    current: { ...b.current, ...(saved.current || {}), baselines: saved.current?.baselines || [], working: saved.current?.working || [], notWorking: saved.current?.notWorking || [] },
+    vision: { ...b.vision, ...(saved.vision || {}) },
+    northStar: { ...b.northStar, ...(saved.northStar || {}) },
+    why: { ...b.why, ...(saved.why || {}) },
+    whatTrue: { ...b.whatTrue, ...(saved.whatTrue || {}), assumptions: saved.whatTrue?.assumptions || [], risks: saved.whatTrue?.risks || [], watching: saved.whatTrue?.watching || [] },
+    bets: saved.bets || [],
+    model: { ...b.model, ...(saved.model || {}) },
+    goals: saved.goals || [],
+    horizon: { now: saved.horizon?.now || [], next: saved.horizon?.next || [], outer: saved.horizon?.outer || [] },
+    initiatives: saved.initiatives || [],
+    alive: { ...b.alive, ...(saved.alive || {}) },
+    updatedAt: saved.updatedAt || "",
+  };
+}
+function mergeVision(saved) {
+  if (!saved) return DEFAULT_VISION;
+  return { ...DEFAULT_VISION, ...saved, products: Object.fromEntries(MONZ_PRODUCTS.map(p => [p, mergeVisionProduct(saved.products?.[p])])) };
+}
+// % of the 32 "slots" filled, for the progress bars.
+function visionCompletion(v) {
+  if (!v) return 0;
+  const t = (s) => (s || "").trim().length > 0 ? 1 : 0;
+  const l = (a) => (a && a.length > 0) ? 1 : 0;
+  const slots = [
+    t(v.who.segment), t(v.who.buyer), t(v.who.payer), l(v.who.profiles),
+    t(v.current.position), l(v.current.baselines), l(v.current.working), l(v.current.notWorking),
+    t(v.vision.now), t(v.vision.next), t(v.vision.outer),
+    t(v.northStar.value), t(v.northStar.commercial),
+    t(v.why.whyNow), t(v.why.whyUs),
+    l(v.whatTrue.assumptions), l(v.whatTrue.risks), l(v.whatTrue.watching), t(v.whatTrue.doubleDown), t(v.whatTrue.pivot), t(v.whatTrue.kill),
+    l(v.bets),
+    t(v.model.packaging), t(v.model.pricing), t(v.model.expansion),
+    l(v.goals),
+    l(v.horizon.now), l(v.horizon.next), l(v.horizon.outer),
+    l(v.initiatives),
+    t(v.alive.owner), t(v.alive.cadence),
+  ];
+  return Math.round(slots.reduce((s, x) => s + x, 0) / slots.length * 100);
+}
+// Section metadata — drives the index chips, framework grid, group headers and guidance.
+const VISION_SECTIONS = [
+  { n: 1, key: "who", group: "A", title: "Who", guide: "Target segment, buyer, and who actually pays if different; one or two named profiles." },
+  { n: 2, key: "current", group: "A", title: "Current state", guide: "Today's position and traction, key metrics as baselines, an honest read on what's working and what isn't." },
+  { n: 3, key: "vision", group: "B", title: "Vision (rolling)", guide: "The future picture across three windows, resolution dropping with distance." },
+  { n: 4, key: "northStar", group: "B", title: "North star", guide: "The single enduring measure — a value + commercial pair — that proves we're moving toward the vision." },
+  { n: 5, key: "why", group: "B", title: "Why", guide: "The shift that makes this the moment (why now) and our right to win (why us)." },
+  { n: 6, key: "whatTrue", group: "C", title: "What has to be true", guide: "Core assumptions, top risks, what we're watching, and the triggers to double down, pivot, or kill a bet." },
+  { n: 7, key: "bets", group: "C", title: "Strategic bets", guide: "The 2–4 big choices, each with its explicit tradeoff and any dependency we don't own." },
+  { n: 8, key: "model", group: "D", title: "Business model / value capture", guide: "Packaging, pricing, and the expansion path; how the bets turn into revenue." },
+  { n: 9, key: "goals", group: "D", title: "Goals / outcomes", guide: "Product and commercial targets, baseline to target, phased to the windows." },
+  { n: 10, key: "horizon", group: "E", title: "Horizon", guide: "Bets and initiatives mapped onto the same Now / Next / Outer windows." },
+  { n: 11, key: "initiatives", group: "E", title: "Initiatives", guide: "The concrete programs that deliver each bet and what they require (team, budget, build vs. buy)." },
+  { n: 12, key: "alive", group: "F", title: "Keeping it alive", guide: "Owner and re-baseline cadence; Now is firm, Next and Outer refreshed quarterly." },
+];
+const VISION_GROUPS = { A: "Where we stand", B: "Where we're going", C: "What must hold", D: "How it pays", E: "How we execute", F: "How we sustain it" };
+
 // Returns user-assigned tier if set, otherwise infers a candidate tier
 // from impact. User overrides always win. "" = explicitly Unassigned.
 function effectiveTier(f) {
@@ -5173,12 +5261,380 @@ function AiPodsPage({ subRoute, setSubRoute }) {
    code churn; the URL exposes friendly slugs ("monetization",
    "prioritization", "framework"). Browser back/forward Just Works
    because we listen for the hashchange event. */
+/* ── Product Vision page ── */
+const VISION_WINDOWS = [
+  { key: "now", label: "Now", sub: "0–6 mo · committed", color: F.plum, bg: F.lightYellow + "55", dash: false },
+  { key: "next", label: "Next", sub: "6–18 mo · shaped", color: F.orange, bg: "rgba(247,139,67,0.08)", dash: false },
+  { key: "outer", label: "Outer", sub: "2–3 yr · directional", color: F.muted2, bg: F.bg, dash: true },
+];
+function VisionPage({ subRoute, setSubRoute }) {
+  const [vision, setVision] = useState(DEFAULT_VISION);
+  const [ready, setReady] = useState(false);
+  const saveTimer = useRef(null);
+  useEffect(() => { (async () => { const s = await loadState("faria-vision-v1"); setVision(mergeVision(s)); setReady(true); })(); }, []);
+  useEffect(() => { if (!ready) return; clearTimeout(saveTimer.current); saveTimer.current = setTimeout(() => saveState("faria-vision-v1", vision), 1000); return () => clearTimeout(saveTimer.current); }, [vision, ready]);
+
+  // Product lives in the 2nd URL segment (Vision has no sub-view): #/vision/openapply
+  const focusedProduct = SLUG_PRODUCT[subRoute] || null; // null = Overview
+  const setFocusedProduct = (prod) => setSubRoute(prod ? (PRODUCT_SLUG[prod] || "") : "");
+
+  const card = { background: F.surface, border: `1px solid ${F.border}`, borderRadius: 12, padding: "18px 22px", marginBottom: 18, boxShadow: F.shadowSm };
+  const sectionTitle = { fontSize: 11, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 };
+  const removeBtn = { width: 22, height: 22, borderRadius: 11, border: "none", background: "transparent", color: F.muted2, cursor: "pointer", fontSize: 15, lineHeight: 1, padding: 0, flexShrink: 0, fontFamily: "inherit" };
+  const addBtn = { marginTop: 8, padding: "5px 11px", borderRadius: 7, border: `1px dashed ${F.borderStrong}`, background: "transparent", color: F.plum, fontSize: 11.5, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" };
+  const ta = { ...inp, width: "100%", resize: "vertical", lineHeight: 1.5 };
+
+  const v = focusedProduct ? vision.products[focusedProduct] : null;
+  const stamp = () => new Date().toISOString().slice(0, 10);
+  const patchP = (updater) => setVision(prev => ({ ...prev, products: { ...prev.products, [focusedProduct]: { ...updater(prev.products[focusedProduct]), updatedAt: stamp() } } }));
+  // object-field + nested string-list + nested-array + top-level-array mutators
+  const objField = (s, k, val) => patchP(c => ({ ...c, [s]: { ...c[s], [k]: val } }));
+  const listAdd = (s, k) => patchP(c => ({ ...c, [s]: { ...c[s], [k]: [...(c[s][k] || []), ""] } }));
+  const listSet = (s, k, i, val) => patchP(c => ({ ...c, [s]: { ...c[s], [k]: c[s][k].map((x, ix) => ix === i ? val : x) } }));
+  const listDel = (s, k, i) => patchP(c => ({ ...c, [s]: { ...c[s], [k]: c[s][k].filter((_, ix) => ix !== i) } }));
+  const nestAdd = (s, k, tmpl) => patchP(c => ({ ...c, [s]: { ...c[s], [k]: [...(c[s][k] || []), tmpl()] } }));
+  const nestSet = (s, k, id, patch) => patchP(c => ({ ...c, [s]: { ...c[s], [k]: c[s][k].map(x => x.id === id ? { ...x, ...patch } : x) } }));
+  const nestDel = (s, k, id) => patchP(c => ({ ...c, [s]: { ...c[s], [k]: c[s][k].filter(x => x.id !== id) } }));
+  const arrAdd = (k, tmpl) => patchP(c => ({ ...c, [k]: [...(c[k] || []), tmpl()] }));
+  const arrSet = (k, id, patch) => patchP(c => ({ ...c, [k]: c[k].map(x => x.id === id ? { ...x, ...patch } : x) }));
+  const arrDel = (k, id) => patchP(c => ({ ...c, [k]: c[k].filter(x => x.id !== id) }));
+
+  // ── small render helpers ──
+  const Labeled = (label, node, hint) => (
+    <div style={{ marginBottom: 12 }}>
+      <div style={lb}>{label}</div>
+      {hint && <div style={{ fontSize: 11, color: F.muted2, fontStyle: "italic", margin: "-2px 0 5px" }}>{hint}</div>}
+      {node}
+    </div>
+  );
+  const Field = (s, k, ph, rows = 2) => (
+    <textarea value={v[s][k]} onChange={e => objField(s, k, e.target.value)} placeholder={ph} rows={rows} style={ta} />
+  );
+  const StrList = (s, k, ph, accent = F.pink) => (
+    <div>
+      {(v[s][k] || []).length === 0 && <div style={{ fontSize: 11.5, color: F.muted2, fontStyle: "italic", marginBottom: 4 }}>None yet.</div>}
+      {(v[s][k] || []).map((row, i) => (
+        <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8, padding: "4px 0", borderBottom: `1px solid ${F.border}` }}>
+          <span style={{ color: accent, fontSize: 11, paddingTop: 7, flexShrink: 0 }}>◆</span>
+          <textarea value={row} onChange={e => listSet(s, k, i, e.target.value)} placeholder={ph} rows={1} style={{ flex: 1, ...inp, border: "none", background: "transparent", resize: "vertical", padding: "5px 0", minWidth: 0 }} />
+          <button onClick={() => listDel(s, k, i)} title="Remove" style={removeBtn}>×</button>
+        </div>
+      ))}
+      <button onClick={() => listAdd(s, k)} style={addBtn}>+ Add</button>
+    </div>
+  );
+  const numWrapStyle = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 };
+
+  // ── 12 section bodies (per-product) ──
+  const sectionBody = (key) => {
+    if (key === "who") return (<>
+      <div style={numWrapStyle}>
+        {Labeled("Target segment", Field("who", "segment", "Who is this for?", 2))}
+        {Labeled("Buyer", Field("who", "buyer", "Who decides to buy?", 2))}
+        {Labeled("Payer (if different)", Field("who", "payer", "Who actually pays?", 2))}
+      </div>
+      <div style={lb}>Named profiles · one or two</div>
+      {v.who.profiles.length === 0 && <div style={{ fontSize: 11.5, color: F.muted2, fontStyle: "italic", marginBottom: 6 }}>No profiles yet.</div>}
+      {v.who.profiles.map(p => (
+        <div key={p.id} style={{ background: F.bg, border: `1px solid ${F.border}`, borderRadius: 8, padding: "10px 12px", marginBottom: 8 }}>
+          <div style={{ display: "flex", gap: 8 }}>
+            <input value={p.name} onChange={e => nestSet("who", "profiles", p.id, { name: e.target.value })} placeholder="Name / persona" style={{ ...inp, flex: 1 }} />
+            <input value={p.role} onChange={e => nestSet("who", "profiles", p.id, { role: e.target.value })} placeholder="Role" style={{ ...inp, flex: 1 }} />
+            <button onClick={() => nestDel("who", "profiles", p.id)} style={removeBtn}>×</button>
+          </div>
+          <textarea value={p.jtbd} onChange={e => nestSet("who", "profiles", p.id, { jtbd: e.target.value })} placeholder="Job to be done" rows={1} style={{ ...ta, marginTop: 8 }} />
+        </div>
+      ))}
+      <button onClick={() => nestAdd("who", "profiles", PROFILE_TEMPLATE)} style={addBtn}>+ Add profile</button>
+    </>);
+    if (key === "current") return (<>
+      {Labeled("Today's position & traction", Field("current", "position", "Where the product sits today — honest read.", 3))}
+      <div style={lb}>Baseline metrics</div>
+      {v.current.baselines.map(b => (
+        <div key={b.id} style={{ display: "flex", gap: 8, marginBottom: 6 }}>
+          <input value={b.metric} onChange={e => nestSet("current", "baselines", b.id, { metric: e.target.value })} placeholder="Metric" style={{ ...inp, flex: 2 }} />
+          <input value={b.value} onChange={e => nestSet("current", "baselines", b.id, { value: e.target.value })} placeholder="Value today" style={{ ...inp, flex: 1 }} />
+          <button onClick={() => nestDel("current", "baselines", b.id)} style={removeBtn}>×</button>
+        </div>
+      ))}
+      <button onClick={() => nestAdd("current", "baselines", BASELINE_TEMPLATE)} style={addBtn}>+ Add metric</button>
+      <div style={{ ...numWrapStyle, marginTop: 14 }}>
+        <div>{Labeled("What's working", StrList("current", "working", "A strength / what's landing", F.green))}</div>
+        <div>{Labeled("What isn't", StrList("current", "notWorking", "A gap / what's not landing", F.pink))}</div>
+      </div>
+    </>);
+    if (key === "vision") return WindowsTriptych("text");
+    if (key === "northStar") return (<div style={numWrapStyle}>
+      {Labeled("Value measure", Field("northStar", "value", "The enduring value signal (e.g. time saved, outcomes).", 2))}
+      {Labeled("Commercial measure", Field("northStar", "commercial", "The paired commercial signal (e.g. ARR, expansion).", 2))}
+    </div>);
+    if (key === "why") return (<div style={numWrapStyle}>
+      {Labeled("Why now", Field("why", "whyNow", "The shift that makes this the moment.", 3))}
+      {Labeled("Why us", Field("why", "whyUs", "Our right to win.", 3))}
+    </div>);
+    if (key === "whatTrue") return (<>
+      <div style={numWrapStyle}>
+        <div>{Labeled("Core assumptions", StrList("whatTrue", "assumptions", "Something that must hold", F.plum))}</div>
+        <div>{Labeled("Top risks", StrList("whatTrue", "risks", "A risk to the bet", F.pink))}</div>
+        <div>{Labeled("Watching (outer-weighted)", StrList("whatTrue", "watching", "Signal we're tracking", F.orange))}</div>
+      </div>
+      <div style={{ ...sectionTitle, marginTop: 8 }}>Triggers</div>
+      <div style={numWrapStyle}>
+        {Labeled("Double down if…", Field("whatTrue", "doubleDown", "Trigger to invest more.", 2))}
+        {Labeled("Pivot if…", Field("whatTrue", "pivot", "Trigger to change course.", 2))}
+        {Labeled("Kill if…", Field("whatTrue", "kill", "Trigger to stop the bet.", 2))}
+      </div>
+    </>);
+    if (key === "bets") return (<>
+      {v.bets.length === 0 && <div style={{ fontSize: 11.5, color: F.muted2, fontStyle: "italic", marginBottom: 6 }}>No bets yet — aim for 2–4.</div>}
+      {v.bets.map((b, i) => (
+        <div key={b.id} style={{ background: F.bg, border: `1px solid ${F.border}`, borderTop: `3px solid ${F.pink}`, borderRadius: 8, padding: "11px 13px", marginBottom: 8 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+            <span style={{ width: 18, height: 18, borderRadius: 9, background: F.pink, color: "#fff", fontSize: 10, fontWeight: 800, display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{i + 1}</span>
+            <input value={b.choice} onChange={e => arrSet("bets", b.id, { choice: e.target.value })} placeholder="The big choice" style={{ ...inp, flex: 1, fontWeight: 700 }} />
+            <button onClick={() => arrDel("bets", b.id)} style={removeBtn}>×</button>
+          </div>
+          <div style={numWrapStyle}>
+            <textarea value={b.tradeoff} onChange={e => arrSet("bets", b.id, { tradeoff: e.target.value })} placeholder="Explicit tradeoff (what we're NOT doing)" rows={2} style={ta} />
+            <textarea value={b.dependency} onChange={e => arrSet("bets", b.id, { dependency: e.target.value })} placeholder="Dependency we don't own (platform, shared AI, other teams)" rows={2} style={ta} />
+          </div>
+        </div>
+      ))}
+      <button onClick={() => arrAdd("bets", BET_TEMPLATE)} style={addBtn}>+ Add bet</button>
+    </>);
+    if (key === "model") return (<div style={numWrapStyle}>
+      {Labeled("Packaging", Field("model", "packaging", "How it's packaged (tiers, bundles).", 3))}
+      {Labeled("Pricing", Field("model", "pricing", "How it's priced.", 3))}
+      {Labeled("Expansion path", Field("model", "expansion", "How revenue grows over time.", 3))}
+    </div>);
+    if (key === "goals") return (<>
+      {v.goals.length === 0 && <div style={{ fontSize: 11.5, color: F.muted2, fontStyle: "italic", marginBottom: 6 }}>No goals yet.</div>}
+      {v.goals.map(g => (
+        <div key={g.id} style={{ display: "flex", gap: 8, marginBottom: 6, flexWrap: "wrap", alignItems: "center" }}>
+          <select value={g.kind} onChange={e => arrSet("goals", g.id, { kind: e.target.value })} style={{ ...inp, width: 110, cursor: "pointer" }}>
+            <option value="product">Product</option><option value="commercial">Commercial</option>
+          </select>
+          <input value={g.metric} onChange={e => arrSet("goals", g.id, { metric: e.target.value })} placeholder="Metric" style={{ ...inp, flex: 2, minWidth: 140 }} />
+          <input value={g.baseline} onChange={e => arrSet("goals", g.id, { baseline: e.target.value })} placeholder="Baseline" style={{ ...inp, width: 100 }} />
+          <span style={{ color: F.muted2 }}>→</span>
+          <input value={g.target} onChange={e => arrSet("goals", g.id, { target: e.target.value })} placeholder="Target" style={{ ...inp, width: 100 }} />
+          <select value={g.window} onChange={e => arrSet("goals", g.id, { window: e.target.value })} style={{ ...inp, width: 90, cursor: "pointer" }}>
+            <option value="now">Now</option><option value="next">Next</option><option value="outer">Outer</option>
+          </select>
+          <button onClick={() => arrDel("goals", g.id)} style={removeBtn}>×</button>
+        </div>
+      ))}
+      <button onClick={() => arrAdd("goals", GOAL_TEMPLATE)} style={addBtn}>+ Add goal</button>
+    </>);
+    if (key === "horizon") return WindowsTriptych("list");
+    if (key === "initiatives") return (<>
+      {v.initiatives.length === 0 && <div style={{ fontSize: 11.5, color: F.muted2, fontStyle: "italic", marginBottom: 6 }}>No initiatives yet.</div>}
+      {v.initiatives.map(it => (
+        <div key={it.id} style={{ background: F.bg, border: `1px solid ${F.border}`, borderRadius: 8, padding: "11px 13px", marginBottom: 8 }}>
+          <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+            <input value={it.program} onChange={e => arrSet("initiatives", it.id, { program: e.target.value })} placeholder="Program / initiative" style={{ ...inp, flex: 2, fontWeight: 700 }} />
+            <input value={it.deliversBet} onChange={e => arrSet("initiatives", it.id, { deliversBet: e.target.value })} placeholder="Delivers which bet?" style={{ ...inp, flex: 1 }} />
+            <button onClick={() => arrDel("initiatives", it.id)} style={removeBtn}>×</button>
+          </div>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <input value={it.team} onChange={e => arrSet("initiatives", it.id, { team: e.target.value })} placeholder="Team" style={{ ...inp, flex: 1, minWidth: 120 }} />
+            <input value={it.budget} onChange={e => arrSet("initiatives", it.id, { budget: e.target.value })} placeholder="Budget" style={{ ...inp, flex: 1, minWidth: 120 }} />
+            <select value={it.buildBuy} onChange={e => arrSet("initiatives", it.id, { buildBuy: e.target.value })} style={{ ...inp, width: 110, cursor: "pointer" }}>
+              <option value="build">Build</option><option value="buy">Buy</option><option value="partner">Partner</option>
+            </select>
+          </div>
+        </div>
+      ))}
+      <button onClick={() => arrAdd("initiatives", INITIATIVE_TEMPLATE)} style={addBtn}>+ Add initiative</button>
+    </>);
+    if (key === "alive") return (<div style={numWrapStyle}>
+      {Labeled("Owner", Field("alive", "owner", "Who keeps this vision alive?", 1))}
+      {Labeled("Re-baseline cadence", Field("alive", "cadence", "Now firm; Next & Outer refreshed quarterly. How it plugs into planning.", 2))}
+    </div>);
+    return null;
+  };
+
+  function WindowsTriptych(mode) {
+    return (
+      <div style={numWrapStyle} className="vis-tript">
+        {VISION_WINDOWS.map(w => (
+          <div key={w.key} style={{ background: w.bg, border: `1px ${w.dash ? "dashed" : "solid"} ${F.border}`, borderTop: `3px solid ${w.color}`, borderRadius: 10, padding: "12px 14px" }}>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 8 }}>
+              <span style={{ fontSize: 13, fontWeight: 800, color: F.plum }}>{w.label}</span>
+              <span style={{ fontSize: 10, color: F.muted2, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em" }}>{w.sub}</span>
+            </div>
+            {mode === "text"
+              ? <textarea value={v.vision[w.key]} onChange={e => objField("vision", w.key, e.target.value)} placeholder={w.key === "now" ? "Committed, high resolution — the product state we're building toward." : w.key === "next" ? "Shaped — direction set, specifics flexible." : "Directional hypothesis, held loosely."} rows={4} style={ta} />
+              : StrList("horizon", w.key, "A bet or initiative in this window", w.color)}
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  // ── chip nav ──
+  const chip = (label, prod, active) => (
+    <button key={label} onClick={() => setFocusedProduct(prod)} style={{ padding: "5px 13px", borderRadius: 999, fontSize: 12, fontWeight: 700, cursor: "pointer", background: active ? F.plum : F.surface, color: active ? F.paper : F.plum, border: `1px solid ${active ? F.plum : F.borderStrong}`, fontFamily: "inherit" }}>{label}</button>
+  );
+
+  // ── Overview ──
+  const overview = () => {
+    const trunc = (s) => (s || "").trim() || <span style={{ color: F.muted2, fontStyle: "italic" }}>—</span>;
+    return (
+      <>
+        <div style={{ ...card, position: "relative", overflow: "hidden", background: `linear-gradient(135deg, ${F.plum}, ${F.lightPlum})`, border: "none", color: F.paper, padding: "22px 26px" }}>
+          <div style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase", color: F.yellow, marginBottom: 8 }}>Product Vision Framework</div>
+          <p style={{ margin: "0 0 14px", fontSize: 14, lineHeight: 1.55, maxWidth: 820, color: F.paper, opacity: 0.95 }}>Give each Faria product a decision-forcing definition of where it's going, why, how we'll get there, and how it pays for itself — so leadership and teams make aligned, accountable calls and can tell whether we're winning.</p>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {VISION_WINDOWS.map(w => (
+              <span key={w.key} style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 11.5, fontWeight: 700, color: F.paper, background: "rgba(255,255,255,0.1)", border: `1px solid rgba(255,255,255,0.18)`, borderRadius: 999, padding: "4px 12px" }}>
+                <span style={{ width: 9, height: 9, borderRadius: "50%", background: w.color === F.muted2 ? "#C9B9C7" : w.color }} />{w.label} · {w.sub.split(" · ")[0]}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* The framework — 12 sections grouped */}
+        <div style={card}>
+          <div style={sectionTitle}>The framework · 12 sections each product works through</div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 12 }}>
+            {Object.entries(VISION_GROUPS).map(([g, gname]) => (
+              <div key={g} style={{ background: F.bg, border: `1px solid ${F.border}`, borderRadius: 10, padding: "12px 14px" }}>
+                <div style={{ fontSize: 10.5, fontWeight: 800, color: F.pink, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>{gname}</div>
+                {VISION_SECTIONS.filter(s => s.group === g).map(s => (
+                  <div key={s.n} style={{ marginBottom: 8 }}>
+                    <div style={{ fontSize: 12.5, fontWeight: 800, color: F.plum }}><span style={{ color: F.muted2 }}>{s.n}.</span> {s.title}</div>
+                    <div style={{ fontSize: 11, color: F.muted, lineHeight: 1.4 }}>{s.guide}</div>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Per-product progress grid */}
+        <div style={card}>
+          <div style={sectionTitle}>Each product's vision · pick one to open</div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 12 }}>
+            {MONZ_PRODUCTS.map(p => {
+              const pv = vision.products[p];
+              const pct = visionCompletion(pv);
+              return (
+                <div key={p} onClick={() => setFocusedProduct(p)} style={{ background: F.bg, border: `1px solid ${F.border}`, borderRadius: 10, padding: "14px 16px", cursor: "pointer", transition: "all 0.15s" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
+                    <div style={{ fontSize: 15, fontWeight: 800, color: F.plum }}>{p}</div>
+                    <div style={{ fontSize: 11, fontWeight: 800, color: pct > 0 ? F.green : F.muted2 }}>{pct}%</div>
+                  </div>
+                  <div style={{ height: 6, background: F.border, borderRadius: 999, overflow: "hidden", marginBottom: 10 }}><div style={{ width: `${pct}%`, height: "100%", background: F.gradient }} /></div>
+                  <div style={{ fontSize: 11.5, color: F.muted, lineHeight: 1.5 }}><strong style={{ color: F.plum }}>Owner:</strong> {pv.alive.owner || "—"}</div>
+                  <div style={{ fontSize: 11.5, color: F.muted, lineHeight: 1.5 }}><strong style={{ color: F.plum }}>North star:</strong> {pv.northStar.value || "—"}</div>
+                  <div style={{ marginTop: 8, fontSize: 12, fontWeight: 700, color: F.pink }}>Open →</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Cross-product comparison */}
+        <div style={card}>
+          <div style={sectionTitle}>At a glance · north star &amp; rolling windows across products</div>
+          <div style={{ overflowX: "auto", border: `1px solid ${F.border}`, borderRadius: 8 }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12, minWidth: 760 }}>
+              <thead><tr style={{ background: F.bg }}>
+                {["Product", "North star", "Now", "Next", "Outer"].map((h, i) => (
+                  <th key={h} style={{ textAlign: "left", padding: "9px 12px", fontSize: 10, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.05em", borderBottom: `1px solid ${F.border}`, width: i === 0 ? "14%" : i === 1 ? "22%" : "21%" }}>{h}</th>
+                ))}
+              </tr></thead>
+              <tbody>
+                {MONZ_PRODUCTS.map((p, ri) => {
+                  const pv = vision.products[p];
+                  const cellTxt = (s) => <span style={{ display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden", lineHeight: 1.4 }}>{s}</span>;
+                  return (
+                    <tr key={p} style={{ background: ri % 2 ? F.bg : F.surface, cursor: "pointer" }} onClick={() => setFocusedProduct(p)}>
+                      <td style={{ padding: "10px 12px", fontWeight: 800, color: F.plum, verticalAlign: "top" }}>{p}</td>
+                      <td style={{ padding: "10px 12px", color: F.plum, verticalAlign: "top" }}>{cellTxt(trunc(pv.northStar.value))}</td>
+                      <td style={{ padding: "10px 12px", color: F.muted, verticalAlign: "top", borderLeft: `2px solid ${F.plum}` }}>{cellTxt(trunc(pv.vision.now))}</td>
+                      <td style={{ padding: "10px 12px", color: F.muted, verticalAlign: "top", borderLeft: `2px solid ${F.orange}` }}>{cellTxt(trunc(pv.vision.next))}</td>
+                      <td style={{ padding: "10px 12px", color: F.muted, verticalAlign: "top", borderLeft: `2px dashed ${F.muted2}` }}>{cellTxt(trunc(pv.vision.outer))}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </>
+    );
+  };
+
+  // ── Per-product page ──
+  const productPage = () => {
+    const pct = visionCompletion(v);
+    return (
+      <>
+        {/* sticky-ish header */}
+        <div style={{ ...card, borderLeft: `4px solid ${F.pink}` }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: 10 }}>
+            <div style={{ fontSize: 20, fontWeight: 800, color: F.plum }}>{focusedProduct} <span style={{ fontSize: 12, fontWeight: 700, color: F.muted2 }}>· Product Vision</span></div>
+            <div style={{ fontSize: 11.5, color: F.muted }}>Owner: <strong style={{ color: F.plum }}>{v.alive.owner || "—"}</strong> · Cadence: <strong style={{ color: F.plum }}>{v.alive.cadence || "—"}</strong>{v.updatedAt && <> · Updated {v.updatedAt}</>}</div>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 10 }}>
+            <div style={{ flex: 1, height: 7, background: F.border, borderRadius: 999, overflow: "hidden" }}><div style={{ width: `${pct}%`, height: "100%", background: F.gradient }} /></div>
+            <div style={{ fontSize: 12, fontWeight: 800, color: pct > 0 ? F.green : F.muted2 }}>{pct}% complete</div>
+          </div>
+          {/* section index */}
+          <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginTop: 12 }}>
+            {VISION_SECTIONS.map(s => (
+              <button key={s.n} onClick={() => { const el = document.getElementById("vis-sec-" + s.n); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); }}
+                title={s.title} style={{ width: 26, height: 26, borderRadius: 7, border: `1px solid ${F.borderStrong}`, background: F.surface, color: F.plum, fontSize: 11, fontWeight: 800, cursor: "pointer", fontFamily: "inherit" }}>{s.n}</button>
+            ))}
+          </div>
+        </div>
+
+        {Object.entries(VISION_GROUPS).map(([g, gname]) => (
+          <div key={g}>
+            <div style={{ fontSize: 11, fontWeight: 800, color: F.pink, textTransform: "uppercase", letterSpacing: "0.08em", margin: "4px 2px 10px" }}>{gname}</div>
+            {VISION_SECTIONS.filter(s => s.group === g).map(s => (
+              <div key={s.n} id={"vis-sec-" + s.n} style={{ ...card, scrollMarginTop: 16 }}>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: 4 }}>
+                  <span style={{ width: 24, height: 24, borderRadius: "50%", background: F.plum, color: F.paper, fontSize: 12, fontWeight: 800, display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{s.n}</span>
+                  <div>
+                    <div style={{ fontSize: 15, fontWeight: 800, color: F.plum, lineHeight: 1.2 }}>{s.title}</div>
+                    <div style={{ fontSize: 11.5, color: F.muted, lineHeight: 1.4, fontStyle: "italic" }}>{s.guide}</div>
+                  </div>
+                </div>
+                <div style={{ marginTop: 12 }}>{sectionBody(s.key)}</div>
+              </div>
+            ))}
+          </div>
+        ))}
+      </>
+    );
+  };
+
+  return (
+    <>
+      <style>{`@media (max-width: 640px){ .vis-tript { grid-template-columns: 1fr !important; } }`}</style>
+      <div style={{ marginBottom: 14 }}>
+        <h1 style={{ fontSize: 24, fontWeight: 700, margin: 0, color: F.plum, lineHeight: 1.15 }}>Product Vision</h1>
+        <p style={{ margin: "4px 0 0", fontSize: 13.5, color: F.muted }}>Each product records its own vision — where it's going, why, how it gets there, and how it pays for itself.</p>
+      </div>
+      <div style={{ display: "flex", gap: 6, marginBottom: 18, flexWrap: "wrap", alignItems: "center" }}>
+        {chip("Overview", null, !focusedProduct)}
+        {MONZ_PRODUCTS.map(p => chip(p, p, focusedProduct === p))}
+      </div>
+      {focusedProduct ? productPage() : overview()}
+    </>
+  );
+}
+
 const PAGE_SLUG = {
   product:  "product",
   ai:       "ai",
   monz:     "monetization",
   handoff:  "lifecycle",
   pods:     "pods",
+  vision:   "vision",
 };
 const SLUG_PAGE = Object.fromEntries(Object.entries(PAGE_SLUG).map(([k, v]) => [v, k]));
 // Sub-route id ↔ URL slug map (per page). Pages not listed here use 1:1 id-as-slug.
@@ -5279,7 +5735,7 @@ export default function App() {
         borderBottom: "2px solid transparent",
         boxShadow: "0 2px 12px rgba(55, 2, 60, 0.18)",
       }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+        <div onClick={() => setPage("product")} onMouseEnter={() => setHovNav("product")} onMouseLeave={() => setHovNav(null)} title="Product Transformation" style={{ display: "flex", alignItems: "center", gap: 14, cursor: "pointer" }}>
           <div style={{
             width: 28, height: 28, borderRadius: 7,
             background: F.gradientIcon,
@@ -5291,7 +5747,7 @@ export default function App() {
           <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
             <span style={{ fontSize: 16, fontWeight: 800, color: F.paper, letterSpacing: "0.01em" }}>Faria</span>
             <span style={{ fontSize: 11, color: "rgba(240,235,235,0.4)" }}>·</span>
-            <span style={{ fontSize: 11, fontWeight: 700, color: F.yellow, letterSpacing: "0.08em", textTransform: "uppercase" }}>Product Trackers</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: (page === "product" || hovNav === "product") ? F.paper : F.yellow, letterSpacing: "0.08em", textTransform: "uppercase", borderBottom: `1.5px solid ${page === "product" ? F.paper : "transparent"}`, paddingBottom: 1, transition: "all 0.15s" }}>Product Trackers</span>
           </div>
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -5300,6 +5756,7 @@ export default function App() {
           {navBtn("monz", "AI Monetization")}
           {navBtn("handoff", <><span className="lbl-full">Product Lifecycle</span><span className="lbl-short">Lifecycle</span></>)}
           {navBtn("pods", <><span className="lbl-full">AI Pods</span><span className="lbl-short">Pods</span></>)}
+          {navBtn("vision", <><span className="lbl-full">Product Vision</span><span className="lbl-short">Vision</span></>)}
         </div>
       </div>
       <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 28px" }}>
@@ -5311,6 +5768,7 @@ export default function App() {
         {page === "monz" && <AiMonetizationPage subRoute={sub} setSubRoute={setSub} deepRoute={deep} setDeepRoute={setDeep} />}
         {page === "handoff" && <PrioritizationPage subRoute={sub} setSubRoute={setSub} />}
         {page === "pods" && <AiPodsPage subRoute={sub} setSubRoute={setSub} />}
+        {page === "vision" && <VisionPage subRoute={sub} setSubRoute={setSub} />}
       </div>
     </div>
   );

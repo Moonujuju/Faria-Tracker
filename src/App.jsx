@@ -365,6 +365,49 @@ const DEFAULT_AI = [
    action limits live ON the AI feature objects in faria-ai-v12
    (added additively — not in DEFAULT_AI literals). */
 const MONZ_PRODUCTS = ["OpenApply", "ManageBac+", "Atlas", "SchoolsBuddy", "Vectare"];
+// Per-model price table feeding all cost math (Usage cost lab + Finance cost/school).
+// Prices are USD per 1M tokens — EDITABLE estimates; verify exact Bedrock rates with the engineer.
+const MODEL_COSTS_SEED = [
+  { id: "m-opus",     name: "Claude Opus 4.x",   tier: "frontier", provider: "Anthropic / Bedrock", inPer1M: 15,   outPer1M: 75,  region: "us · eu · ca", notes: "Top reasoning; licensing premium on Bedrock." },
+  { id: "m-sonnet",   name: "Claude Sonnet 4.x", tier: "frontier", provider: "Anthropic / Bedrock", inPer1M: 3,    outPer1M: 15,  region: "us · eu · ca", notes: "Strong default for Pro features." },
+  { id: "m-haiku",    name: "Claude Haiku 4.5",  tier: "mid",      provider: "Anthropic / Bedrock", inPer1M: 1,    outPer1M: 5,   region: "us · eu · ca", notes: "Fast & cheap for light tasks." },
+  { id: "m-gpt5",     name: "GPT-5",             tier: "frontier", provider: "OpenAI",              inPer1M: 1.25, outPer1M: 10,  region: "us", notes: "Moving to Bedrock as AWS rolls out OpenAI." },
+  { id: "m-gpt5mini", name: "GPT-5 mini",        tier: "mid",      provider: "OpenAI",              inPer1M: 0.25, outPer1M: 2,   region: "us", notes: "" },
+  { id: "m-qwen",     name: "Qwen (open)",       tier: "open",     provider: "Alibaba / Bedrock",   inPer1M: 0.20, outPer1M: 0.60, region: "in & out of China", notes: "No frontier licensing cost — good free-tier default." },
+  { id: "m-llama",    name: "Llama (open)",      tier: "open",     provider: "Meta / Bedrock",      inPer1M: 0.20, outPer1M: 0.60, region: "us · eu", notes: "Open-weight; ≈ last-year frontier." },
+];
+// One row per AI feature, per product — each prices independently (own tokens + free/pro model).
+// [product, feature, inputTokens, outputTokens, runsPerAction, proModelId]; free model defaults to Qwen.
+const COST_LAB_SEED = [
+  ["OpenApply", "AI Writing Assistant", 1200, 500, 1, "m-sonnet"],
+  ["OpenApply", "AI Applicant Insights", 4000, 500, 1, "m-sonnet"],
+  ["OpenApply", "AI 2nd Language Translations", 800, 800, 1, "m-haiku"],
+  ["OpenApply", "Agentic Nurture Workflows", 6000, 600, 4, "m-opus"],
+  ["OpenApply", "AI Admissions Assistant for Parents", 2000, 500, 2, "m-sonnet"],
+  ["OpenApply", "AI Lead Scoring", 3000, 200, 1, "m-sonnet"],
+  ["OpenApply", "AI Configuration Dashboard", 1500, 400, 1, "m-haiku"],
+  ["OpenApply", "AI Form Creation", 1500, 800, 1, "m-sonnet"],
+  ["OpenApply", "AI Custom Dashboard", 2500, 600, 1, "m-sonnet"],
+  ["OpenApply", "AI Document Verification", 9000, 400, 2, "m-opus"],
+  ["OpenApply", "MCP", 2000, 600, 3, "m-sonnet"],
+  ["OpenApply", "AI Analyst", 8000, 800, 3, "m-opus"],
+  ["ManageBac+", "AI Notification Summaries", 1500, 300, 1, "m-haiku"],
+  ["ManageBac+", "Image Generation for Unit Planner Covers", 200, 0, 1, "m-sonnet"],
+  ["ManageBac+", "MYP AI Assistant", 2500, 600, 2, "m-sonnet"],
+  ["ManageBac+", "Live Turkish Translations for Communications", 600, 600, 1, "m-haiku"],
+  ["ManageBac+", "Automated Tagging for Portfolio & Class Streams", 1200, 200, 1, "m-haiku"],
+  ["ManageBac+", "Quiz Generation", 2000, 900, 1, "m-sonnet"],
+  ["ManageBac+", "Task/Workload Scheduler", 2000, 400, 1, "m-sonnet"],
+  ["ManageBac+", "Ask AI Anything (Web)", 3000, 700, 2, "m-sonnet"],
+  ["ManageBac+", "eCoursework Assistant", 4000, 800, 2, "m-sonnet"],
+  ["ManageBac+", "AI Assistant for Portfolio & Class Stream Analytics", 4000, 700, 2, "m-sonnet"],
+  ["ManageBac+", "Unit/Lesson Design Assistant", 3000, 1200, 2, "m-opus"],
+  ["ManageBac+", "Ask Anything (Mobile)", 3000, 700, 2, "m-sonnet"],
+  ["Atlas", "Curriculum Insights Beta Testing", 7000, 800, 2, "m-opus"],
+  ["Atlas", "Curriculum Insights Release", 7000, 800, 2, "m-opus"],
+  ["Atlas", "Unit Planning Assistant", 3000, 1200, 2, "m-sonnet"],
+  ["Atlas", "Lesson Planning Assistant", 2500, 1000, 2, "m-sonnet"],
+];
 const DEFAULT_MONETIZATION = {
   products: {
     "OpenApply":    { sku: "OpenApply AI Pro",    unit: "per account / year", price: 0 },
@@ -392,6 +435,8 @@ const DEFAULT_MONETIZATION = {
     "Pricing signal is honest — heavier features cost more credits.",
     "Per-user cap (18 credits) prevents one power user from draining the pool.",
   ],
+  modelCosts: MODEL_COSTS_SEED,
+  costLab: COST_LAB_SEED.map((r, i) => ({ id: "cl-" + i, product: r[0], feature: r[1], inputTokens: r[2], outputTokens: r[3], runsPerAction: r[4], freeModelId: "m-qwen", proModelId: r[5], notes: "" })),
 };
 
 /* ── Defaults for the new monetization sub-pages ───────── */
@@ -1111,7 +1156,8 @@ const DEFAULT_FINANCE = {
     monthlyInfraCost: 0,
     supportCostPerCustomer: 0,
   },
-  usageInputs: Object.fromEntries(MONZ_PRODUCTS.map(p => [p, { essActionsPerSchoolMonth: 0, proActionsPerSchoolMonth: 0, tokensPerAction: 0 }])),
+  usageInputs: Object.fromEntries(MONZ_PRODUCTS.map(p => [p, { essActionsPerSchoolMonth: 0, proActionsPerSchoolMonth: 0, tokensPerAction: 0, freeModelId: "m-qwen", proModelId: "m-sonnet" }])),
+  freeTierBudget: { annualSpendUSD: 10000, schools: 1000 },
   uptakeScenarios: [],
   decisions: [],
   notes: "",
@@ -1135,7 +1181,9 @@ function mergeFinance(saved) {
     ...DEFAULT_FINANCE,
     ...saved,
     costInputs: { ...DEFAULT_FINANCE.costInputs, ...(saved.costInputs || {}) },
-    usageInputs: { ...DEFAULT_FINANCE.usageInputs, ...(saved.usageInputs || {}) },
+    // Per-product deep-merge so existing saved products gain freeModelId/proModelId.
+    usageInputs: Object.fromEntries(MONZ_PRODUCTS.map(p => [p, { ...DEFAULT_FINANCE.usageInputs[p], ...((saved.usageInputs || {})[p] || {}) }])),
+    freeTierBudget: { ...DEFAULT_FINANCE.freeTierBudget, ...(saved.freeTierBudget || {}) },
     uptakeScenarios: saved.uptakeScenarios || [],
     decisions: saved.decisions || [],
   };
@@ -1203,6 +1251,13 @@ function mergeMonz(saved) {
     bundleDiscounts: saved.bundleDiscounts || DEFAULT_MONETIZATION.bundleDiscounts,
     framework: { ...DEFAULT_MONETIZATION.framework, ...(saved.framework || {}) },
     leadingModelRationale: saved.leadingModelRationale || DEFAULT_MONETIZATION.leadingModelRationale,
+    modelCosts: saved.modelCosts || DEFAULT_MONETIZATION.modelCosts,
+    // id-merge cost lab: keep saved/edited rows, append any new default features by id.
+    costLab: (() => {
+      if (!saved.costLab) return DEFAULT_MONETIZATION.costLab;
+      const ids = new Set(saved.costLab.map(r => r.id));
+      return [...saved.costLab, ...DEFAULT_MONETIZATION.costLab.filter(d => !ids.has(d.id))];
+    })(),
   };
 }
 
@@ -1761,7 +1816,7 @@ function AiMonetizationPage({ subRoute, setSubRoute, deepRoute, setDeepRoute }) 
       {(() => {
         const titles = {
           plan:        { t: "Monetization Framework", s: "Working framework for AI Essential vs AI Pro across Faria products. Edit anything inline — this is a living document." },
-          usage:       { t: "Usage", s: "Three candidate usage-limit models — Model B (shared credits) is the leading option. Below, a state-by-state deep dive across all three." },
+          usage:       { t: "Usage & cost", s: "Model cost table + cap strategy. Pick a product to price each AI feature across models (free vs Pro) and see what a free-tier allowance buys." },
           competitive: { t: "Competitive Analysis", s: "Track how competitors are pricing and packaging AI. Use this to calibrate our Pro tier and bundle pricing." },
           market:      { t: "Market Validation", s: "Per-product school validation — pilots, willingness to pay, and which Pro outcomes schools have confirmed." },
           finance:     { t: "Finance", s: "SKUs & pricing, cost model, breakeven analysis, uptake scenarios, and decision log for AI monetization." },
@@ -1799,7 +1854,7 @@ function AiMonetizationPage({ subRoute, setSubRoute, deepRoute, setDeepRoute }) 
         })}
       </div>
 
-      {view === "usage"       && <FairUseExample monz={mz} setMonz={setMz} />}
+      {view === "usage"       && <FairUseExample monz={mz} setMonz={setMz} deepRoute={deepRoute} setDeepRoute={setDeepRoute} />}
       {view === "competitive" && <MonzCompetitivePage />}
       {view === "market"      && <MonzMarketPage />}
       {view === "finance"     && <MonzFinancePage monz={mz} setMonz={setMz} />}
@@ -3139,6 +3194,8 @@ function MonzFinancePage({ monz, setMonz }) {
 
   const setCost = (k, v) => setFin(prev => ({ ...prev, costInputs: { ...prev.costInputs, [k]: v === "" ? 0 : (parseFloat(v) || 0) } }));
   const setUsage = (p, k, v) => setFin(prev => ({ ...prev, usageInputs: { ...prev.usageInputs, [p]: { ...prev.usageInputs[p], [k]: v === "" ? 0 : (parseFloat(v) || 0) } } }));
+  const setUsageModel = (p, k, v) => setFin(prev => ({ ...prev, usageInputs: { ...prev.usageInputs, [p]: { ...prev.usageInputs[p], [k]: v } } }));
+  const setFTB = (k, v) => setFin(prev => ({ ...prev, freeTierBudget: { ...prev.freeTierBudget, [k]: v === "" ? 0 : (parseFloat(v) || 0) } }));
   const addScenario = () => setFin(prev => ({ ...prev, uptakeScenarios: [...prev.uptakeScenarios, SCENARIO_TEMPLATE()] }));
   const updScenario = (id, patch) => setFin(prev => ({ ...prev, uptakeScenarios: prev.uptakeScenarios.map(s => s.id === id ? { ...s, ...patch } : s) }));
   const delScenario = (id) => setFin(prev => ({ ...prev, uptakeScenarios: prev.uptakeScenarios.filter(s => s.id !== id) }));
@@ -3162,11 +3219,19 @@ function MonzFinancePage({ monz, setMonz }) {
   const sectionTitle = { fontSize: 11, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 };
   const numInp = { ...inp, width: "100%", textAlign: "right" };
 
-  // Computed: monthly cost per school
+  // Model-aware $/1k tokens: blend the chosen model's in/out rates (80/20 in:out proxy).
+  // Falls back to the flat costInputs.tokenCostPer1k when no model is set / found.
+  const modelPer1k = (modelId) => {
+    const m = (monz.modelCosts || []).find(x => x.id === modelId);
+    if (!m) return fin.costInputs.tokenCostPer1k;
+    return (0.8 * m.inPer1M + 0.2 * m.outPer1M) / 1000;
+  };
+  // Computed: monthly cost per school — uses the per-product free (Essential) / pro model.
   const costPerSchool = (prod, tier) => {
     const u = fin.usageInputs[prod] || { essActionsPerSchoolMonth: 0, proActionsPerSchoolMonth: 0, tokensPerAction: 0 };
     const actions = tier === "pro" ? u.proActionsPerSchoolMonth : u.essActionsPerSchoolMonth;
-    const tokenCost = (actions * u.tokensPerAction * fin.costInputs.tokenCostPer1k) / 1000;
+    const per1k = modelPer1k(tier === "pro" ? u.proModelId : u.freeModelId);
+    const tokenCost = (actions * u.tokensPerAction * per1k) / 1000;
     // Spread infra evenly across all products as a rough proxy; support is per-customer per-year, so /12 per month
     const infraShare = fin.costInputs.monthlyInfraCost / MONZ_PRODUCTS.length;
     const support = (fin.costInputs.supportCostPerCustomer || 0) / 12;
@@ -3174,9 +3239,43 @@ function MonzFinancePage({ monz, setMonz }) {
   };
   const fmtMoney = (n) => isFinite(n) ? `$${n.toFixed(2)}` : "—";
   const fmtPct = (n) => isFinite(n) ? `${n.toFixed(0)}%` : "—";
+  // Free-tier budget → per-school/month allowance (engineer's "comfortable spend ÷ schools" method).
+  const ftb = fin.freeTierBudget || { annualSpendUSD: 0, schools: 0 };
+  const ftbMonthlyPot = (ftb.annualSpendUSD || 0) / 12;
+  const ftbPerSchoolMo = ftb.schools > 0 ? ftbMonthlyPot / ftb.schools : 0;
+  const ftbPerSchoolYr = ftb.schools > 0 ? (ftb.annualSpendUSD || 0) / ftb.schools : 0;
 
   return (
     <>
+      {/* Free-tier budget calculator — comfortable annual spend ÷ schools → per-school/month allowance */}
+      <div style={{ ...card, borderLeft: `4px solid ${F.yellow}` }}>
+        <div style={sectionTitle}>Free-tier budget · what we're comfortable giving away</div>
+        <p style={{ margin: "-2px 0 14px", fontSize: 12.5, color: F.muted, lineHeight: 1.5, maxWidth: 820 }}>Start from a number that wouldn't bother finance, then divide by schools to get the per-school allowance. Run it as a <strong>shared pot</strong> — power users draw more, light users less — so the per-school figure is an average, not a hard cap.</p>
+        <div style={{ display: "flex", gap: 22, flexWrap: "wrap", alignItems: "flex-end" }}>
+          <div>
+            <div style={lb}>Comfortable annual spend (USD)</div>
+            <input type="number" min="0" value={ftb.annualSpendUSD || ""} placeholder="10000" onChange={e => setFTB("annualSpendUSD", e.target.value)} style={{ ...inp, width: 140 }} />
+          </div>
+          <div>
+            <div style={lb}>Schools on free tier</div>
+            <input type="number" min="0" value={ftb.schools || ""} placeholder="1000" onChange={e => setFTB("schools", e.target.value)} style={{ ...inp, width: 120 }} />
+          </div>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            {[
+              { l: "Monthly pot", v: fmtMoney(ftbMonthlyPot), c: F.plum },
+              { l: "Per school / yr", v: fmtMoney(ftbPerSchoolYr), c: F.plum },
+              { l: "Per school / mo", v: fmtMoney(ftbPerSchoolMo), c: F.green },
+            ].map((s, i) => (
+              <div key={i} style={{ background: F.bg, border: `1px solid ${F.border}`, borderTop: `3px solid ${s.c}`, borderRadius: 10, padding: "10px 14px", minWidth: 110 }}>
+                <div style={{ fontSize: 20, fontWeight: 800, color: F.plum, lineHeight: 1 }}>{s.v}</div>
+                <div style={{ fontSize: 10.5, color: F.muted, marginTop: 4, fontWeight: 600 }}>{s.l}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <p style={{ margin: "12px 0 0", fontSize: 11.5, color: F.muted2, fontStyle: "italic" }}>Size this against the <strong style={{ color: F.pink }}>Usage → cost lab</strong>: at the per-school/mo allowance, how many runs of each feature does the free model buy?</p>
+      </div>
+
       {/* SKUs & pricing — moved from the Framework view; the source of truth for breakeven and uptake-scenario revenue */}
       <div style={card}>
         <div style={sectionTitle}>SKUs &amp; pricing</div>
@@ -3267,17 +3366,22 @@ function MonzFinancePage({ monz, setMonz }) {
                 <th style={{ textAlign: "right", padding: "8px 10px", fontSize: 10.5, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em" }}>Essential actions / school / mo</th>
                 <th style={{ textAlign: "right", padding: "8px 10px", fontSize: 10.5, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em" }}>Pro actions / school / mo</th>
                 <th style={{ textAlign: "right", padding: "8px 10px", fontSize: 10.5, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em" }}>Tokens / action</th>
+                <th style={{ textAlign: "left", padding: "8px 10px", fontSize: 10.5, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em" }}>Free (Ess) model</th>
+                <th style={{ textAlign: "left", padding: "8px 10px", fontSize: 10.5, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em" }}>Pro model</th>
               </tr>
             </thead>
             <tbody>
               {MONZ_PRODUCTS.map(p => {
                 const u = fin.usageInputs[p] || {};
+                const mOpts = (monz.modelCosts || []).map(m => <option key={m.id} value={m.id}>{m.name}</option>);
                 return (
                   <tr key={p} style={{ borderBottom: `1px solid ${F.border}` }}>
                     <td style={{ padding: "8px 10px", color: F.plum, fontWeight: 600 }}>{p}</td>
                     <td style={{ padding: "6px 10px" }}><input type="number" min="0" value={u.essActionsPerSchoolMonth || ""} placeholder="0" onChange={e => setUsage(p, "essActionsPerSchoolMonth", e.target.value)} style={numInp} /></td>
                     <td style={{ padding: "6px 10px" }}><input type="number" min="0" value={u.proActionsPerSchoolMonth || ""} placeholder="0" onChange={e => setUsage(p, "proActionsPerSchoolMonth", e.target.value)} style={numInp} /></td>
                     <td style={{ padding: "6px 10px" }}><input type="number" min="0" value={u.tokensPerAction || ""} placeholder="0" onChange={e => setUsage(p, "tokensPerAction", e.target.value)} style={numInp} /></td>
+                    <td style={{ padding: "6px 10px" }}><select value={u.freeModelId || ""} onChange={e => setUsageModel(p, "freeModelId", e.target.value)} style={{ ...inp, width: "100%", cursor: "pointer", fontSize: 12 }}><option value="">flat rate</option>{mOpts}</select></td>
+                    <td style={{ padding: "6px 10px" }}><select value={u.proModelId || ""} onChange={e => setUsageModel(p, "proModelId", e.target.value)} style={{ ...inp, width: "100%", cursor: "pointer", fontSize: 12 }}><option value="">flat rate</option>{mOpts}</select></td>
                   </tr>
                 );
               })}
@@ -3288,7 +3392,7 @@ function MonzFinancePage({ monz, setMonz }) {
 
       <div style={card}>
         <div style={sectionTitle}>Computed · monthly cost per school</div>
-        <p style={{ margin: "0 0 12px", fontSize: 11.5, color: F.muted, fontStyle: "italic" }}>(actions/mo × tokens/action × token cost ÷ 1000) + infra share + support / 12.</p>
+        <p style={{ margin: "0 0 12px", fontSize: 11.5, color: F.muted, fontStyle: "italic" }}>(actions/mo × tokens/action × the chosen model's $/1k ÷ 1000) + infra share + support / 12. Essential uses the free model, Pro the Pro model (per Usage inputs); blank model = flat token rate.</p>
         <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12.5 }}>
             <thead>
@@ -3430,806 +3534,293 @@ function MonzFinancePage({ monz, setMonz }) {
    neutrals (Open Sans, grayscale text, plum brand, amber warnings)
    so the panels feel authentic to the in-product UX rather than the
    bright Faria tracker chrome. */
-function FairUseExample({ monz, setMonz }) {
-  const rationale = monz?.leadingModelRationale || DEFAULT_MONETIZATION.leadingModelRationale;
-  const setRationale = (idx, val) => setMonz(prev => ({ ...prev, leadingModelRationale: (prev.leadingModelRationale || DEFAULT_MONETIZATION.leadingModelRationale).map((r, i) => i === idx ? val : r) }));
-  const addRationale = () => setMonz(prev => ({ ...prev, leadingModelRationale: [...(prev.leadingModelRationale || DEFAULT_MONETIZATION.leadingModelRationale), ""] }));
-  const removeRationale = (idx) => setMonz(prev => ({ ...prev, leadingModelRationale: (prev.leadingModelRationale || DEFAULT_MONETIZATION.leadingModelRationale).filter((_, i) => i !== idx) }));
-  const styles = `
-    .fue-deck { font-family: 'Open Sans', system-ui, sans-serif; color: #101828; font-size: 14px; line-height: 1.45; }
-    .fue-intro { margin: 0 0 28px; padding: 18px 20px; background: #ECE9EF; border: 1px solid #E0DAE6; border-radius: 10px; }
-    .fue-intro h2 { font-size: 16px; margin: 0 0 6px 0; color: ${F.plum}; font-weight: 700; }
-    .fue-intro p { color: #667085; margin: 0; font-size: 13px; }
+function FairUseExample({ monz, setMonz, deepRoute, setDeepRoute }) {
+  const card = { background: F.surface, border: `1px solid ${F.border}`, borderRadius: 12, padding: "18px 22px", marginBottom: 18, boxShadow: F.shadowSm };
+  const sectionTitle = { fontSize: 11, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 };
+  const th = { textAlign: "left", padding: "8px 10px", fontSize: 10, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.05em", borderBottom: `1px solid ${F.border}`, whiteSpace: "nowrap" };
+  const td = { padding: "7px 10px", fontSize: 12.5, color: F.plum, verticalAlign: "middle", borderBottom: `1px solid ${F.border}` };
+  const numInp = { ...inp, width: 78, padding: "5px 7px", fontSize: 12 };
+  const selInp = { ...inp, padding: "5px 7px", fontSize: 12, cursor: "pointer", maxWidth: 150 };
 
-    .fue-variant { margin-bottom: 36px; }
-    .fue-variant-name h3 { font-size: 16px; margin: 0 0 4px 0; color: ${F.plum}; font-weight: 700; }
-    .fue-variant-name p { margin: 0 0 16px 0; color: #667085; font-size: 12.5px; }
+  const models = monz.modelCosts || [];
+  const modelById = Object.fromEntries(models.map(m => [m.id, m]));
+  const lab = monz.costLab || [];
 
-    .fue-surface { margin-bottom: 12px; }
-    .fue-surface-label { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.6px; color: #667085; font-weight: 700; margin-bottom: 8px; }
+  const [selFeat, setSelFeat] = useState(null);    // costLab row id whose model comparison is shown
+  const [allowance, setAllowance] = useState(0.85); // $/school/month free-tier allowance to test
 
-    .fue-plan-tag { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px 3px 7px; border-radius: 999px; font-size: 10px; font-weight: 700; letter-spacing: 0.4px; line-height: 1.4; background: #F6F4FA; color: #5D3460; border: 1px solid #EFE9F3; white-space: nowrap; }
-    .fue-plan-tag .fue-spark { font-size: 10px; line-height: 1; }
+  const focusedProduct = SLUG_PRODUCT[deepRoute] || null; // null = Overview
+  const setFocusedProduct = (prod) => { setSelFeat(null); setDeepRoute(prod ? (PRODUCT_SLUG[prod] || "") : ""); };
 
-    .fue-panel-row { display: flex; gap: 22px; align-items: flex-start; }
-    .fue-panel { width: 380px; min-height: 540px; background: #fff; border: 1px solid #EAECF0; border-radius: 8px; box-shadow: 0 4px 12px rgba(16,24,40,0.08); display: flex; flex-direction: column; overflow: hidden; flex-shrink: 0; max-width: 100%; }
+  const costPerRun = (row, modelId) => {
+    const m = modelById[modelId]; if (!m || !row) return 0;
+    return (row.inputTokens || 0) / 1e6 * m.inPer1M + (row.outputTokens || 0) / 1e6 * m.outPer1M;
+  };
+  const fmtUSD = (n) => n >= 1 ? `$${n.toFixed(2)}` : n >= 0.01 ? `${(n * 100).toFixed(1)}¢` : `${(n * 100).toFixed(3)}¢`;
+  const tierColor = (t) => t === "frontier" ? F.plum : t === "mid" ? F.orange : F.green;
 
-    .fue-panel-head { display: flex; align-items: center; padding: 14px 16px 10px; border-bottom: 1px solid #EAECF0; gap: 10px; }
-    .fue-panel-head .fue-back, .fue-panel-head .fue-close { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #667085; font-size: 16px; flex-shrink: 0; }
-    .fue-panel-head .fue-ph-stack { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; }
-    .fue-panel-head .fue-ph-title { font-weight: 700; font-size: 14px; line-height: 1.2; }
+  const setModelCost = (id, patch) => setMonz(prev => ({ ...prev, modelCosts: (prev.modelCosts || []).map(m => m.id === id ? { ...m, ...patch } : m) }));
+  const setLabRow = (id, patch) => setMonz(prev => ({ ...prev, costLab: (prev.costLab || []).map(r => r.id === id ? { ...r, ...patch } : r) }));
+  const setRationale = (i, val) => setMonz(prev => ({ ...prev, leadingModelRationale: prev.leadingModelRationale.map((r, ix) => ix === i ? val : r) }));
+  const addRationale = () => setMonz(prev => ({ ...prev, leadingModelRationale: [...(prev.leadingModelRationale || []), ""] }));
+  const removeRationale = (i) => setMonz(prev => ({ ...prev, leadingModelRationale: prev.leadingModelRationale.filter((_, ix) => ix !== i) }));
 
-    .fue-panel-sub { padding: 14px 18px 6px; font-size: 12px; color: #667085; }
-    .fue-panel-sub strong { color: #101828; font-weight: 600; }
+  const modelOptions = models.map(m => <option key={m.id} value={m.id}>{m.name}</option>);
+  const labProducts = MONZ_PRODUCTS.filter(p => lab.some(r => r.product === p));
 
-    .fue-summary { margin: 8px 18px 0; background: linear-gradient(180deg, #FBFAFD 0%, #F2EDF6 100%); border: 1px solid #EFE9F3; border-radius: 8px; padding: 14px 14px 12px; }
-    .fue-summary p { margin: 0 0 8px 0; font-size: 13px; line-height: 1.5; color: #101828; }
-    .fue-summary .fue-meta { display: inline-flex; align-items: center; gap: 5px; color: ${F.plum}; font-weight: 700; font-size: 12px; }
-    .fue-summary .fue-meta .fue-spark { font-size: 13px; }
-
-    .fue-meter { margin: 14px 18px 0; padding: 10px 12px; background: #fff; border: 1px solid #EAECF0; border-radius: 6px; display: flex; align-items: center; gap: 10px; }
-    .fue-meter .fue-dots { display: inline-flex; gap: 3px; }
-    .fue-meter .fue-dot { width: 10px; height: 10px; border-radius: 50%; background: #E4E7EC; }
-    .fue-meter .fue-dot.fue-filled { background: #98a2b3; }
-    .fue-meter .fue-dot.fue-amber { background: #F59D00; }
-    .fue-meter .fue-mlabel { font-size: 12px; color: #344054; flex: 1; }
-    .fue-meter .fue-mlabel .fue-resets { color: #667085; }
-    .fue-meter.fue-amber-meter { background: #FFF8E6; border-color: #F1D58C; }
-    .fue-meter.fue-amber-meter .fue-mlabel { color: #6b4500; font-weight: 600; }
-
-    .fue-callout { margin: 12px 18px 0; padding: 10px 12px; background: #FFF8E6; border: 1px solid #F1D58C; border-radius: 6px; font-size: 12px; color: #6b4500; line-height: 1.6; }
-    .fue-callout strong { color: #6b4500; font-weight: 700; }
-    .fue-callout a { color: ${F.plum}; font-weight: 800; text-decoration: none; background: #fff; padding: 1px 7px; margin: 0 1px; border-radius: 4px; border: 1px solid #F1D58C; }
-
-    /* Soft upgrade chip — subtle link tucked below the Review Profile button */
-    .fue-soft-upgrade { margin: 8px 0 0; padding: 0; background: none; border: none; font-size: 11px; line-height: 1.4; text-align: center; }
-    .fue-soft-upgrade a { color: #8E7F8C; font-weight: 600; text-decoration: underline; text-decoration-color: rgba(142,127,140,0.35); text-underline-offset: 2px; }
-    .fue-soft-upgrade a:hover { color: ${F.plum}; text-decoration-color: ${F.plum}; }
-
-    /* Collapsible "Total AI Usage" card — used in comparison columns and Plenty/Approaching deep-dive states */
-    .fue-usage-card { background: #FAFAFB; border: 1px solid #EAECF0; border-radius: 6px; overflow: hidden; margin-top: 12px; }
-    .fue-usage-card.fue-in-panel { margin: 12px 18px 0; }
-    .fue-usage-card summary { cursor: pointer; padding: 9px 11px; font-size: 11.5px; font-weight: 700; color: #344054; list-style: none; display: flex; align-items: center; gap: 8px; user-select: none; }
-    .fue-usage-card summary::-webkit-details-marker { display: none; }
-    .fue-usage-chevron { font-size: 9px; color: #98a2b3; transition: transform 0.15s ease; display: inline-block; line-height: 1; }
-    .fue-usage-card[open] .fue-usage-chevron { transform: rotate(90deg); }
-    .fue-usage-title { flex: 1; }
-    .fue-usage-header-val { font-size: 11px; font-weight: 600; color: #667085; white-space: nowrap; }
-    .fue-usage-rows { padding: 2px 11px 10px; display: flex; flex-direction: column; gap: 4px; }
-    .fue-usage-row { display: flex; align-items: center; gap: 7px; font-size: 11.5px; color: #344054; padding: 1px 0; }
-    .fue-usage-swatch { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
-    .fue-usage-name { flex: 1; }
-    .fue-usage-val { font-weight: 700; color: #101828; white-space: nowrap; }
-
-    .fue-blocked { margin: 12px 18px 0; padding: 16px; background: #FAFAFB; border: 1px solid #EAECF0; border-radius: 8px; }
-    .fue-blocked .fue-bk-title { font-weight: 700; font-size: 14px; margin: 0 0 6px 0; color: #101828; }
-    .fue-blocked p { font-size: 13px; color: #344054; margin: 0 0 8px 0; line-height: 1.5; }
-    .fue-blocked .fue-reset-line { font-size: 12px; color: #667085; margin: 0 0 14px 0; }
-    .fue-blocked .fue-cta-stack { display: flex; flex-direction: column; gap: 8px; }
-
-    .fue-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 14px; border-radius: 6px; font-size: 13px; font-weight: 700; border: 1px solid transparent; text-decoration: none; line-height: 1; font-family: inherit; }
-    .fue-btn-primary { background: ${F.plum}; color: #fff; }
-    .fue-btn-secondary { background: #fff; color: #101828; border-color: #EAECF0; }
-    .fue-btn-block { width: 100%; padding: 12px 14px; font-size: 14px; }
-
-    .fue-panel-spacer { flex: 1; }
-    .fue-panel-foot { padding: 12px 18px 16px; border-top: 1px solid #EAECF0; display: flex; flex-direction: column; gap: 8px; background: #fff; }
-    .fue-panel-foot .fue-start-btn { width: 100%; background: ${F.plum}; color: #fff; border: none; padding: 14px 16px; border-radius: 6px; font-weight: 700; font-size: 14px; font-family: inherit; }
-    .fue-panel-foot .fue-disclaimer { font-size: 11px; color: #98a2b3; line-height: 1.5; margin: 0; }
-
-    .fue-postrun { background: #fff; border: 1px solid #EAECF0; border-radius: 8px; padding: 12px 16px; font-size: 13px; color: #667085; display: flex; align-items: center; gap: 10px; box-shadow: 0 1px 2px rgba(16,24,40,0.05); max-width: 380px; }
-    .fue-postrun.fue-amber-post { background: #FFF8E6; border-color: #F1D58C; color: #6b4500; font-weight: 600; }
-    .fue-postrun .fue-pr-dot { width: 6px; height: 6px; border-radius: 50%; background: #98a2b3; flex-shrink: 0; }
-    .fue-postrun.fue-amber-post .fue-pr-dot { background: #F59D00; }
-    .fue-postrun a { color: ${F.plum}; font-weight: 700; text-decoration: none; margin-left: auto; white-space: nowrap; }
-    .fue-surface.fue-na .fue-postrun { background: transparent; border: 1px dashed #EAECF0; color: #98a2b3; font-style: italic; box-shadow: none; }
-
-    /* ── Side-by-side comparison (Model A vs Model B) ─── */
-    .fue-cmp-section { margin: 0 0 40px; }
-    .fue-cmp-heading { font-size: 16px; font-weight: 700; color: ${F.plum}; margin: 0 0 4px 0; font-family: 'Nunito Sans','Trebuchet MS',system-ui,sans-serif; }
-    .fue-cmp-sub { font-size: 12.5px; color: #667085; margin: 0 0 18px 0; }
-    .fue-cmp-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; align-items: stretch; }
-    .fue-cmp-col { background: #fff; border: 1px solid #EAECF0; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 1px 2px rgba(16,24,40,0.05); }
-    .fue-cmp-banner { padding: 14px 18px; border-bottom: 1px solid #EAECF0; }
-    .fue-cmp-banner.fue-cmp-banner-a { background: #F6F4FA; }
-    .fue-cmp-banner.fue-cmp-banner-b { background: #FFF8E6; }
-    .fue-cmp-banner.fue-cmp-banner-c { background: #E8F5EE; }
-    .fue-cmp-tag { display: inline-block; font-size: 10px; font-weight: 800; letter-spacing: 0.8px; padding: 3px 9px; border-radius: 4px; margin-bottom: 6px; }
-    .fue-cmp-banner-a .fue-cmp-tag { background: ${F.plum}; color: #fff; }
-    .fue-cmp-banner-b .fue-cmp-tag { background: #6b4500; color: #FFF8E6; }
-    .fue-cmp-banner-c .fue-cmp-tag { background: ${F.green}; color: #fff; }
-
-    /* Leading-option highlight on Model B */
-    .fue-cmp-col.fue-cmp-leading { border: 2px solid ${F.pink}; box-shadow: 0 6px 18px rgba(232, 55, 172, 0.18); }
-    .fue-leading-row { margin-bottom: 8px; }
-    .fue-leading-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 800; letter-spacing: 0.8px; padding: 3px 9px; border-radius: 4px; background: ${F.pink}; color: #fff; }
-
-    /* "Why Model B?" rationale card */
-    .fue-rationale-card { background: #fff; border: 2px solid ${F.pink}; border-radius: 12px; padding: 18px 22px; margin: 22px 0 8px; box-shadow: 0 4px 14px rgba(232, 55, 172, 0.10); display: grid; grid-template-columns: minmax(200px, 1fr) 2fr; gap: 22px; align-items: start; }
-    .fue-rationale-card .rat-left { display: flex; flex-direction: column; gap: 6px; }
-    .fue-rationale-card .rat-eyebrow { font-size: 10.5px; font-weight: 800; color: ${F.pink}; text-transform: uppercase; letter-spacing: 0.1em; }
-    .fue-rationale-card .rat-title { font-size: 17px; font-weight: 700; color: ${F.plum}; line-height: 1.25; margin: 0; font-family: 'Nunito Sans','Trebuchet MS',system-ui,sans-serif; }
-    .fue-rationale-card .rat-sub { font-size: 12.5px; color: #667085; margin: 0; line-height: 1.5; }
-    .fue-rationale-card .rat-list { display: flex; flex-direction: column; gap: 8px; }
-    .fue-rationale-card .rat-row { display: flex; align-items: center; gap: 8px; background: #FAFAFB; border: 1px solid #EAECF0; border-radius: 7px; padding: 7px 10px 7px 11px; }
-    .fue-rationale-card .rat-bullet { width: 7px; height: 7px; border-radius: 50%; background: ${F.pink}; flex-shrink: 0; }
-    .fue-rationale-card .rat-input { flex: 1; border: none; background: transparent; font-size: 13px; color: #344054; outline: none; font-family: inherit; min-width: 0; }
-    .fue-rationale-card .rat-remove { width: 20px; height: 20px; border-radius: 10px; background: transparent; border: none; color: #98a2b3; cursor: pointer; font-size: 14px; line-height: 1; padding: 0; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; font-family: inherit; }
-    .fue-rationale-card .rat-add { margin-top: 4px; padding: 6px 11px; border: 1px dashed ${F.borderStrong}; background: transparent; color: ${F.plum}; border-radius: 7px; font-size: 11.5px; font-weight: 700; cursor: pointer; font-family: inherit; align-self: flex-start; }
-    @media (max-width: 720px) { .fue-rationale-card { grid-template-columns: 1fr; } }
-    .fue-cmp-title { font-size: 15px; font-weight: 700; color: #101828; margin: 0 0 3px 0; line-height: 1.25; }
-    .fue-cmp-tagline { font-size: 12px; color: #667085; margin: 0; line-height: 1.4; }
-    .fue-cmp-body { padding: 16px 18px 0; display: flex; flex-direction: column; gap: 14px; flex: 1; }
-
-    /* mock launcher (smaller, fits inside the comparison column) */
-    .fue-cmp-mini-panel { background: #fff; border: 1px solid #EAECF0; border-radius: 8px; padding: 12px 12px 10px; box-shadow: 0 1px 2px rgba(16,24,40,0.04); }
-    .fue-cmp-mp-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-    .fue-cmp-mp-title { font-size: 12.5px; font-weight: 700; color: #101828; flex: 1; }
-    .fue-cmp-mp-sub { font-size: 11px; color: #667085; margin: 0 0 10px 0; }
-    .fue-cmp-mp-sub strong { color: #101828; font-weight: 600; }
-
-    /* per-feature meter (Model A) */
-    .fue-cmp-pf-meter { display: flex; align-items: center; gap: 9px; padding: 8px 10px; background: #fff; border: 1px solid #EAECF0; border-radius: 6px; }
-    .fue-cmp-pf-meter .fue-dots { display: inline-flex; gap: 3px; }
-    .fue-cmp-pf-meter .fue-dot { width: 9px; height: 9px; border-radius: 50%; background: #E4E7EC; }
-    .fue-cmp-pf-meter .fue-dot.fue-filled { background: #98a2b3; }
-    .fue-cmp-pf-meter .fue-mlabel { font-size: 11.5px; color: #344054; flex: 1; }
-    .fue-cmp-pf-meter .fue-mlabel strong { color: #101828; }
-    .fue-cmp-pf-meter .fue-resets { color: #667085; }
-
-    /* pooled-credit meter (Model B) */
-    .fue-cmp-pool-meter { padding: 10px 12px; background: #fff; border: 1px solid #EAECF0; border-radius: 6px; }
-    .fue-cmp-pool-label { display: flex; justify-content: space-between; align-items: baseline; font-size: 11.5px; color: #344054; margin-bottom: 7px; }
-    .fue-cmp-pool-label strong { color: #101828; font-weight: 700; }
-    .fue-cmp-pool-reset { font-size: 10.5px; color: #667085; font-weight: 500; }
-    .fue-cmp-pool-track { height: 8px; background: #ECE9EF; border-radius: 4px; overflow: hidden; display: flex; }
-    .fue-cmp-pool-fill-a { background: ${F.plum}; }
-    .fue-cmp-pool-fill-b { background: ${F.pink}; }
-
-    /* sibling card (Model A) — shows the other feature's independent counter */
-    .fue-cmp-sibling { padding: 12px 14px; background: #FAFAFB; border: 1px solid #EAECF0; border-radius: 8px; }
-    .fue-cmp-sibling-eyebrow { font-size: 10px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: #98a2b3; margin: 0 0 8px 0; }
-    .fue-cmp-sibling-row { display: flex; align-items: center; gap: 9px; }
-    .fue-cmp-sibling-name { font-size: 12.5px; font-weight: 600; color: #101828; flex: 1; }
-    .fue-cmp-sibling-count { font-size: 11.5px; color: #667085; font-weight: 600; }
-
-    /* breakdown card (Model B) — stacked bar + key */
-    .fue-cmp-breakdown { padding: 12px 14px; background: #FAFAFB; border: 1px solid #EAECF0; border-radius: 8px; }
-    .fue-cmp-bd-eyebrow { font-size: 10px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: #98a2b3; margin: 0 0 9px 0; }
-    .fue-cmp-bd-total { font-size: 12px; color: #344054; margin-bottom: 8px; }
-    .fue-cmp-bd-total strong { color: #101828; font-weight: 700; }
-    .fue-cmp-bd-bar { height: 10px; background: #ECE9EF; border-radius: 5px; overflow: hidden; display: flex; margin-bottom: 10px; }
-    .fue-cmp-bd-seg-a { background: ${F.plum}; }
-    .fue-cmp-bd-seg-b { background: ${F.pink}; }
-    .fue-cmp-bd-key { display: flex; flex-direction: column; gap: 5px; font-size: 11.5px; color: #344054; }
-    .fue-cmp-bd-key-row { display: flex; align-items: center; gap: 7px; }
-    .fue-cmp-bd-swatch { width: 9px; height: 9px; border-radius: 2px; flex-shrink: 0; }
-    .fue-cmp-bd-key-name { flex: 1; }
-    .fue-cmp-bd-key-val { font-weight: 700; color: #101828; }
-    .fue-cmp-bd-cost { font-size: 10.5px; color: #667085; margin-top: 8px; font-style: italic; }
-
-    /* verdict bullets */
-    .fue-cmp-verdict { padding: 12px 18px 16px; border-top: 1px solid #EAECF0; background: #FAFAFB; }
-    .fue-cmp-verdict-eyebrow { font-size: 10px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: #667085; margin: 0 0 8px 0; }
-    .fue-cmp-verdict ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
-    .fue-cmp-verdict li { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; line-height: 1.45; color: #344054; }
-    .fue-cmp-verdict li .fue-mark { flex-shrink: 0; font-weight: 800; width: 14px; text-align: center; line-height: 1.45; }
-    .fue-cmp-verdict li.fue-pro .fue-mark { color: ${F.pink}; }
-    .fue-cmp-verdict li.fue-con .fue-mark { color: #98a2b3; }
-
-    .fue-deep-heading { font-size: 16px; font-weight: 700; color: ${F.plum}; margin: 36px 0 4px 0; font-family: 'Nunito Sans','Trebuchet MS',system-ui,sans-serif; }
-    .fue-deep-sub { font-size: 12.5px; color: #667085; margin: 0 0 22px 0; }
-
-    /* Per-model state walkthrough headings */
-    .fue-model-section { margin: 36px 0 0; padding-top: 24px; border-top: 1px solid #EAECF0; }
-    .fue-model-section:first-of-type { border-top: none; padding-top: 0; margin-top: 36px; }
-    .fue-model-section-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 4px; flex-wrap: wrap; }
-    .fue-model-section-head h3 { font-size: 16px; font-weight: 700; color: ${F.plum}; margin: 0; font-family: 'Nunito Sans','Trebuchet MS',system-ui,sans-serif; }
-    .fue-model-section-sub { font-size: 12.5px; color: #667085; margin: 0 0 22px 0; }
-
-    /* State-level model tag (small chip above each variant name) */
-    .fue-state-tag { display: inline-block; font-size: 9.5px; font-weight: 800; letter-spacing: 0.7px; padding: 2px 8px; border-radius: 3px; margin-bottom: 6px; white-space: nowrap; }
-    .fue-state-tag.fue-tag-a { background: ${F.plum}; color: #fff; }
-    .fue-state-tag.fue-tag-b { background: #6b4500; color: #FFF8E6; }
-    .fue-state-tag.fue-tag-c { background: ${F.green}; color: #fff; }
-
-    /* Small caption under the Model C side-by-side mock (replaces breakdown card) */
-    .fue-cmp-caption { padding: 10px 12px; background: #F4FAF6; border: 1px solid #D7EEDF; border-radius: 8px; font-size: 12px; color: #1f5232; line-height: 1.5; font-style: italic; text-align: center; }
-
-    /* States grid — lays out a model's state mockups in columns (auto-fit) — deprecated, kept harmless */
-    .fue-states-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; align-items: stretch; margin-top: 18px; }
-    .fue-states-grid .fue-variant { margin-bottom: 0; display: flex; flex-direction: column; }
-    .fue-states-grid .fue-variant-name { padding: 0 4px; }
-    .fue-states-grid .fue-variant-name h3 { font-size: 14.5px; }
-    .fue-states-grid .fue-variant-name p { font-size: 12px; min-height: 32px; }
-    .fue-states-grid .fue-panel-row { width: 100%; }
-    .fue-states-grid .fue-panel { width: 100%; min-height: 0; height: 100%; }
-
-    /* By-state layout — each row is a state, cells are the three models side-by-side */
-    .fue-by-state-section { margin-top: 36px; }
-    .fue-by-state-heading { font-size: 16px; font-weight: 700; color: ${F.plum}; margin: 0 0 4px 0; font-family: 'Nunito Sans','Trebuchet MS',system-ui,sans-serif; }
-    .fue-by-state-sub { font-size: 12.5px; color: #667085; margin: 0 0 6px 0; }
-    .fue-by-state-hint { font-size: 11.5px; color: #98a2b3; font-style: italic; margin: 0 0 26px 0; }
-    .fue-by-state-row { margin-bottom: 36px; padding-top: 22px; border-top: 1px solid #EAECF0; }
-    .fue-by-state-row:first-of-type { border-top: none; padding-top: 0; }
-    .fue-by-state-row:last-child { margin-bottom: 0; }
-    .fue-by-state-row-header { margin-bottom: 14px; padding: 0 4px; }
-    .fue-by-state-row-header h4 { font-size: 15px; font-weight: 700; color: ${F.plum}; margin: 0 0 4px 0; font-family: 'Nunito Sans','Trebuchet MS',system-ui,sans-serif; }
-    .fue-by-state-row-header p { font-size: 12px; color: #667085; margin: 0; line-height: 1.5; }
-    .fue-by-state-cells { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; align-items: stretch; }
-    .fue-by-state-cell { display: flex; flex-direction: column; gap: 7px; position: relative; }
-    .fue-by-state-cell > .fue-state-tag { align-self: flex-start; margin-bottom: 0; }
-    .fue-by-state-cell .fue-panel { width: 100%; min-height: 0; height: 100%; transition: transform 0.22s cubic-bezier(0.2,0,0.2,1), box-shadow 0.22s ease; transform-origin: center center; }
-    .fue-by-state-cell:hover .fue-panel { transform: scale(1.12); box-shadow: 0 16px 40px rgba(16,24,40,0.22); z-index: 20; position: relative; }
-    .fue-by-state-cells:has(.fue-by-state-cell:hover) .fue-by-state-cell:not(:hover) .fue-panel { opacity: 0.45; filter: saturate(0.85); }
-    .fue-by-state-cells:has(.fue-by-state-cell:hover) .fue-by-state-cell:not(:hover) .fue-na-card { opacity: 0.45; }
-
-    /* NA card — for states that don't apply to a given model */
-    .fue-na-card { flex: 1; border: 1px dashed #D5CACB; border-radius: 8px; padding: 22px 18px; font-size: 12px; color: #8E7F8C; font-style: italic; display: flex; align-items: center; justify-content: center; text-align: center; line-height: 1.55; min-height: 200px; background: #FAF7F7; transition: opacity 0.22s ease; }
-
-    /* Per-state usage breakdown mini-card (Models B and C deep-dive states) */
-    .fue-usage-mini { margin: 12px 18px 0; padding: 9px 11px; background: #FAFAFB; border: 1px solid #EAECF0; border-radius: 6px; }
-    .fue-usage-mini-eyebrow { font-size: 9.5px; font-weight: 700; letter-spacing: 0.4px; text-transform: uppercase; color: #98a2b3; margin: 0 0 7px; }
-    .fue-usage-mini-row { display: flex; align-items: center; gap: 7px; font-size: 11.5px; padding: 1px 0; color: #344054; }
-    .fue-usage-mini-swatch { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
-    .fue-usage-mini-name { flex: 1; }
-    .fue-usage-mini-val { font-weight: 700; color: #101828; white-space: nowrap; }
-
-    /* Bar-style meter for Model B and Model C states (used in deep-dive panels) */
-    .fue-bar-meter { margin: 14px 18px 0; padding: 10px 12px; background: #fff; border: 1px solid #EAECF0; border-radius: 6px; }
-    .fue-bar-meter .fue-bm-row { display: flex; justify-content: space-between; align-items: baseline; font-size: 12px; color: #344054; margin-bottom: 6px; }
-    .fue-bar-meter .fue-bm-row strong { color: #101828; font-weight: 700; }
-    .fue-bar-meter .fue-bm-reset { font-size: 11px; color: #667085; font-weight: 500; }
-    .fue-bar-meter .fue-bm-track { height: 8px; background: #ECE9EF; border-radius: 4px; overflow: hidden; }
-    .fue-bar-meter .fue-bm-fill { height: 100%; background: #98a2b3; transition: width 0.3s; }
-    .fue-bar-meter.fue-bar-amber { background: #FFF8E6; border-color: #F1D58C; }
-    .fue-bar-meter.fue-bar-amber .fue-bm-row { color: #6b4500; font-weight: 600; }
-    .fue-bar-meter.fue-bar-amber .fue-bm-row strong { color: #6b4500; }
-    .fue-bar-meter.fue-bar-amber .fue-bm-fill { background: #F59D00; }
-
-    @media (max-width: 760px) {
-      .fue-panel { width: 100%; }
-    }
-  `;
-
-  // Reusable panel header (back / title / plan tag / close)
-  const PanelHead = () => (
-    <div className="fue-panel-head">
-      <div className="fue-back">←</div>
-      <div className="fue-ph-stack">
-        <div className="fue-ph-title">AI Profile Review</div>
-        <span className="fue-plan-tag"><span className="fue-spark">✦</span> AI Essential</span>
-      </div>
-      <div className="fue-close">✕</div>
+  // ── product chip nav (Overview + products that have AI features) ──
+  const chip = (label, prod, active) => (
+    <button key={label} onClick={() => setFocusedProduct(prod)} style={{ padding: "5px 13px", borderRadius: 999, fontSize: 12, fontWeight: 700, cursor: "pointer", background: active ? F.plum : F.surface, color: active ? F.paper : F.plum, border: `1px solid ${active ? F.plum : F.borderStrong}`, fontFamily: "inherit" }}>{label}</button>
+  );
+  const chipNav = (
+    <div style={{ display: "flex", gap: 6, marginBottom: 18, flexWrap: "wrap", alignItems: "center" }}>
+      {chip("Overview", null, !focusedProduct)}
+      {labProducts.map(p => chip(p, p, focusedProduct === p))}
+      <span style={{ fontSize: 11, color: F.muted2, marginLeft: 4 }}>· pick a product to price each AI feature across models</span>
     </div>
   );
 
-  const PanelSub = () => (
-    <div className="fue-panel-sub">Reviewing applicant profile · <strong>Olivia Zhang</strong></div>
-  );
+  // ── PER-PRODUCT: AI feature cost lab ──
+  const renderProduct = () => {
+    const rows = lab.filter(r => r.product === focusedProduct);
+    const withCost = rows.map(r => ({ r, free: costPerRun(r, r.freeModelId), pro: costPerRun(r, r.proModelId) }));
+    const sortedByPro = [...withCost].filter(x => x.pro > 0).sort((a, b) => b.pro - a.pro);
+    const priciest = sortedByPro[0];
+    const cheapest = sortedByPro[sortedByPro.length - 1];
+    const sel = rows.find(r => r.id === selFeat);
 
-  const SummaryCard = () => (
-    <div className="fue-summary">
-      <p>Generate an AI summary for this profile.</p>
-    </div>
-  );
-
-  const Disclaimer = ({ showStart, softUpgrade }) => (
-    <div className="fue-panel-foot">
-      {showStart && <button className="fue-start-btn">Review Profile</button>}
-      {softUpgrade && <SoftUpgrade />}
-      <p className="fue-disclaimer">AI-generated summaries may contain errors. Please verify against source documents.</p>
-    </div>
-  );
-
-  // ── Reusable usage-mini breakdown card (Models B and C, expanded — used in UserCap/Exhausted states) ──
-  const UsageMini = ({ eyebrow, rows }) => (
-    <div className="fue-usage-mini">
-      <p className="fue-usage-mini-eyebrow">{eyebrow}</p>
-      {rows.map((r, i) => (
-        <div key={i} className="fue-usage-mini-row">
-          <span className="fue-usage-mini-swatch" style={{ background: r.color }}></span>
-          <span className="fue-usage-mini-name">{r.name}</span>
-          <span className="fue-usage-mini-val">{r.val}</span>
-        </div>
-      ))}
-    </div>
-  );
-
-  // ── Collapsible "Total AI Usage" card (used in comparison columns + Plenty/Approaching deep-dive states) ──
-  const TotalAIUsage = ({ headerVal, rows, inPanel = false }) => (
-    <details className={"fue-usage-card" + (inPanel ? " fue-in-panel" : "")}>
-      <summary>
-        <span className="fue-usage-chevron">▸</span>
-        <span className="fue-usage-title">Total AI Usage</span>
-        <span className="fue-usage-header-val">{headerVal}</span>
-      </summary>
-      <div className="fue-usage-rows">
-        {rows.map((r, i) => (
-          <div key={i} className="fue-usage-row">
-            <span className="fue-usage-swatch" style={{ background: r.color }}></span>
-            <span className="fue-usage-name">{r.name}</span>
-            <span className="fue-usage-val">{r.val}</span>
+    return (
+      <>
+        {/* header strip */}
+        <div style={{ ...card, borderLeft: `4px solid ${F.pink}` }}>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap", marginBottom: 4 }}>
+            <span style={{ fontSize: 18, fontWeight: 800, color: F.plum }}>{focusedProduct}</span>
+            <span style={{ fontSize: 12, color: F.muted2 }}>AI feature cost lab · {rows.length} features</span>
           </div>
-        ))}
-      </div>
-    </details>
-  );
+          <p style={{ margin: "0 0 12px", fontSize: 12.5, color: F.muted, lineHeight: 1.5, maxWidth: 820 }}>Each feature prices independently — set its token estimates and pick a <strong style={{ color: F.green }}>free</strong> (cheap/open) and <strong style={{ color: F.plum }}>Pro</strong> (frontier) model. Calibrate token counts from the FAIF playground; cost = in·$/M + out·$/M, per run.</p>
+          <div style={{ display: "flex", gap: 18, flexWrap: "wrap", alignItems: "center" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ ...lb, marginBottom: 0 }}>Free-tier allowance to test</span>
+              <span style={{ fontSize: 13, color: F.muted }}>$</span>
+              <input type="number" step="0.05" value={allowance} onChange={e => setAllowance(Math.max(0, +e.target.value))} style={{ ...numInp, width: 70 }} />
+              <span style={{ fontSize: 12, color: F.muted2 }}>/school/mo</span>
+            </div>
+            <span style={{ fontSize: 11, color: F.muted2, fontStyle: "italic" }}>Set the real budget in Finance → free-tier calculator.</span>
+          </div>
+          {priciest && cheapest && (
+            <div style={{ marginTop: 12, display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <span style={{ fontSize: 11.5, fontWeight: 700, color: F.plum, background: F.bg, border: `1px solid ${F.border}`, borderRadius: 8, padding: "5px 10px" }}>Priciest (Pro): {priciest.r.feature} · {fmtUSD(priciest.pro)}/run</span>
+              <span style={{ fontSize: 11.5, fontWeight: 700, color: F.plum, background: F.bg, border: `1px solid ${F.border}`, borderRadius: 8, padding: "5px 10px" }}>Cheapest (Pro): {cheapest.r.feature} · {fmtUSD(cheapest.pro)}/run</span>
+            </div>
+          )}
+        </div>
 
-  // ── Soft upgrade chip shown below the Review Profile button on non-blocked states ────────
-  const SoftUpgrade = () => (
-    <div className="fue-soft-upgrade">
-      <a href="#" onClick={e => e.preventDefault()}>Upgrade to AI Pro to unlock more</a>
-    </div>
-  );
+        {/* feature cost-lab table */}
+        <div style={card}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 10, flexWrap: "wrap" }}>
+            <div style={sectionTitle}>Cost per feature</div>
+            <span style={{ fontSize: 11, color: F.muted2, fontStyle: "italic" }}>Click a row to compare it across all models ↓</span>
+          </div>
+          <div style={{ overflowX: "auto", border: `1px solid ${F.border}`, borderRadius: 8 }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 920 }}>
+              <thead><tr style={{ background: F.bg }}>
+                <th style={th}>Feature</th>
+                <th style={th}>In tok</th>
+                <th style={th}>Out tok</th>
+                <th style={th}>Runs/action</th>
+                <th style={th}>Free model</th>
+                <th style={th}>Pro model</th>
+                <th style={{ ...th, textAlign: "right" }}>Cost/run (free)</th>
+                <th style={{ ...th, textAlign: "right" }}>Cost/run (pro)</th>
+                <th style={{ ...th, textAlign: "right" }}>Cost/action (pro)</th>
+                <th style={{ ...th, textAlign: "right" }}>Runs/mo on free</th>
+              </tr></thead>
+              <tbody>
+                {withCost.map(({ r, free, pro }) => {
+                  const active = selFeat === r.id;
+                  const runsMo = free > 0 ? Math.floor(allowance / free) : 0;
+                  return (
+                    <tr key={r.id} onClick={() => setSelFeat(active ? null : r.id)} style={{ cursor: "pointer", background: active ? F.lightYellow + "55" : "transparent" }}>
+                      <td style={{ ...td, fontWeight: 700, whiteSpace: "nowrap" }}>{r.feature}</td>
+                      <td style={td}><input type="number" value={r.inputTokens} onClick={e => e.stopPropagation()} onChange={e => setLabRow(r.id, { inputTokens: +e.target.value })} style={numInp} /></td>
+                      <td style={td}><input type="number" value={r.outputTokens} onClick={e => e.stopPropagation()} onChange={e => setLabRow(r.id, { outputTokens: +e.target.value })} style={numInp} /></td>
+                      <td style={td}><input type="number" value={r.runsPerAction} onClick={e => e.stopPropagation()} onChange={e => setLabRow(r.id, { runsPerAction: Math.max(1, +e.target.value) })} style={{ ...numInp, width: 58 }} /></td>
+                      <td style={td}><select value={r.freeModelId} onClick={e => e.stopPropagation()} onChange={e => setLabRow(r.id, { freeModelId: e.target.value })} style={selInp}>{modelOptions}</select></td>
+                      <td style={td}><select value={r.proModelId} onClick={e => e.stopPropagation()} onChange={e => setLabRow(r.id, { proModelId: e.target.value })} style={selInp}>{modelOptions}</select></td>
+                      <td style={{ ...td, textAlign: "right", color: F.green, fontWeight: 700 }}>{fmtUSD(free)}</td>
+                      <td style={{ ...td, textAlign: "right", fontWeight: 700 }}>{fmtUSD(pro)}</td>
+                      <td style={{ ...td, textAlign: "right" }}>{fmtUSD(pro * (r.runsPerAction || 1))}</td>
+                      <td style={{ ...td, textAlign: "right", color: runsMo < 5 ? F.pink : F.muted }}>{runsMo.toLocaleString()}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          <div style={{ marginTop: 10, fontSize: 11.5, color: F.muted2, fontStyle: "italic" }}>"Runs/mo on free" = the ${allowance.toFixed(2)}/school/mo allowance ÷ the free-model cost/run. Features in <span style={{ color: F.pink }}>pink</span> burn the allowance fastest — gate those behind Pro.</div>
+        </div>
 
-  // ── Model A panels ───────────────────────────────────────
-  const APlenty = () => (
-    <div className="fue-panel">
-      <PanelHead />
-      <PanelSub />
-      <SummaryCard />
-      <div className="fue-meter">
-        <span className="fue-dots">
-          <span className="fue-dot fue-filled"></span>
-          <span className="fue-dot fue-filled"></span>
-          <span className="fue-dot fue-filled"></span>
-          <span className="fue-dot fue-filled"></span>
-          <span className="fue-dot"></span>
-        </span>
-        <span className="fue-mlabel"><strong style={{ color: "#101828" }}>4 of 5</strong> reviews left <span className="fue-resets">· resets Jun 1</span></span>
-      </div>
-      <div className="fue-panel-spacer"></div>
-      <Disclaimer showStart softUpgrade />
-    </div>
-  );
-  const AOneLeft = () => (
-    <div className="fue-panel">
-      <PanelHead />
-      <PanelSub />
-      <SummaryCard />
-      <div className="fue-meter fue-amber-meter">
-        <span className="fue-dots">
-          <span className="fue-dot fue-amber"></span>
-          <span className="fue-dot"></span>
-          <span className="fue-dot"></span>
-          <span className="fue-dot"></span>
-          <span className="fue-dot"></span>
-        </span>
-        <span className="fue-mlabel"><strong>Only 1 of 5</strong> reviews left · resets Jun 1</span>
-      </div>
-      <div className="fue-panel-spacer"></div>
-      <Disclaimer showStart softUpgrade />
-    </div>
-  );
-  const AReviewsUsedUp = () => (
-    <div className="fue-panel">
-      <PanelHead />
-      <PanelSub />
-      <div className="fue-blocked">
-        <h4 className="fue-bk-title">You've used your 5 reviews this month</h4>
-        <p>AI Essential gives each user 5 AI Profile Reviews per month. You'll be able to run reviews again on <strong>Jun 1</strong>.</p>
-        <p className="fue-reset-line">Resets in 11 days · other users at your school may still have capacity.</p>
-        <div className="fue-cta-stack">
-          <a href="#" onClick={e => e.preventDefault()} className="fue-btn fue-btn-primary fue-btn-block">Upgrade to AI Pro to unlock more</a>
-          <a href="#" onClick={e => e.preventDefault()} className="fue-btn fue-btn-secondary fue-btn-block">View AI plans</a>
+        {/* selected feature: per-model comparison */}
+        {sel && (
+          <div style={card}>
+            <div style={sectionTitle}>{sel.feature} — cost per run across all models</div>
+            <VizBars
+              data={[...models].map(m => ({ label: m.name, value: +(costPerRun(sel, m.id) * 100).toFixed(2) })).sort((a, b) => b.value - a.value)}
+              accent={F.lightPlum}
+              highlightTop
+              valueSuffix="¢"
+            />
+            <div style={{ marginTop: 10, fontSize: 11.5, color: F.muted, lineHeight: 1.5 }}>Same prompt ({sel.inputTokens.toLocaleString()} in / {sel.outputTokens.toLocaleString()} out tokens), {models.length} models. The frontier ↔ open-source gap is the lever: run it free on the cheapest model, reserve the frontier model for Pro.</div>
+          </div>
+        )}
+      </>
+    );
+  };
+
+  // ── OVERVIEW: model table + cap strategy + requirements ──
+  const capDims = [
+    { t: "By tokens", sub: "crude", body: "Hard token budget per period. Precise to cost but opaque to users — they don't think in tokens.", who: "Engineering backstop" },
+    { t: "By cost (USD)", sub: "finance-friendly", body: "A dollar budget per user/school/month. Maps straight to the bill — easiest to reason about for finance.", who: "Finance & caps" },
+    { t: "By usage-based actions", sub: "user-friendly", body: "\"50 actions/month\" — one action may fan out to several model calls. Simplest mental model for schools.", who: "What users see" },
+  ];
+  const reqGroups = [
+    { g: "Foundation — FAIF provides", chip: "✓ Ready", color: F.green, items: [
+      "Uniform history API returns cost + tokens + region per request",
+      "Session / chat ID ties every request back to the user that made it",
+      "One-string model swap (frontier ↔ open-source); same request body",
+      "Playground to test any prompt × model for real token + $ cost",
+    ] },
+    { g: "Product build — OpenApply / ManageBac", chip: "▢ To build", color: F.orange, items: [
+      "Store a usage record per request: sessionID → userID → school → school group, model, in/out tokens, USD, operation, region, timestamp",
+      "Pre-flight capacity check before each run (any allowance left?)",
+      "Entitlement → model selection: free school → cheap model, Pro school → frontier",
+      "Cap business rules per user / per school / per school group + shared pot",
+      "Buy-more UI when an allowance runs low",
+      "Hourly retro-build from the history API for front-end-only integrations (Atlas PHP / ManageBac JS)",
+    ] },
+    { g: "Cap controls", chip: "▢ To build", color: F.orange, items: [
+      "Breaker — real-time rate limit (e.g. 100 requests/hour) that stops abuse",
+      "Observability — alert when a user/school crosses a threshold, before the bill lands",
+    ] },
+    { g: "Analytics", chip: "▢ To build", color: F.orange, items: [
+      "Spend per operation, by region / deployment; which AI features are hot vs cold",
+    ] },
+    { g: "Pricing inputs — this tracker", chip: "◐ In progress", color: F.pink, items: [
+      "Model cost table, per-feature cost lab, and the free-tier budget calculator feed the caps & SKU pricing",
+    ] },
+  ];
+
+  const renderOverview = () => (
+    <>
+      {/* model cost table */}
+      <div style={card}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 10, flexWrap: "wrap" }}>
+          <div style={sectionTitle}>Model cost table</div>
+          <span style={{ fontSize: 11, color: F.muted2, fontStyle: "italic" }}>USD per 1M tokens · editable estimates — verify exact Bedrock rates with the engineer</span>
+        </div>
+        <div style={{ overflowX: "auto", border: `1px solid ${F.border}`, borderRadius: 8 }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 760 }}>
+            <thead><tr style={{ background: F.bg }}>
+              <th style={th}>Model</th><th style={th}>Tier</th>
+              <th style={{ ...th, textAlign: "right" }}>$/M in</th>
+              <th style={{ ...th, textAlign: "right" }}>$/M out</th>
+              <th style={th}>Region</th><th style={th}>Notes</th>
+            </tr></thead>
+            <tbody>
+              {models.map(m => (
+                <tr key={m.id}>
+                  <td style={{ ...td, fontWeight: 700, whiteSpace: "nowrap" }}>{m.name}</td>
+                  <td style={td}>
+                    <select value={m.tier} onChange={e => setModelCost(m.id, { tier: e.target.value })} style={{ ...selInp, color: tierColor(m.tier), fontWeight: 700 }}>
+                      <option value="frontier">frontier</option><option value="mid">mid</option><option value="open">open</option>
+                    </select>
+                  </td>
+                  <td style={{ ...td, textAlign: "right" }}><input type="number" step="0.05" value={m.inPer1M} onChange={e => setModelCost(m.id, { inPer1M: +e.target.value })} style={{ ...numInp, width: 64, textAlign: "right" }} /></td>
+                  <td style={{ ...td, textAlign: "right" }}><input type="number" step="0.05" value={m.outPer1M} onChange={e => setModelCost(m.id, { outPer1M: +e.target.value })} style={{ ...numInp, width: 64, textAlign: "right" }} /></td>
+                  <td style={{ ...td, color: F.muted, whiteSpace: "nowrap" }}>{m.region}</td>
+                  <td style={{ ...td, color: F.muted }}><input value={m.notes} onChange={e => setModelCost(m.id, { notes: e.target.value })} placeholder="—" style={{ ...inp, width: "100%", minWidth: 160, padding: "5px 7px", fontSize: 12 }} /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
-      <div className="fue-panel-spacer"></div>
-      <Disclaimer showStart={false} />
-    </div>
-  );
-  const ASchoolCap = () => (
-    <div className="fue-panel">
-      <PanelHead />
-      <PanelSub />
-      <div className="fue-blocked">
-        <h4 className="fue-bk-title">Your school has used all 15 reviews this month</h4>
-        <p>AI Essential gives each school 15 AI Profile Reviews per month across all users. The shared monthly pool resets on <strong>Jun 1</strong>.</p>
-        <p className="fue-reset-line">Resets in 11 days · you may have personal reviews remaining, but the school-wide pool is full.</p>
-        <div className="fue-cta-stack">
-          <a href="#" onClick={e => e.preventDefault()} className="fue-btn fue-btn-primary fue-btn-block">Upgrade to AI Pro to unlock more</a>
-          <a href="#" onClick={e => e.preventDefault()} className="fue-btn fue-btn-secondary fue-btn-block">View AI plans</a>
+
+      {/* cap strategy */}
+      <div style={card}>
+        <div style={sectionTitle}>How to express the cap</div>
+        <p style={{ margin: "-2px 0 12px", fontSize: 12.5, color: F.muted, lineHeight: 1.5, maxWidth: 820 }}>The same usage data can be capped three ways. Pick the dimension per audience — schools see <strong>actions</strong>, finance budgets in <strong>dollars</strong>, engineering enforces in <strong>tokens</strong>.</p>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
+          {capDims.map((c, i) => (
+            <div key={i} style={{ background: F.bg, border: `1px solid ${F.border}`, borderTop: `3px solid ${F.plum}`, borderRadius: 10, padding: "13px 15px" }}>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 7, marginBottom: 6 }}>
+                <span style={{ fontSize: 13.5, fontWeight: 800, color: F.plum }}>{c.t}</span>
+                <span style={{ fontSize: 9.5, fontWeight: 800, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.05em" }}>{c.sub}</span>
+              </div>
+              <p style={{ margin: "0 0 8px", fontSize: 12, color: F.muted, lineHeight: 1.5 }}>{c.body}</p>
+              <div style={{ fontSize: 11, fontWeight: 700, color: F.plum }}><span style={{ color: F.green }}>→</span> {c.who}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* rationale (kept, retitled) */}
+        <div style={{ marginTop: 16, background: F.bg, border: `1px solid ${F.border}`, borderRadius: 10, padding: "14px 16px" }}>
+          <div style={{ ...sectionTitle, marginBottom: 8 }}>Why a shared, action-based allowance</div>
+          {(monz.leadingModelRationale || []).map((r, i) => (
+            <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8, padding: "5px 0" }}>
+              <span style={{ color: F.pink, fontSize: 13, paddingTop: 3, flexShrink: 0 }}>◆</span>
+              <textarea value={r} onChange={e => setRationale(i, e.target.value)} rows={1} style={{ flex: 1, border: "none", background: "transparent", color: F.plum, fontSize: 12.5, lineHeight: 1.5, fontFamily: "inherit", outline: "none", resize: "vertical", padding: "2px 0", minWidth: 0 }} />
+              <button onClick={() => removeRationale(i)} title="Remove" style={{ width: 20, height: 20, borderRadius: 10, border: "none", background: "transparent", color: F.muted2, cursor: "pointer", fontSize: 14, lineHeight: 1, padding: 0, flexShrink: 0, fontFamily: "inherit" }}>×</button>
+            </div>
+          ))}
+          <button onClick={addRationale} style={{ marginTop: 8, padding: "5px 11px", borderRadius: 7, border: `1px dashed ${F.borderStrong}`, background: "transparent", color: F.plum, fontSize: 11.5, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>+ Add reason</button>
+        </div>
+
+        {/* breaker vs observability */}
+        <div style={{ marginTop: 12, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 12 }}>
+          <div style={{ background: F.bg, border: `1px solid ${F.border}`, borderLeft: `3px solid ${F.pink}`, borderRadius: 8, padding: "12px 14px" }}>
+            <div style={{ fontSize: 12.5, fontWeight: 800, color: F.plum, marginBottom: 4 }}>🛑 Breaker</div>
+            <p style={{ margin: 0, fontSize: 12, color: F.muted, lineHeight: 1.5 }}>Stops abuse in real time — e.g. "100 requests in an hour, chill out." The hard backstop against a runaway bill.</p>
+          </div>
+          <div style={{ background: F.bg, border: `1px solid ${F.border}`, borderLeft: `3px solid ${F.orange}`, borderRadius: 8, padding: "12px 14px" }}>
+            <div style={{ fontSize: 12.5, fontWeight: 800, color: F.plum, marginBottom: 4 }}>📡 Observability</div>
+            <p style={{ margin: 0, fontSize: 12, color: F.muted, lineHeight: 1.5 }}>Monitors and alerts when a user/school crosses a threshold — so we find out before the bill comes in, not after.</p>
+          </div>
         </div>
       </div>
-      <div className="fue-panel-spacer"></div>
-      <Disclaimer showStart={false} />
-    </div>
-  );
 
-  // ── Model B panels (shared credit pool) ──────────────────
-  const BarMeter = ({ amber, label, fillPct, fillColor }) => (
-    <div className={"fue-bar-meter" + (amber ? " fue-bar-amber" : "")}>
-      <div className="fue-bm-row">
-        <span>{label}</span>
-        <span className="fue-bm-reset">resets Jun 1</span>
+      {/* requirements & status */}
+      <div style={card}>
+        <div style={sectionTitle}>Usage-tracking system — requirements &amp; status</div>
+        <p style={{ margin: "-2px 0 14px", fontSize: 12.5, color: F.muted, lineHeight: 1.5, maxWidth: 820 }}>What the FAIF proxy already gives us, and what the product teams need to build on top to ship caps + charging. Handoff checklist for the engineer + product devs.</p>
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {reqGroups.map((grp, gi) => (
+            <div key={gi} style={{ background: F.bg, border: `1px solid ${F.border}`, borderRadius: 10, padding: "13px 15px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, flexWrap: "wrap" }}>
+                <span style={{ fontSize: 12.5, fontWeight: 800, color: F.plum }}>{grp.g}</span>
+                <span style={{ fontSize: 10, fontWeight: 800, color: F.surface, background: grp.color, padding: "2px 9px", borderRadius: 999, textTransform: "uppercase", letterSpacing: "0.04em" }}>{grp.chip}</span>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                {grp.items.map((it, ii) => (
+                  <div key={ii} style={{ display: "flex", gap: 8, fontSize: 12, color: F.plum, lineHeight: 1.45 }}>
+                    <span style={{ color: grp.color, flexShrink: 0, fontWeight: 800 }}>{grp.chip.startsWith("✓") ? "✓" : grp.chip.startsWith("◐") ? "◐" : "▢"}</span>{it}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
-      <div className="fue-bm-track">
-        <div className="fue-bm-fill" style={{ width: `${fillPct}%`, ...(fillColor ? { background: fillColor } : {}) }}></div>
-      </div>
-    </div>
-  );
-  const BlockedCard = ({ title, body, resetLine }) => (
-    <div className="fue-blocked">
-      <h4 className="fue-bk-title">{title}</h4>
-      <p>{body}</p>
-      <p className="fue-reset-line">{resetLine}</p>
-      <div className="fue-cta-stack">
-        <a href="#" onClick={e => e.preventDefault()} className="fue-btn fue-btn-primary fue-btn-block">Upgrade to AI Pro to unlock more</a>
-        <a href="#" onClick={e => e.preventDefault()} className="fue-btn fue-btn-secondary fue-btn-block">View AI plans</a>
-      </div>
-    </div>
-  );
-  const BPlenty = () => (
-    <div className="fue-panel">
-      <PanelHead /><PanelSub /><SummaryCard />
-      <BarMeter label={<><strong>30 of 50</strong> AI credits left</>} fillPct={40} />
-      <TotalAIUsage inPanel headerVal="20 of 50 credits used" rows={[
-        { color: F.plum, name: "AI Profile Review", val: "12 credits" },
-        { color: F.pink, name: "AI Lead Scoring",  val: "8 credits" },
-      ]} />
-      <div className="fue-panel-spacer"></div>
-      <Disclaimer showStart softUpgrade />
-    </div>
-  );
-  const BApproaching = () => (
-    <div className="fue-panel">
-      <PanelHead /><PanelSub /><SummaryCard />
-      <BarMeter amber label={<><strong>Only 4 of 50</strong> AI credits left</>} fillPct={8} />
-      <TotalAIUsage inPanel headerVal="46 of 50 credits used" rows={[
-        { color: F.plum, name: "AI Profile Review", val: "36 credits" },
-        { color: F.pink, name: "AI Lead Scoring",  val: "10 credits" },
-      ]} />
-      <div className="fue-panel-spacer"></div>
-      <Disclaimer showStart softUpgrade />
-    </div>
-  );
-  const BUserCap = () => (
-    <div className="fue-panel">
-      <PanelHead /><PanelSub />
-      <BlockedCard
-        title="You've used your 18 AI credits this month"
-        body={<>AI Essential gives each user 18 AI credits per month, within the school's 50-credit pool. You'll be able to use AI again on <strong>Jun 1</strong>.</>}
-        resetLine="Resets in 11 days · your school still has credits remaining — other users may still be able to run AI."
-      />
-      <UsageMini eyebrow="Your 18 credits used · by feature" rows={[
-        { color: F.plum, name: "AI Profile Review", val: "12 credits" },
-        { color: F.pink, name: "AI Lead Scoring",  val: "6 credits" },
-      ]} />
-      <div className="fue-panel-spacer"></div>
-      <Disclaimer showStart={false} />
-    </div>
-  );
-  const BExhausted = () => (
-    <div className="fue-panel">
-      <PanelHead /><PanelSub />
-      <BlockedCard
-        title="Your school has used all 50 AI credits this month"
-        body={<>AI Essential gives each school 50 AI credits per month, shared across all AI features. The pool resets on <strong>Jun 1</strong>.</>}
-        resetLine="Resets in 11 days · this affects every AI feature for every user at your school."
-      />
-      <UsageMini eyebrow="50 credits used · by feature" rows={[
-        { color: F.plum, name: "AI Profile Review", val: "42 credits" },
-        { color: F.pink, name: "AI Lead Scoring",  val: "8 credits" },
-      ]} />
-      <div className="fue-panel-spacer"></div>
-      <Disclaimer showStart={false} />
-    </div>
-  );
-
-  // ── Model C panels (shared action pool, flat 1-per-run) ──
-  const CPlenty = () => (
-    <div className="fue-panel">
-      <PanelHead /><PanelSub /><SummaryCard />
-      <BarMeter label={<><strong>6 of 10</strong> AI actions left</>} fillPct={60} fillColor={F.green} />
-      <TotalAIUsage inPanel headerVal="4 of 10 actions used" rows={[
-        { color: F.plum, name: "AI Profile Review", val: "2 actions" },
-        { color: F.pink, name: "AI Lead Scoring",  val: "2 actions" },
-      ]} />
-      <div className="fue-panel-spacer"></div>
-      <Disclaimer showStart softUpgrade />
-    </div>
-  );
-  const CApproaching = () => (
-    <div className="fue-panel">
-      <PanelHead /><PanelSub /><SummaryCard />
-      <BarMeter amber label={<><strong>Only 1 of 10</strong> AI actions left</>} fillPct={10} />
-      <TotalAIUsage inPanel headerVal="9 of 10 actions used" rows={[
-        { color: F.plum, name: "AI Profile Review", val: "6 actions" },
-        { color: F.pink, name: "AI Lead Scoring",  val: "3 actions" },
-      ]} />
-      <div className="fue-panel-spacer"></div>
-      <Disclaimer showStart softUpgrade />
-    </div>
-  );
-  const CUserCap = () => (
-    <div className="fue-panel">
-      <PanelHead /><PanelSub />
-      <BlockedCard
-        title="You've used your 4 AI actions this month"
-        body={<>AI Essential gives each user 4 AI actions per month, within the school's 10-action pool. You'll be able to use AI again on <strong>Jun 1</strong>.</>}
-        resetLine="Resets in 11 days · your school still has actions remaining — other users may still be able to run AI."
-      />
-      <UsageMini eyebrow="Your 4 actions used · by feature" rows={[
-        { color: F.plum, name: "AI Profile Review", val: "2 actions" },
-        { color: F.pink, name: "AI Lead Scoring",  val: "2 actions" },
-      ]} />
-      <div className="fue-panel-spacer"></div>
-      <Disclaimer showStart={false} />
-    </div>
-  );
-  const CExhausted = () => (
-    <div className="fue-panel">
-      <PanelHead /><PanelSub />
-      <BlockedCard
-        title="Your school has used all 10 AI actions this month"
-        body={<>AI Essential gives each school 10 AI actions per month, shared across all AI features. Every AI run counts as 1. The pool resets on <strong>Jun 1</strong>.</>}
-        resetLine="Resets in 11 days · this affects every AI feature for every user at your school."
-      />
-      <UsageMini eyebrow="10 actions used · by feature" rows={[
-        { color: F.plum, name: "AI Profile Review", val: "6 actions" },
-        { color: F.pink, name: "AI Lead Scoring",  val: "4 actions" },
-      ]} />
-      <div className="fue-panel-spacer"></div>
-      <Disclaimer showStart={false} />
-    </div>
-  );
-
-  // NA card — used when a state doesn't apply to a model
-  const NACard = ({ children }) => (
-    <div className="fue-na-card">{children}</div>
+    </>
   );
 
   return (
     <>
-      <style>{styles}</style>
-      <div className="fue-deck">
-        <div className="fue-intro">
-          <h2>AI Usage Limits — three candidate models</h2>
-          <p>How school users on AI Essential experience usage limits across AI features. Three candidate models are shown side-by-side below — pick the one that gives the better user experience. Beneath that, a state-by-state deep dive lines up the four states a user can land in (Plenty left, Approaching the limit, User-level cap reached, School pool exhausted) across all three models.</p>
-        </div>
-
-        {/* ── Side-by-side comparison: Model A vs Model B vs Model C ─── */}
-        <div className="fue-cmp-section">
-          <h3 className="fue-cmp-heading">Compare &amp; contrast</h3>
-          <p className="fue-cmp-sub">Three ways to rate-limit AI on AI Essential. Same school user, same two features — AI Profile Review and AI Lead Scoring. Different counter UX.</p>
-          <div className="fue-cmp-grid">
-
-            {/* ─── Model A: per-feature limits ─── */}
-            <div className="fue-cmp-col">
-              <div className="fue-cmp-banner fue-cmp-banner-a">
-                <span className="fue-cmp-tag">MODEL A · PER-FEATURE</span>
-                <h4 className="fue-cmp-title">Per-feature limits</h4>
-                <p className="fue-cmp-tagline">Each AI feature has its own independent monthly counter.</p>
-              </div>
-              <div className="fue-cmp-body">
-                <div className="fue-cmp-mini-panel">
-                  <div className="fue-cmp-mp-head">
-                    <span className="fue-cmp-mp-title">AI Profile Review</span>
-                    <span className="fue-plan-tag"><span className="fue-spark">✦</span> AI Essential</span>
-                  </div>
-                  <p className="fue-cmp-mp-sub">Reviewing <strong>Olivia Zhang</strong></p>
-                  <div className="fue-cmp-pf-meter">
-                    <span className="fue-dots">
-                      <span className="fue-dot fue-filled"></span>
-                      <span className="fue-dot fue-filled"></span>
-                      <span className="fue-dot fue-filled"></span>
-                      <span className="fue-dot fue-filled"></span>
-                      <span className="fue-dot"></span>
-                    </span>
-                    <span className="fue-mlabel"><strong>4 of 5</strong> reviews left <span className="fue-resets">· resets Jun 1</span></span>
-                  </div>
-                </div>
-
-                <div className="fue-cmp-sibling">
-                  <div className="fue-cmp-sibling-row">
-                    <span className="fue-dots">
-                      <span className="fue-dot fue-filled"></span>
-                      <span className="fue-dot fue-filled"></span>
-                      <span className="fue-dot fue-filled"></span>
-                      <span className="fue-dot fue-filled"></span>
-                      <span className="fue-dot fue-filled"></span>
-                      <span className="fue-dot fue-filled"></span>
-                      <span className="fue-dot fue-filled"></span>
-                      <span className="fue-dot"></span>
-                      <span className="fue-dot"></span>
-                      <span className="fue-dot"></span>
-                    </span>
-                    <span className="fue-cmp-sibling-name">AI Lead Scoring</span>
-                    <span className="fue-cmp-sibling-count"><strong style={{ color: "#101828" }}>7 of 10</strong> left</span>
-                  </div>
-                </div>
-              </div>
-              <div style={{ height: 18 }}></div>
-            </div>
-
-            {/* ─── Model B: shared credit pool (weighted) — LEADING OPTION ─── */}
-            <div className="fue-cmp-col fue-cmp-leading">
-              <div className="fue-cmp-banner fue-cmp-banner-b">
-                <div className="fue-leading-row"><span className="fue-leading-badge">★ Leading option</span></div>
-                <span className="fue-cmp-tag">MODEL B · CREDITS</span>
-                <h4 className="fue-cmp-title">Shared credits across features</h4>
-                <p className="fue-cmp-tagline">One monthly pool of AI credits, drawn from by every feature.</p>
-              </div>
-              <div className="fue-cmp-body">
-                <div className="fue-cmp-mini-panel">
-                  <div className="fue-cmp-mp-head">
-                    <span className="fue-cmp-mp-title">AI Profile Review</span>
-                    <span className="fue-plan-tag"><span className="fue-spark">✦</span> AI Essential</span>
-                  </div>
-                  <p className="fue-cmp-mp-sub">Reviewing <strong>Olivia Zhang</strong></p>
-                  <div className="fue-cmp-pool-meter">
-                    <div className="fue-cmp-pool-label">
-                      <span><strong>30 of 50</strong> AI credits left</span>
-                      <span className="fue-cmp-pool-reset">resets Jun 1</span>
-                    </div>
-                    <div className="fue-cmp-pool-track">
-                      <div className="fue-cmp-pool-fill-a" style={{ width: "24%" }}></div>
-                      <div className="fue-cmp-pool-fill-b" style={{ width: "16%" }}></div>
-                    </div>
-                  </div>
-                </div>
-
-                <TotalAIUsage headerVal="20 of 50 credits used" rows={[
-                  { color: F.plum, name: "AI Profile Review", val: "12 credits" },
-                  { color: F.pink, name: "AI Lead Scoring",  val: "8 credits" },
-                ]} />
-              </div>
-              <div style={{ height: 18 }}></div>
-            </div>
-
-            {/* ─── Model C: pooled actions (flat, no credit weighting) ─── */}
-            <div className="fue-cmp-col">
-              <div className="fue-cmp-banner fue-cmp-banner-c">
-                <span className="fue-cmp-tag">MODEL C · ACTIONS</span>
-                <h4 className="fue-cmp-title">Shared actions across features</h4>
-                <p className="fue-cmp-tagline">One monthly pool of AI actions. Every action = 1, no matter the feature.</p>
-              </div>
-              <div className="fue-cmp-body">
-                <div className="fue-cmp-mini-panel">
-                  <div className="fue-cmp-mp-head">
-                    <span className="fue-cmp-mp-title">AI Profile Review</span>
-                    <span className="fue-plan-tag"><span className="fue-spark">✦</span> AI Essential</span>
-                  </div>
-                  <p className="fue-cmp-mp-sub">Reviewing <strong>Olivia Zhang</strong></p>
-                  <div className="fue-cmp-pool-meter">
-                    <div className="fue-cmp-pool-label">
-                      <span><strong>6 of 10</strong> AI actions left</span>
-                      <span className="fue-cmp-pool-reset">resets Jun 1</span>
-                    </div>
-                    <div className="fue-cmp-pool-track">
-                      <div style={{ width: "40%", height: "100%", background: F.green }}></div>
-                    </div>
-                  </div>
-                </div>
-
-                <TotalAIUsage headerVal="4 of 10 actions used" rows={[
-                  { color: F.plum, name: "AI Profile Review", val: "2 actions" },
-                  { color: F.pink, name: "AI Lead Scoring",  val: "2 actions" },
-                ]} />
-                <p style={{ margin: "8px 0 0", fontSize: 11, color: "#667085", fontStyle: "italic", textAlign: "center" }}>Every AI action = 1. No cost map to learn.</p>
-              </div>
-              <div style={{ height: 18 }}></div>
-            </div>
-
-          </div>
-        </div>
-
-        {/* ── Why Model B? — editable rationale strip ─── */}
-        <div className="fue-rationale-card">
-          <div className="rat-left">
-            <span className="rat-eyebrow">★ Leading option</span>
-            <h4 className="rat-title">Why Model B is our leading candidate</h4>
-            <p className="rat-sub">Editable rationale — refine the bullets as the team aligns.</p>
-          </div>
-          <div className="rat-list">
-            {rationale.map((r, i) => (
-              <div key={i} className="rat-row">
-                <span className="rat-bullet"></span>
-                <input className="rat-input" value={r} onChange={e => setRationale(i, e.target.value)} placeholder="New rationale…" />
-                <button className="rat-remove" onClick={() => removeRationale(i)} title="Remove">×</button>
-              </div>
-            ))}
-            <button className="rat-add" onClick={addRationale}>+ Add reason</button>
-          </div>
-        </div>
-
-        {/* ── By-state deep dive: one row per state, three model cells per row ─── */}
-        <div className="fue-by-state-section">
-          <h3 className="fue-by-state-heading">States — side by side across models</h3>
-          <p className="fue-by-state-sub">Same school-user moment, rendered under each model. Hover any panel to magnify it.</p>
-          <p className="fue-by-state-hint">Tip: hover over a panel to compare details up close.</p>
-
-          {/* Row 1 — Plenty left */}
-          <div className="fue-by-state-row">
-            <div className="fue-by-state-row-header">
-              <h4>Plenty left</h4>
-              <p>Early in the month. Quiet meter. No upgrade pressure.</p>
-            </div>
-            <div className="fue-by-state-cells">
-              <div className="fue-by-state-cell">
-                <span className="fue-state-tag fue-tag-a">MODEL A · PER-FEATURE</span>
-                <APlenty />
-              </div>
-              <div className="fue-by-state-cell">
-                <span className="fue-state-tag fue-tag-b">MODEL B · CREDITS</span>
-                <BPlenty />
-              </div>
-              <div className="fue-by-state-cell">
-                <span className="fue-state-tag fue-tag-c">MODEL C · ACTIONS</span>
-                <CPlenty />
-              </div>
-            </div>
-          </div>
-
-          {/* Row 2 — Approaching the limit */}
-          <div className="fue-by-state-row">
-            <div className="fue-by-state-row-header">
-              <h4>Approaching the limit</h4>
-              <p>Few resources remaining. Amber warning. First soft mention of AI Pro.</p>
-            </div>
-            <div className="fue-by-state-cells">
-              <div className="fue-by-state-cell">
-                <span className="fue-state-tag fue-tag-a">MODEL A · PER-FEATURE</span>
-                <AOneLeft />
-              </div>
-              <div className="fue-by-state-cell">
-                <span className="fue-state-tag fue-tag-b">MODEL B · CREDITS</span>
-                <BApproaching />
-              </div>
-              <div className="fue-by-state-cell">
-                <span className="fue-state-tag fue-tag-c">MODEL C · ACTIONS</span>
-                <CApproaching />
-              </div>
-            </div>
-          </div>
-
-          {/* Row 3 — User-level cap reached (all three models — each has a per-user sub-cap inside the school pool) */}
-          <div className="fue-by-state-row">
-            <div className="fue-by-state-row-header">
-              <h4>User-level cap reached</h4>
-              <p>One specific user has hit their personal cap for the month. The school still has capacity, so other users may continue. Each model has its own per-user limit (5 reviews · 18 credits · 4 actions).</p>
-            </div>
-            <div className="fue-by-state-cells">
-              <div className="fue-by-state-cell">
-                <span className="fue-state-tag fue-tag-a">MODEL A · PER-FEATURE</span>
-                <AReviewsUsedUp />
-              </div>
-              <div className="fue-by-state-cell">
-                <span className="fue-state-tag fue-tag-b">MODEL B · CREDITS</span>
-                <BUserCap />
-              </div>
-              <div className="fue-by-state-cell">
-                <span className="fue-state-tag fue-tag-c">MODEL C · ACTIONS</span>
-                <CUserCap />
-              </div>
-            </div>
-          </div>
-
-          {/* Row 4 — School pool exhausted */}
-          <div className="fue-by-state-row">
-            <div className="fue-by-state-row-header">
-              <h4>School pool exhausted</h4>
-              <p>Shared pool empty. Every user at the school is blocked from the affected feature(s) until the pool resets.</p>
-            </div>
-            <div className="fue-by-state-cells">
-              <div className="fue-by-state-cell">
-                <span className="fue-state-tag fue-tag-a">MODEL A · PER-FEATURE</span>
-                <ASchoolCap />
-              </div>
-              <div className="fue-by-state-cell">
-                <span className="fue-state-tag fue-tag-b">MODEL B · CREDITS</span>
-                <BExhausted />
-              </div>
-              <div className="fue-by-state-cell">
-                <span className="fue-state-tag fue-tag-c">MODEL C · ACTIONS</span>
-                <CExhausted />
-              </div>
-            </div>
-          </div>
-        </div>
-
+      <div style={{ ...card, borderLeft: `4px solid ${F.plum}` }}>
+        <p style={{ margin: 0, fontSize: 13, color: F.muted, lineHeight: 1.55 }}>Price our AI features against real model costs so the free tier and Pro caps are grounded in numbers, not guesses. The model table below is the reference; pick a product to price each feature, and read the engineer-handoff checklist for the live usage-tracking system.</p>
       </div>
+      {chipNav}
+      {focusedProduct ? renderProduct() : renderOverview()}
     </>
   );
 }
@@ -4642,20 +4233,20 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
       {(() => {
         const PHASE_C = { Prioritise: "#B07A0E", Build: "#E06A2E", Adopt: "#C42B94" };
         const stages = [
-          { when: "By Day 30", name: "Foundations", note: "the easy wins", tone: F.muted2, moves: [
-            { ph: "Prioritise", text: "Open one signal pool and a WhatsApp user-group channel." },
-            { ph: "Build", text: "Pilot one single-owner pod; slice the next feature under a week." },
-            { ph: "Adopt", text: "Track Pendo adoption on whatever you ship." },
+          { when: "By Day 30", name: "Foundations", note: "the easy wins", tone: F.muted2, groups: [
+            { ph: "Prioritise", tasks: ["Open one signal pool (shared board or doc).", "Stand up a user-group channel (e.g. WhatsApp).", "Hold the first monthly product + revenue check-in."] },
+            { ph: "Build", tasks: ["Pilot one single-owner pod.", "Slice the next feature into sub-week chunks.", "Ship one small release to prove the rhythm."] },
+            { ph: "Adopt", tasks: ["Turn on Pendo adoption tracking for what you ship.", "Auto-generate a basic enablement note at release."] },
           ] },
-          { when: "By Day 60", name: "Find the rhythm", note: "operating cadence", tone: F.plum, moves: [
-            { ph: "Prioritise", text: "Run a monthly AI opportunity digest and a monthly product day." },
-            { ph: "Build", text: "Move the pod to the staggered weekly rhythm — Monday releases." },
-            { ph: "Adopt", text: "Auto-generate an enablement drop at each release." },
+          { when: "By Day 60", name: "Find the rhythm", note: "operating cadence", tone: F.plum, groups: [
+            { ph: "Prioritise", tasks: ["Run a monthly AI opportunity digest (Salesforce / Pendo / Planhat).", "Hold a monthly product day with Sales, Support & CX.", "Start monthly discovery interviews with schools."] },
+            { ph: "Build", tasks: ["Move pods to the staggered weekly rhythm (dev + QA week).", "Release every Monday.", "Add AI across the SDLC — spec, prototype, test, review."] },
+            { ph: "Adopt", tasks: ["Auto-generate enablement at each release.", "Run in-product onboarding for each shipped feature."] },
           ] },
-          { when: "By Day 90", name: "Full model", note: "the loop, running", tone: F.green, moves: [
-            { ph: "Prioritise", text: "AI ranks themes; schools sign off; QBR commits the quarter." },
-            { ph: "Build", text: "All pods weekly with AI across the SDLC; shock-absorber pod live." },
-            { ph: "Adopt", text: "AAA campaigns + auto-certs; adoption signal feeds Prioritise — loop closed." },
+          { when: "By Day 90", name: "Full model", note: "the loop, running", tone: F.green, groups: [
+            { ph: "Prioritise", tasks: ["AI synthesis ranks themes automatically.", "Schools sign off; QBR commits the quarter.", "Rolling Now / Next / Later roadmap, tuned monthly."] },
+            { ph: "Build", tasks: ["All pods on weekly releases with AI in the SDLC.", "Shock-absorber pod live to protect focus.", "Every feature sliced to ship in days, not weeks."] },
+            { ph: "Adopt", tasks: ["AAA campaigns + auto-built certifications.", "Always-on adoption signal (Pendo + Salesforce).", "That signal feeds the next Prioritise — loop closed."] },
           ] },
         ];
         return (
@@ -4684,11 +4275,18 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
                 <div style={{ fontSize: 10, fontWeight: 800, color: M.tone === F.muted2 ? F.muted : M.tone, textTransform: "uppercase", letterSpacing: "0.07em" }}>{M.when}</div>
                 <div style={{ fontSize: 15, fontWeight: 800, color: F.plum, lineHeight: 1.15, margin: "2px 0 1px" }}>{M.name}</div>
                 <div style={{ fontSize: 10.5, color: F.muted2, fontWeight: 600, marginBottom: 12 }}>{M.note}</div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
-                  {M.moves.map((m, mi) => (
-                    <div key={mi} style={{ display: "flex", gap: 8, fontSize: 11.5, lineHeight: 1.4 }}>
-                      <span style={{ flexShrink: 0, width: 52, fontSize: 8.5, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.03em", color: PHASE_C[m.ph], paddingTop: 1 }}>{m.ph}</span>
-                      <span style={{ color: F.plum }}>{m.text}</span>
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  {M.groups.map((g, gi) => (
+                    <div key={gi}>
+                      <div style={{ fontSize: 8.5, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.04em", color: PHASE_C[g.ph], marginBottom: 5 }}>{g.ph}</div>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                        {g.tasks.map((t, ti) => (
+                          <div key={ti} style={{ display: "flex", gap: 7, fontSize: 11.5, lineHeight: 1.4 }}>
+                            <span style={{ color: PHASE_C[g.ph], fontWeight: 800, flexShrink: 0 }}>·</span>
+                            <span style={{ color: F.plum }}>{t}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   ))}
                 </div>

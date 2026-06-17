@@ -746,6 +746,7 @@ const DEFAULT_COMPETITIVE = {
 const COMPETITOR_TEMPLATE = () => ({
   id: Date.now() + Math.floor(Math.random() * 1000),
   name: "",
+  sector: "",
   aiModel: [], // multi-select array
   pricing: "",
   pricingDetails: "",
@@ -2278,6 +2279,35 @@ const COMP_AI_MODELS = [
   "Bundled (no extra charge)",
   "Tiered freemium",
 ];
+// Sector taxonomy for the competitive set — "what kind of system school users touch".
+// Keyed by competitor id; user-added competitors carry their own `sector` field instead.
+const COMP_SECTORS = {
+  "duolingo-max": "Teaching & learning",
+  "khanmigo": "Teaching & learning",
+  "magicschool": "Teaching & learning",
+  "coursera-coach": "Teaching & learning",
+  "quizlet": "Teaching & learning",
+  "brisk-teaching": "Teaching & learning",
+  "instructure-igniteai": "LMS / SIS",
+  "powerschool-powerbuddy": "LMS / SIS",
+  "element451": "Admissions & enrollment",
+  "ravenna": "Admissions & enrollment",
+  "google-for-education-gemini": "Productivity & general AI",
+  "chatgpt-edu": "Productivity & general AI",
+  "microsoft-copilot": "Productivity & general AI",
+  "github-copilot": "Productivity & general AI",
+  "adobe-firefly": "Productivity & general AI",
+  "zoom-ai-companion": "Productivity & general AI",
+  "notion-ai": "Productivity & general AI",
+  "granola": "Productivity & general AI",
+  "google-workspace-gemini": "Productivity & general AI",
+  "salesforce-agentforce": "CRM, sales & support",
+  "intercom-fin": "CRM, sales & support",
+  "hubspot-breeze": "CRM, sales & support",
+  "zendesk": "CRM, sales & support",
+};
+// Sectors where the buyer is a school (used for the "Education-focused" headline stat).
+const COMP_EDU_SECTORS = ["Teaching & learning", "LMS / SIS", "Admissions & enrollment"];
 const VALIDATION_STAGES = ["interested", "piloting", "live", "committed", "declined"];
 function stageColor(stage) {
   return stage === "interested" ? F.muted2 :
@@ -2467,6 +2497,12 @@ function MonzCompetitivePage() {
   const bundledN = cntModel("Bundled (no extra charge)");
   const usageOutcomeN = comp.competitors.filter(c => { const a = c.aiModel || []; return a.includes("Consumption/credits") || a.includes("Outcome-based"); }).length;
   const pctOf = (n) => total ? `${Math.round((n / total) * 100)}%` : "0%";
+  // By sector — what kind of system school users are touching.
+  const sectorOf = (c) => c.sector || COMP_SECTORS[c.id] || "Other";
+  const sectorBars = Object.entries(comp.competitors.reduce((m, c) => { const s = sectorOf(c); m[s] = (m[s] || 0) + 1; return m; }, {}))
+    .map(([label, value]) => ({ label, value }))
+    .sort((a, b) => b.value - a.value);
+  const eduN = comp.competitors.filter(c => COMP_EDU_SECTORS.includes(sectorOf(c))).length;
 
   const openAndScrollTo = (id) => {
     if (!expanded.has(id)) setExpanded(prev => new Set(prev).add(id));
@@ -2496,6 +2532,7 @@ function MonzCompetitivePage() {
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 10, marginBottom: 18 }}>
           {[
             { n: `${total}`, l: "Tools tracked", c: F.plum },
+            { n: `${eduN}`, sub: pctOf(eduN), l: "Education-sector", c: F.yellow },
             { n: `${freemiumN}`, sub: pctOf(freemiumN), l: "Run a free tier", c: F.green },
             { n: `${bundledN}`, sub: pctOf(bundledN), l: "Bundle AI · no surcharge", c: F.orange },
             { n: `${usageOutcomeN}`, sub: pctOf(usageOutcomeN), l: "Usage / outcome priced", c: F.pink },
@@ -2506,10 +2543,20 @@ function MonzCompetitivePage() {
             </div>
           ))}
         </div>
-        <div style={{ ...sectionTitle, marginBottom: 10 }}>How they charge for AI <span style={{ color: F.muted2, fontWeight: 600, textTransform: "none", letterSpacing: 0 }}>· tools per model (some use more than one)</span></div>
-        {modelBars.length > 0
-          ? <VizBars data={modelBars} accent={F.lightPlum} highlightTop />
-          : <div style={{ fontSize: 12.5, color: F.muted, fontStyle: "italic" }}>No competitors tracked yet.</div>}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 18 }} className="ws-grid">
+          <div>
+            <div style={{ ...sectionTitle, marginBottom: 10 }}>By sector <span style={{ color: F.muted2, fontWeight: 600, textTransform: "none", letterSpacing: 0 }}>· what kind of system schools touch</span></div>
+            {sectorBars.length > 0
+              ? <VizBars data={sectorBars} accent={F.pink} highlightTop />
+              : <div style={{ fontSize: 12.5, color: F.muted, fontStyle: "italic" }}>No competitors tracked yet.</div>}
+          </div>
+          <div>
+            <div style={{ ...sectionTitle, marginBottom: 10 }}>How they charge for AI <span style={{ color: F.muted2, fontWeight: 600, textTransform: "none", letterSpacing: 0 }}>· tools per model (some use more than one)</span></div>
+            {modelBars.length > 0
+              ? <VizBars data={modelBars} accent={F.lightPlum} highlightTop />
+              : <div style={{ fontSize: 12.5, color: F.muted, fontStyle: "italic" }}>No competitors tracked yet.</div>}
+          </div>
+        </div>
       </div>
 
       {/* ── Executive summary: "What this tells us" — landing card pinned to the top ── */}
@@ -2594,7 +2641,10 @@ function MonzCompetitivePage() {
                       background: i % 2 === 0 ? F.surface : F.bg,
                     }}
                   >
-                    <td style={{ padding: "12px 14px", color: F.plum, fontWeight: 700, verticalAlign: "top" }}>{c.name || <span style={{ color: F.muted2, fontStyle: "italic", fontWeight: 500 }}>(unnamed)</span>}</td>
+                    <td style={{ padding: "12px 14px", color: F.plum, fontWeight: 700, verticalAlign: "top" }}>
+                      {c.name || <span style={{ color: F.muted2, fontStyle: "italic", fontWeight: 500 }}>(unnamed)</span>}
+                      <div style={{ fontSize: 10, fontWeight: 600, color: F.muted2, marginTop: 3, textTransform: "none", letterSpacing: 0 }}>{sectorOf(c)}</div>
+                    </td>
                     <td style={{ padding: "12px 14px", verticalAlign: "top" }}>
                       {(c.aiModel || []).length === 0 ? (
                         <span style={{ color: F.muted2 }}>—</span>
@@ -2643,6 +2693,13 @@ function MonzCompetitivePage() {
                 <div>
                   <div style={lb}>Name</div>
                   <input value={c.name} onChange={e => updateCompetitor(c.id, { name: e.target.value })} placeholder="e.g. Veracross" style={{ ...inp, width: "100%" }} />
+                </div>
+                <div>
+                  <div style={lb}>Sector</div>
+                  <select value={c.sector || COMP_SECTORS[c.id] || ""} onChange={e => updateCompetitor(c.id, { sector: e.target.value })} style={{ ...inp, width: "100%", cursor: "pointer" }}>
+                    <option value="">— Select sector —</option>
+                    {["Admissions & enrollment", "LMS / SIS", "Teaching & learning", "Productivity & general AI", "CRM, sales & support", "Other"].map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
                 </div>
                 <div style={{ gridColumn: "1 / -1" }}>
                   <div style={lb}>AI model · select one or more</div>
@@ -2828,23 +2885,6 @@ function MonzMarketPage() {
   return (
     <>
       <style>{`@media (max-width: 720px) { .mkt-viz-grid { grid-template-columns: 1fr !important; } }`}</style>
-
-      <div style={card}>
-        <div style={sectionTitle}>Summary by product</div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10 }}>
-          {MONZ_PRODUCTS.map(p => {
-            const c = counts(p);
-            const active = filter === p;
-            return (
-              <div key={p} onClick={() => setFilter(active ? "All" : p)} style={{ padding: "12px 14px", background: active ? F.lightYellow : F.bg, border: `1px solid ${active ? F.yellow : F.border}`, borderRadius: 10, cursor: "pointer", transition: "all 0.15s" }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>{p}</div>
-                <div style={{ fontSize: 20, fontWeight: 700, color: F.plum, lineHeight: 1.1 }}>{c.total}</div>
-                <div style={{ fontSize: 11, color: F.muted, marginTop: 4 }}>{c.piloting} piloting · {c.committed} committed · {c.declined} declined</div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
 
       {/* ── Market Insights — data-viz dashboard over the entered validation data ── */}
       <div style={{ ...card, borderLeft: `4px solid ${F.pink}` }}>

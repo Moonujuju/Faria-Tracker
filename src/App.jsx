@@ -625,6 +625,20 @@ const DEFAULT_COMPETITIVE = {
       notes: "Evolved from a flat per-user add-on to bundled-into-a-higher-tier, plus credits for advanced agents. The standalone ~$8–10/user/month AI add-on was retired in May 2025. Illustrates retiring a standalone AI line in favor of bundling into a higher-priced tier.",
     },
     {
+      id: "granola",
+      name: "Granola",
+      aiModel: ["Per-seat", "Tiered freemium"],
+      pricing: "Free / $14/user/mo (Business) / $35/user/mo (Enterprise)",
+      pricingDetails: "Basic: $0 — unlimited meeting notes, AI chat, 30-day meeting history, limited MCP access, Slack integration\nBusiness: $14/user/month — everything in Basic + unlimited history, advanced AI models, API access, full MCP access, full integrations (Zapier, Affinity, HubSpot, Notion, Slack, etc.)\nEnterprise: $35/user/month — everything in Business + SSO (for teams 50+ users), org-wide auto-deletion, admin controls",
+      essentialFeatures: "Free Basic: unlimited meeting notes, AI chat, 30-day history, limited MCP, one integration (Slack)",
+      proFeatures: "Business ($14): unlimited history, advanced AI models, API access, full MCP, full integrations. Enterprise ($35): SSO (50+ users), org-wide auto-deletion, admin controls",
+      strengths: "Textbook three-tier per-seat AI SaaS ladder: the free tier is genuinely useful (unlimited notes + AI chat), while the paid levers are model quality (advanced models), extensibility (API + full MCP), and governance (SSO, auto-deletion, admin) reserved for Enterprise.",
+      weaknesses: "Standalone per-seat AI-notes tool — same \"AI tax\" exposure as MagicSchool for buyers who already pay for meeting/CRM tooling; little moat if suites bundle equivalent note-taking.",
+      lastReviewed: "2026-06-17",
+      sourceUrl: "",
+      notes: "AI meeting-notes app. Three-tier per-seat freemium — Basic $0, Business $14/user/mo, Enterprise $35/user/mo. Gating ladder worth copying: advanced AI models, API access and full MCP unlock at Business; SSO (50+ users), org-wide auto-deletion and admin controls are the Enterprise levers. Governance-as-enterprise-upsell and MCP-as-a-paid-feature are the notable moves.",
+    },
+    {
       id: "google-workspace-gemini",
       name: "Google (Workspace / Gemini)",
       aiModel: ["Bundled (no extra charge)"],
@@ -879,6 +893,14 @@ const DEFAULT_MARKET = {
         participants: 45,
         invited: 50,
         charts: [
+          {
+            q: "Which region is your school in?",
+            sub: "45 responses",
+            type: "bars",
+            data: [
+              { label: "UK & Ireland", value: 45 },
+            ],
+          },
           {
             q: "Where do you lose the most time in your admissions cycle?",
             sub: "Ranked #1 most time-consuming · 45 responses",
@@ -1723,21 +1745,17 @@ function AiMonetizationPage({ subRoute, setSubRoute, deepRoute, setDeepRoute }) 
       {view === "finance"     && <MonzFinancePage monz={mz} setMonz={setMz} />}
 
       {view === "plan" && (<>
-      {/* Framework card — visual side-by-side with demarcation rules in the middle */}
+      {/* Framework card — Essential vs Pro two-up, demarcation criteria as a full-width band below */}
       <div style={card}>
         <div style={sectionTitle}>Framework</div>
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 1.15fr 1fr",
-          gap: 0,
-          borderRadius: 10,
-          overflow: "hidden",
-          border: `1px solid ${F.border}`,
-        }}>
+        <p style={{ margin: "-2px 0 14px", fontSize: 12.5, color: F.muted, lineHeight: 1.5, maxWidth: 760 }}>Two tiers of AI across every Faria product. A feature only earns its way into the paid tier if it clears the demarcation line below.</p>
+
+        {/* Essential vs Pro — balanced two-up */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 12 }}>
           {/* AI Essential */}
-          <div style={{ background: F.lightYellow + "55", padding: "20px 22px", borderRight: `1px solid ${F.border}` }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-              <span style={{ fontSize: 13, fontWeight: 800, color: F.plum, textTransform: "uppercase", letterSpacing: "0.08em" }}>AI Essential</span>
+          <div style={{ background: F.lightYellow + "55", border: `1px solid ${F.border}`, borderTop: `3px solid ${F.yellow}`, borderRadius: 10, padding: "18px 20px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+              <span style={{ fontSize: 14, fontWeight: 800, color: F.plum, textTransform: "uppercase", letterSpacing: "0.08em" }}>AI Essential</span>
               <span style={{ fontSize: 10, fontWeight: 800, color: F.plum, background: F.yellow, padding: "2px 8px", borderRadius: 4 }}>FREE</span>
             </div>
             <p style={{ margin: "0 0 12px", fontSize: 12.5, color: F.plum, fontWeight: 700 }}>Default-on for every school</p>
@@ -1747,58 +1765,10 @@ function AiMonetizationPage({ subRoute, setSubRoute, deepRoute, setDeepRoute }) 
               <li>Lower fair-use caps to keep inference cost bounded on the free tier</li>
             </ul>
           </div>
-
-          {/* Demarcation rules — static, with concrete examples (read-only) */}
-          <div style={{ background: F.bg, padding: "20px 22px", display: "flex", flexDirection: "column" }}>
-            <div style={{ fontSize: 10.5, fontWeight: 800, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6, textAlign: "center" }}>Demarcation line</div>
-            <p style={{ margin: "0 0 12px", fontSize: 12.5, color: F.plum, fontWeight: 700, textAlign: "center" }}>A feature crosses into AI Pro when it…</p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8, flex: 1 }}>
-              {[
-                {
-                  rule: "Saves a school 5+ hours/week of manual work",
-                  examples: [
-                    "AI Writing Assistant — drafts applicant communications staff currently type by hand",
-                    "AI Document Verification — auto-cross-references transcripts against the school's checklist",
-                  ],
-                },
-                {
-                  rule: "Unlocks something they literally cannot do today",
-                  examples: [
-                    "MCP — schools query their OpenApply data from Claude / ChatGPT / Cursor",
-                    "Agentic Nurture Workflows — autonomous, tailored applicant follow-ups at scale",
-                  ],
-                },
-                {
-                  rule: "Produces a measurable outcome (conversion lift, time-to-decision, retention)",
-                  examples: [
-                    "AI Lead Scoring — 15% conversion lift in the top-scored applicant cohort",
-                    "AI Analyst — quarterly board reports auto-drafted in under 30 min (vs 8+ hrs)",
-                  ],
-                },
-              ].map((r, i) => (
-                <div key={i} style={{ background: F.surface, border: `1px solid ${F.border}`, borderRadius: 8, padding: "8px 11px" }}>
-                  <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
-                    <span style={{ width: 18, height: 18, borderRadius: 9, background: F.pink, color: "#fff", fontSize: 10, fontWeight: 800, display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>{i + 1}</span>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 12.5, color: F.plum, fontWeight: 700, lineHeight: 1.4 }}>{r.rule}</div>
-                      <div style={{ marginTop: 6, paddingLeft: 4, borderLeft: `2px solid ${F.lightYellow}` }}>
-                        <div style={{ fontSize: 9.5, fontWeight: 800, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.08em", marginLeft: 8, marginBottom: 3 }}>Examples</div>
-                        {r.examples.map((ex, ei) => (
-                          <div key={ei} style={{ fontSize: 11.5, color: F.muted, lineHeight: 1.45, fontStyle: "italic", marginLeft: 8, marginBottom: 2 }}>· {ex}</div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div style={{ marginTop: 12, fontSize: 11.5, color: F.muted, fontStyle: "italic", textAlign: "center" }}>Pass <strong style={{ color: F.plum }}>any one</strong> rule → Pro. Else → Essential. <span style={{ color: F.muted2 }}>(Examples illustrative — actual tier assignment per feature lives in each product block.)</span></div>
-          </div>
-
           {/* AI Pro */}
-          <div style={{ background: F.plum, padding: "20px 22px", color: F.paper, borderLeft: `1px solid ${F.border}` }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-              <span style={{ fontSize: 13, fontWeight: 800, color: F.paper, textTransform: "uppercase", letterSpacing: "0.08em" }}>AI Pro</span>
+          <div style={{ background: F.plum, border: `1px solid ${F.plum}`, borderTop: `3px solid ${F.yellow}`, borderRadius: 10, padding: "18px 20px", color: F.paper }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+              <span style={{ fontSize: 14, fontWeight: 800, color: F.paper, textTransform: "uppercase", letterSpacing: "0.08em" }}>AI Pro</span>
               <span style={{ fontSize: 10, fontWeight: 800, color: F.plum, background: F.yellow, padding: "2px 8px", borderRadius: 4 }}>PAID SKU</span>
             </div>
             <p style={{ margin: "0 0 12px", fontSize: 12.5, color: F.paper, fontWeight: 700, opacity: 0.95 }}>Separate SKU per product · bundle discount stacks</p>
@@ -1808,6 +1778,53 @@ function AiMonetizationPage({ subRoute, setSubRoute, deepRoute, setDeepRoute }) 
               <li>Each product validates 2–3 "wow" outcomes before paid go-live</li>
             </ul>
           </div>
+        </div>
+
+        {/* Demarcation line — full-width band of the three crossover rules */}
+        <div style={{ marginTop: 14, background: F.bg, border: `1px solid ${F.border}`, borderRadius: 10, padding: "16px 20px" }}>
+          <div style={{ textAlign: "center", marginBottom: 12 }}>
+            <div style={{ fontSize: 10.5, fontWeight: 800, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 4 }}>The demarcation line</div>
+            <div style={{ fontSize: 14, color: F.plum, fontWeight: 800 }}>A feature crosses into AI Pro when it passes <span style={{ color: F.pink }}>any one</span> of these</div>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 10 }}>
+            {[
+              {
+                rule: "Saves a school 5+ hours/week of manual work",
+                examples: [
+                  "AI Writing Assistant — drafts applicant communications staff currently type by hand",
+                  "AI Document Verification — auto-cross-references transcripts against the school's checklist",
+                ],
+              },
+              {
+                rule: "Unlocks something they literally cannot do today",
+                examples: [
+                  "MCP — schools query their OpenApply data from Claude / ChatGPT / Cursor",
+                  "Agentic Nurture Workflows — autonomous, tailored applicant follow-ups at scale",
+                ],
+              },
+              {
+                rule: "Produces a measurable outcome (conversion lift, time-to-decision, retention)",
+                examples: [
+                  "AI Lead Scoring — 15% conversion lift in the top-scored applicant cohort",
+                  "AI Analyst — quarterly board reports auto-drafted in under 30 min (vs 8+ hrs)",
+                ],
+              },
+            ].map((r, i) => (
+              <div key={i} style={{ background: F.surface, border: `1px solid ${F.border}`, borderTop: `3px solid ${F.pink}`, borderRadius: 8, padding: "12px 14px" }}>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 8 }}>
+                  <span style={{ width: 18, height: 18, borderRadius: 9, background: F.pink, color: "#fff", fontSize: 10, fontWeight: 800, display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>{i + 1}</span>
+                  <div style={{ fontSize: 12.5, color: F.plum, fontWeight: 700, lineHeight: 1.4 }}>{r.rule}</div>
+                </div>
+                <div style={{ paddingLeft: 4, borderLeft: `2px solid ${F.lightYellow}` }}>
+                  <div style={{ fontSize: 9.5, fontWeight: 800, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.08em", marginLeft: 8, marginBottom: 3 }}>Examples</div>
+                  {r.examples.map((ex, ei) => (
+                    <div key={ei} style={{ fontSize: 11.5, color: F.muted, lineHeight: 1.45, fontStyle: "italic", marginLeft: 8, marginBottom: 3 }}>· {ex}</div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+          <div style={{ marginTop: 12, fontSize: 11.5, color: F.muted, fontStyle: "italic", textAlign: "center" }}>Pass <strong style={{ color: F.plum }}>any one</strong> rule → Pro. Else → Essential. <span style={{ color: F.muted2 }}>(Examples illustrative — actual tier assignment per feature lives in each product block.)</span></div>
         </div>
       </div>
 
@@ -2385,6 +2402,12 @@ function MonzCompetitivePage() {
   const byModel = COMP_AI_MODELS
     .map(m => ({ m, n: comp.competitors.filter(c => (c.aiModel || []).includes(m)).length }))
     .filter(x => x.n > 0);
+  const modelBars = [...byModel].sort((a, b) => b.n - a.n).map(x => ({ label: x.m, value: x.n }));
+  const cntModel = (m) => comp.competitors.filter(c => (c.aiModel || []).includes(m)).length;
+  const freemiumN = cntModel("Tiered freemium");
+  const bundledN = cntModel("Bundled (no extra charge)");
+  const usageOutcomeN = comp.competitors.filter(c => { const a = c.aiModel || []; return a.includes("Consumption/credits") || a.includes("Outcome-based"); }).length;
+  const pctOf = (n) => total ? `${Math.round((n / total) * 100)}%` : "0%";
 
   const openAndScrollTo = (id) => {
     if (!expanded.has(id)) setExpanded(prev => new Set(prev).add(id));
@@ -2404,6 +2427,31 @@ function MonzCompetitivePage() {
         .ws-bullet-row:last-of-type { border-bottom: none; }
         @media (max-width: 720px) { .ws-grid { grid-template-columns: 1fr !important; } }
       `}</style>
+
+      {/* ── Trends at a glance — quick visual analytics across all tracked tools, pinned to the very top ── */}
+      <div style={{ ...card, padding: "20px 24px", marginBottom: 18 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
+          <span style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: "0.12em", padding: "3px 10px", borderRadius: 4, background: F.plum, color: F.paper, textTransform: "uppercase" }}>📊 Trends at a glance</span>
+          <span style={{ fontSize: 11, color: F.muted2, fontStyle: "italic" }}>Quick read across the {total} tools tracked</span>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 10, marginBottom: 18 }}>
+          {[
+            { n: `${total}`, l: "Tools tracked", c: F.plum },
+            { n: `${freemiumN}`, sub: pctOf(freemiumN), l: "Run a free tier", c: F.green },
+            { n: `${bundledN}`, sub: pctOf(bundledN), l: "Bundle AI · no surcharge", c: F.orange },
+            { n: `${usageOutcomeN}`, sub: pctOf(usageOutcomeN), l: "Usage / outcome priced", c: F.pink },
+          ].map((s, i) => (
+            <div key={i} style={{ background: F.bg, border: `1px solid ${F.border}`, borderTop: `3px solid ${s.c}`, borderRadius: 10, padding: "12px 14px" }}>
+              <div style={{ fontSize: 24, fontWeight: 800, color: F.plum, lineHeight: 1 }}>{s.n}{s.sub ? <span style={{ fontSize: 12, fontWeight: 700, color: F.muted2 }}> · {s.sub}</span> : null}</div>
+              <div style={{ fontSize: 11, color: F.muted, marginTop: 5, fontWeight: 600 }}>{s.l}</div>
+            </div>
+          ))}
+        </div>
+        <div style={{ ...sectionTitle, marginBottom: 10 }}>How they charge for AI <span style={{ color: F.muted2, fontWeight: 600, textTransform: "none", letterSpacing: 0 }}>· tools per model (some use more than one)</span></div>
+        {modelBars.length > 0
+          ? <VizBars data={modelBars} accent={F.lightPlum} highlightTop />
+          : <div style={{ fontSize: 12.5, color: F.muted, fontStyle: "italic" }}>No competitors tracked yet.</div>}
+      </div>
 
       {/* ── Executive summary: "What this tells us" — landing card pinned to the top ── */}
       <div style={{ ...card, borderLeft: `4px solid ${F.pink}`, padding: "20px 24px", marginBottom: 22 }}>
@@ -2455,23 +2503,6 @@ function MonzCompetitivePage() {
               placeholder="Counter-trend, blind spot, or the next-cycle move worth flagging…"
               style={{ width: "100%", border: "none", background: "transparent", color: F.plum, fontSize: 12.5, lineHeight: 1.55, fontFamily: "inherit", outline: "none", resize: "vertical", padding: 0 }}
             />
-          </div>
-        </div>
-      </div>
-
-      <div style={card}>
-        <div style={sectionTitle}>Snapshot</div>
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          <div style={tile}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Tracked</div>
-            <div style={{ fontSize: 22, fontWeight: 700, color: F.plum }}>{total}</div>
-          </div>
-          <div style={{ ...tile, flex: 2, minWidth: 220 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>By AI model</div>
-            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-              {byModel.length === 0 ? <span style={{ fontSize: 12, color: F.muted, fontStyle: "italic" }}>No competitors tracked yet</span> :
-                byModel.map(x => <span key={x.m} style={{ fontSize: 11, padding: "3px 8px", background: F.lightYellow, color: F.plum, borderRadius: 4, fontWeight: 700 }}>{x.m} · {x.n}</span>)}
-            </div>
           </div>
         </div>
       </div>
@@ -2716,14 +2747,23 @@ function MonzMarketPage() {
   const painsChart = chartByKeyword("lose the most time");
   const wishChart = chartByKeyword("capability you want most");
   const trustChart = chartByKeyword("hesitate");
-  const regionChart = chartByKeyword("region");
   const SENTIMENT_COLORS = { "Open but cautious": F.yellow, "Excited, want it now": F.green, "Skeptical": F.orange, "Neutral": F.muted2, "Uncomfortable": F.pink };
   const SELL_COLORS = { "Worth it with proof of time saved": F.yellow, "Hard sell internally": F.orange, "Easy, clear value": F.green, "Unlikely to be approved": F.pink };
   const withColors = (chart, map) => (chart ? chart.data.map(d => ({ label: d.label, value: d.value, color: map[d.label] || F.muted2 })) : []);
   const positivePct = sentimentChart ? Math.round(((sentimentChart.data.find(d => d.label.startsWith("Open"))?.value || 0) + (sentimentChart.data.find(d => d.label.startsWith("Excited"))?.value || 0)) / sentimentChart.data.reduce((s, d) => s + d.value, 0) * 100) : 0;
-  // By-region donut: use the featured survey's region breakdown if present, else count validations by their region field.
+  // By-region donut: aggregate the region breakdown across EVERY survey-backed validation in scope
+  // (each survey carries its own "region" chart), so multiple surveys roll up together. Fall back to
+  // counting validations by their region field when no survey reports region.
   const REGION_PALETTE = [F.plum, F.pink, F.orange, F.yellow, F.green, F.lightPlum, F.muted2];
-  const regionData = regionChart ? regionChart.data : Object.entries(filtered.reduce((m, v) => { if (v.region) m[v.region] = (m[v.region] || 0) + 1; return m; }, {})).map(([label, value]) => ({ label, value }));
+  const regionAcc = {};
+  let regionFromSurvey = false;
+  filtered.forEach(v => {
+    const rc = v.survey?.charts?.find(c => c.q.toLowerCase().includes("region"));
+    if (rc) { regionFromSurvey = true; rc.data.forEach(d => { regionAcc[d.label] = (regionAcc[d.label] || 0) + d.value; }); }
+  });
+  if (!regionFromSurvey) filtered.forEach(v => { if (v.region) regionAcc[v.region] = (regionAcc[v.region] || 0) + 1; });
+  const regionData = Object.entries(regionAcc).map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value);
+  const regionTotal = regionData.reduce((s, d) => s + d.value, 0);
   const regionSegs = regionData.filter(d => d.value > 0).map((d, i) => ({ label: d.label, value: d.value, color: REGION_PALETTE[i % REGION_PALETTE.length] }));
 
   return (
@@ -2762,7 +2802,7 @@ function MonzMarketPage() {
           <div style={{ display: "grid", gridTemplateColumns: survey ? "minmax(0,1fr) minmax(0,1fr)" : "1fr", gap: 18, alignItems: "start" }} className="mkt-viz-grid">
             {/* By region (always available) */}
             <div style={{ background: F.bg, border: `1px solid ${F.border}`, borderRadius: 10, padding: "14px 16px" }}>
-              <div style={{ ...sectionTitle, marginBottom: 12 }}>By region{regionChart ? <span style={{ color: F.muted2, fontWeight: 600, textTransform: "none", letterSpacing: 0 }}> · {regionChart.sub}</span> : ""}</div>
+              <div style={{ ...sectionTitle, marginBottom: 12 }}>By region{regionSegs.length ? <span style={{ color: F.muted2, fontWeight: 600, textTransform: "none", letterSpacing: 0 }}> · {regionTotal} {regionFromSurvey ? "responses" : "logged"}</span> : ""}</div>
               {regionSegs.length > 0
                 ? <VizDonut segments={regionSegs} centerLabel={regionSegs.length} centerSub="REGIONS" />
                 : <div style={{ fontSize: 12.5, color: F.muted, fontStyle: "italic" }}>No region data yet.</div>}

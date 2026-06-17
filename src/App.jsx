@@ -792,6 +792,7 @@ const COMPETITOR_TEMPLATE = () => ({
   id: Date.now() + Math.floor(Math.random() * 1000),
   name: "",
   sector: "",
+  audience: "", // B2B | B2C | Both
   aiModel: [], // multi-select array
   pricing: "",
   pricingDetails: "",
@@ -2451,6 +2452,18 @@ const COMP_SECTORS = {
 };
 // Sectors where the buyer is a school (used for the "Education-focused" headline stat).
 const COMP_EDU_SECTORS = ["Teaching & learning", "LMS / SIS", "Admissions & enrollment"];
+// Go-to-market audience — B2B (institution/business buyer), B2C (individual consumer), or Both.
+// Keyed by competitor id; user-added competitors carry their own `audience` field.
+const COMP_AUDIENCE = {
+  "duolingo-max": "B2C", "quizlet": "B2C",
+  "khanmigo": "Both", "magicschool": "Both", "coursera-coach": "Both",
+  "brisk-teaching": "Both", "adobe-firefly": "Both", "notion-ai": "Both",
+  "instructure-igniteai": "B2B", "powerschool-powerbuddy": "B2B",
+  "google-for-education-gemini": "B2B", "chatgpt-edu": "B2B", "element451": "B2B",
+  "ravenna": "B2B", "microsoft-copilot": "B2B", "salesforce-agentforce": "B2B",
+  "intercom-fin": "B2B", "hubspot-breeze": "B2B", "github-copilot": "B2B",
+  "zoom-ai-companion": "B2B", "google-workspace-gemini": "B2B", "zendesk": "B2B", "granola": "B2B",
+};
 const VALIDATION_STAGES = ["interested", "piloting", "live", "committed", "declined"];
 function stageColor(stage) {
   return stage === "interested" ? F.muted2 :
@@ -2600,6 +2613,7 @@ function MonzCompetitivePage() {
   const [ready, setReady] = useState(false);
   const [expanded, setExpanded] = useState(new Set());
   const [confirmDel, setConfirmDel] = useState(null);
+  const [aud, setAud] = useState("all"); // audience filter: "all" | "B2B" | "B2C"
   const saveTimer = useRef(null);
 
   useEffect(() => { (async () => {
@@ -2629,23 +2643,32 @@ function MonzCompetitivePage() {
   const sectionTitle = { fontSize: 11, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 };
   const tile = { flex: 1, minWidth: 130, padding: "12px 16px", background: F.bg, border: `1px solid ${F.border}`, borderRadius: 10 };
 
-  // Stats
-  const total = comp.competitors.length;
+  // ── Audience (B2B / B2C) — the analytics split into "almost two different kinds" ──
+  const audienceOf = (c) => c.audience || COMP_AUDIENCE[c.id] || "B2B";
+  // "Both" counts inside either filtered view.
+  const inAudience = (c) => aud === "all" || audienceOf(c) === aud || audienceOf(c) === "Both";
+  const allComp = comp.competitors;
+  const audCounts = { B2B: allComp.filter(c => audienceOf(c) === "B2B").length, Both: allComp.filter(c => audienceOf(c) === "Both").length, B2C: allComp.filter(c => audienceOf(c) === "B2C").length };
+  // Scope every analytic + the table by the selected audience.
+  const scoped = allComp.filter(inAudience);
+
+  // Stats (scoped to the audience filter)
+  const total = scoped.length;
   const byModel = COMP_AI_MODELS
-    .map(m => ({ m, n: comp.competitors.filter(c => (c.aiModel || []).includes(m)).length }))
+    .map(m => ({ m, n: scoped.filter(c => (c.aiModel || []).includes(m)).length }))
     .filter(x => x.n > 0);
   const modelBars = [...byModel].sort((a, b) => b.n - a.n).map(x => ({ label: x.m, value: x.n }));
-  const cntModel = (m) => comp.competitors.filter(c => (c.aiModel || []).includes(m)).length;
+  const cntModel = (m) => scoped.filter(c => (c.aiModel || []).includes(m)).length;
   const freemiumN = cntModel("Tiered freemium");
   const bundledN = cntModel("Bundled (no extra charge)");
-  const usageOutcomeN = comp.competitors.filter(c => { const a = c.aiModel || []; return a.includes("Consumption/credits") || a.includes("Outcome-based"); }).length;
+  const usageOutcomeN = scoped.filter(c => { const a = c.aiModel || []; return a.includes("Consumption/credits") || a.includes("Outcome-based"); }).length;
   const pctOf = (n) => total ? `${Math.round((n / total) * 100)}%` : "0%";
   // By sector — what kind of system school users are touching.
   const sectorOf = (c) => c.sector || COMP_SECTORS[c.id] || "Other";
-  const sectorBars = Object.entries(comp.competitors.reduce((m, c) => { const s = sectorOf(c); m[s] = (m[s] || 0) + 1; return m; }, {}))
+  const sectorBars = Object.entries(scoped.reduce((m, c) => { const s = sectorOf(c); m[s] = (m[s] || 0) + 1; return m; }, {}))
     .map(([label, value]) => ({ label, value }))
     .sort((a, b) => b.value - a.value);
-  const eduN = comp.competitors.filter(c => COMP_EDU_SECTORS.includes(sectorOf(c))).length;
+  const eduN = scoped.filter(c => COMP_EDU_SECTORS.includes(sectorOf(c))).length;
 
   const openAndScrollTo = (id) => {
     if (!expanded.has(id)) setExpanded(prev => new Set(prev).add(id));
@@ -2668,9 +2691,22 @@ function MonzCompetitivePage() {
 
       {/* ── Trends at a glance — quick visual analytics across all tracked tools, pinned to the very top ── */}
       <div style={{ ...card, padding: "20px 24px", marginBottom: 18 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>
           <span style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: "0.12em", padding: "3px 10px", borderRadius: 4, background: F.plum, color: F.paper, textTransform: "uppercase" }}>📊 Trends at a glance</span>
-          <span style={{ fontSize: 11, color: F.muted2, fontStyle: "italic" }}>Quick read across the {total} tools tracked</span>
+          <span style={{ fontSize: 11, color: F.muted2, fontStyle: "italic" }}>Quick read across the {total} {aud === "all" ? "tools tracked" : `${aud} tools`}</span>
+        </div>
+        {/* B2B / B2C — almost two different kinds. Toggle re-scopes every analytic + the table below. */}
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", gap: 0, border: `1px solid ${F.borderStrong}`, borderRadius: 999, overflow: "hidden" }}>
+            {[["all", "All"], ["B2B", "B2B"], ["B2C", "B2C"]].map(([v, lbl]) => (
+              <button key={v} onClick={() => setAud(v)} style={{ padding: "5px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer", border: "none", background: aud === v ? F.plum : F.surface, color: aud === v ? F.paper : F.plum, fontFamily: "inherit" }}>{lbl}</button>
+            ))}
+          </div>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {[["B2B", audCounts.B2B, F.plum], ["Both", audCounts.Both, F.orange], ["B2C", audCounts.B2C, F.pink]].map(([lbl, n, c]) => (
+              <span key={lbl} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 11.5, fontWeight: 700, color: F.plum, background: F.bg, border: `1px solid ${F.border}`, borderRadius: 999, padding: "3px 11px" }}><span style={{ width: 9, height: 9, borderRadius: "50%", background: c }} />{lbl} · {n}</span>
+            ))}
+          </div>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 10, marginBottom: 18 }}>
           {[
@@ -2760,8 +2796,8 @@ function MonzCompetitivePage() {
       {comp.competitors.length > 0 && (
         <div style={card}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 10 }}>
-            <div style={sectionTitle}>Comparative table</div>
-            <span style={{ fontSize: 11, color: F.muted2, fontStyle: "italic" }}>Click a row to jump to that competitor's details below</span>
+            <div style={sectionTitle}>Comparative table{aud !== "all" ? ` · ${aud}` : ""}</div>
+            <span style={{ fontSize: 11, color: F.muted2, fontStyle: "italic" }}>Grouped B2B → Both → B2C · click a row for details below</span>
           </div>
           <div style={{ overflowX: "auto", border: `1px solid ${F.border}`, borderRadius: 8 }}>
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
@@ -2773,19 +2809,25 @@ function MonzCompetitivePage() {
                 </tr>
               </thead>
               <tbody>
-                {comp.competitors.map((c, i) => (
+                {[...scoped].sort((a, b) => ({ B2B: 0, Both: 1, B2C: 2 }[audienceOf(a)] - { B2B: 0, Both: 1, B2C: 2 }[audienceOf(b)])).map((c, i, arr) => {
+                  const ac = audienceOf(c);
+                  const acColor = ac === "B2C" ? F.pink : ac === "Both" ? F.orange : F.plum;
+                  return (
                   <tr
                     key={c.id}
                     className="comp-row"
                     onClick={() => openAndScrollTo(c.id)}
                     style={{
-                      borderBottom: i === comp.competitors.length - 1 ? "none" : `1px solid ${F.border}`,
+                      borderBottom: i === arr.length - 1 ? "none" : `1px solid ${F.border}`,
                       cursor: "pointer",
                       background: i % 2 === 0 ? F.surface : F.bg,
                     }}
                   >
                     <td style={{ padding: "12px 14px", color: F.plum, fontWeight: 700, verticalAlign: "top" }}>
-                      {c.name || <span style={{ color: F.muted2, fontStyle: "italic", fontWeight: 500 }}>(unnamed)</span>}
+                      <div style={{ display: "flex", alignItems: "center", gap: 7, flexWrap: "wrap" }}>
+                        {c.name || <span style={{ color: F.muted2, fontStyle: "italic", fontWeight: 500 }}>(unnamed)</span>}
+                        <span style={{ fontSize: 9, fontWeight: 800, padding: "1px 6px", borderRadius: 999, background: acColor, color: F.paper, letterSpacing: "0.03em" }}>{ac}</span>
+                      </div>
                       <div style={{ fontSize: 10, fontWeight: 600, color: F.muted2, marginTop: 3, textTransform: "none", letterSpacing: 0 }}>{sectorOf(c)}</div>
                     </td>
                     <td style={{ padding: "12px 14px", verticalAlign: "top" }}>
@@ -2801,7 +2843,7 @@ function MonzCompetitivePage() {
                     </td>
                     <td style={{ padding: "12px 14px", color: F.muted, verticalAlign: "top", lineHeight: 1.45 }}>{c.pricing || <span style={{ color: F.muted2 }}>—</span>}</td>
                   </tr>
-                ))}
+                ); })}
               </tbody>
             </table>
           </div>
@@ -2819,7 +2861,7 @@ function MonzCompetitivePage() {
         </div>
       )}
 
-      {comp.competitors.map(c => {
+      {scoped.map(c => {
         const open = expanded.has(c.id);
         return (
           <div key={c.id} id={`comp-card-${c.id}`} style={card}>
@@ -2842,6 +2884,13 @@ function MonzCompetitivePage() {
                   <select value={c.sector || COMP_SECTORS[c.id] || ""} onChange={e => updateCompetitor(c.id, { sector: e.target.value })} style={{ ...inp, width: "100%", cursor: "pointer" }}>
                     <option value="">— Select sector —</option>
                     {["Admissions & enrollment", "LMS / SIS", "Teaching & learning", "Productivity & general AI", "CRM, sales & support", "Other"].map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <div style={lb}>Audience</div>
+                  <select value={c.audience || COMP_AUDIENCE[c.id] || ""} onChange={e => updateCompetitor(c.id, { audience: e.target.value })} style={{ ...inp, width: "100%", cursor: "pointer" }}>
+                    <option value="">— Select audience —</option>
+                    {["B2B", "B2C", "Both"].map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
                 </div>
                 <div style={{ gridColumn: "1 / -1" }}>

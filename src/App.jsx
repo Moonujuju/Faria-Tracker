@@ -3307,24 +3307,21 @@ function MonzFinancePage({ monz, setMonz }) {
   const sectionTitle = { fontSize: 11, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 };
   const numInp = { ...inp, width: "100%", textAlign: "right" };
 
-  // Model-aware $/1k tokens: blend the chosen model's in/out rates (80/20 in:out proxy).
-  // Falls back to the flat costInputs.tokenCostPer1k when no model is set / found.
-  const modelPer1k = (modelId) => {
-    const m = (monz.modelCosts || []).find(x => x.id === modelId);
-    if (!m) return fin.costInputs.tokenCostPer1k;
-    return (0.8 * m.inPer1M + 0.2 * m.outPer1M) / 1000;
+  // ── AI cost pulled from the Usage cost lab (monz.costLab + monz.modelCosts) ──
+  const fModelById = Object.fromEntries((monz.modelCosts || []).map(m => [m.id, m]));
+  const runCost = (row, modelId) => { const m = fModelById[modelId]; if (!m || !row) return 0; return (row.inputTokens || 0) / 1e6 * m.inPer1M + (row.outputTokens || 0) / 1e6 * m.outPer1M; };
+  const labRows = (prod) => (monz.costLab || []).filter(r => r.product === prod);
+  // Avg cost per action across a product's features (run cost × runs/action), free or pro model.
+  const avgCostPerAction = (prod, tier) => {
+    const rows = labRows(prod); if (!rows.length) return 0;
+    const sum = rows.reduce((s, r) => s + runCost(r, tier === "pro" ? r.proModelId : r.freeModelId) * (r.runsPerAction || 1), 0);
+    return sum / rows.length;
   };
-  // Computed: monthly cost per school — uses the per-product free (Essential) / pro model.
-  const costPerSchool = (prod, tier) => {
-    const u = fin.usageInputs[prod] || { essActionsPerSchoolMonth: 0, proActionsPerSchoolMonth: 0, tokensPerAction: 0 };
-    const actions = tier === "pro" ? u.proActionsPerSchoolMonth : u.essActionsPerSchoolMonth;
-    const per1k = modelPer1k(tier === "pro" ? u.proModelId : u.freeModelId);
-    const tokenCost = (actions * u.tokensPerAction * per1k) / 1000;
-    // Spread infra evenly across all products as a rough proxy; support is per-customer per-year, so /12 per month
-    const infraShare = fin.costInputs.monthlyInfraCost / MONZ_PRODUCTS.length;
-    const support = (fin.costInputs.supportCostPerCustomer || 0) / 12;
-    return tokenCost + infraShare + support;
-  };
+  // Shared infra/support spread per school per month (infra split across products; support /12).
+  const overheadPerSchoolMo = (fin.costInputs.monthlyInfraCost / MONZ_PRODUCTS.length) + ((fin.costInputs.supportCostPerCustomer || 0) / 12);
+  const aiCostPerSchool = (prod, tier) => ((fin.usageInputs[prod] || {})[tier === "pro" ? "proActionsPerSchoolMonth" : "essActionsPerSchoolMonth"] || 0) * avgCostPerAction(prod, tier === "pro" ? "pro" : "free");
+  // Full monthly cost per school (AI + shared overhead) — used by uptake scenarios.
+  const costPerSchool = (prod, tier) => aiCostPerSchool(prod, tier) + overheadPerSchoolMo;
   const fmtMoney = (n) => isFinite(n) ? `$${n.toFixed(2)}` : "—";
   const fmtPct = (n) => isFinite(n) ? `${n.toFixed(0)}%` : "—";
   // Free-tier budget → per-school/month allowance (engineer's "comfortable spend ÷ schools" method).
@@ -5751,7 +5748,6 @@ export default function App() {
           </div>
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          {navBtn("product", <><span className="lbl-full">Product Transformation</span><span className="lbl-short">Product</span></>)}
           {navBtn("ai", <><span className="lbl-full">AI Powered Features</span><span className="lbl-short">AI Features</span></>)}
           {navBtn("monz", "AI Monetization")}
           {navBtn("handoff", <><span className="lbl-full">Product Lifecycle</span><span className="lbl-short">Lifecycle</span></>)}

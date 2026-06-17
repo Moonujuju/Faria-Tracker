@@ -749,6 +749,19 @@ const DEFAULT_MARKET = {
         ],
         charts: [
           {
+            q: "Which region is your school in?",
+            sub: "74 responses",
+            type: "bars",
+            data: [
+              { label: "Europe (excl. UK & Ireland)", value: 26 },
+              { label: "Middle East & Africa", value: 18 },
+              { label: "Asia-Pacific", value: 16 },
+              { label: "UK & Ireland", value: 11 },
+              { label: "Latin America", value: 2 },
+              { label: "North America", value: 1 },
+            ],
+          },
+          {
             q: "Where do you lose the most time in your admissions cycle?",
             sub: "Ranked #1 most time-consuming · 73 responses",
             type: "bars",
@@ -2703,10 +2716,15 @@ function MonzMarketPage() {
   const painsChart = chartByKeyword("lose the most time");
   const wishChart = chartByKeyword("capability you want most");
   const trustChart = chartByKeyword("hesitate");
+  const regionChart = chartByKeyword("region");
   const SENTIMENT_COLORS = { "Open but cautious": F.yellow, "Excited, want it now": F.green, "Skeptical": F.orange, "Neutral": F.muted2, "Uncomfortable": F.pink };
   const SELL_COLORS = { "Worth it with proof of time saved": F.yellow, "Hard sell internally": F.orange, "Easy, clear value": F.green, "Unlikely to be approved": F.pink };
   const withColors = (chart, map) => (chart ? chart.data.map(d => ({ label: d.label, value: d.value, color: map[d.label] || F.muted2 })) : []);
   const positivePct = sentimentChart ? Math.round(((sentimentChart.data.find(d => d.label.startsWith("Open"))?.value || 0) + (sentimentChart.data.find(d => d.label.startsWith("Excited"))?.value || 0)) / sentimentChart.data.reduce((s, d) => s + d.value, 0) * 100) : 0;
+  // By-region donut: use the featured survey's region breakdown if present, else count validations by their region field.
+  const REGION_PALETTE = [F.plum, F.pink, F.orange, F.yellow, F.green, F.lightPlum, F.muted2];
+  const regionData = regionChart ? regionChart.data : Object.entries(filtered.reduce((m, v) => { if (v.region) m[v.region] = (m[v.region] || 0) + 1; return m; }, {})).map(([label, value]) => ({ label, value }));
+  const regionSegs = regionData.filter(d => d.value > 0).map((d, i) => ({ label: d.label, value: d.value, color: REGION_PALETTE[i % REGION_PALETTE.length] }));
 
   return (
     <>
@@ -2742,10 +2760,12 @@ function MonzMarketPage() {
 
         {filtered.length > 0 && (
           <div style={{ display: "grid", gridTemplateColumns: survey ? "minmax(0,1fr) minmax(0,1fr)" : "1fr", gap: 18, alignItems: "start" }} className="mkt-viz-grid">
-            {/* Pipeline (always available) */}
+            {/* By region (always available) */}
             <div style={{ background: F.bg, border: `1px solid ${F.border}`, borderRadius: 10, padding: "14px 16px" }}>
-              <div style={{ ...sectionTitle, marginBottom: 12 }}>Validation pipeline</div>
-              <VizDonut segments={pipelineSegs} centerLabel={filtered.length} centerSub="LOGGED" />
+              <div style={{ ...sectionTitle, marginBottom: 12 }}>By region{regionChart ? <span style={{ color: F.muted2, fontWeight: 600, textTransform: "none", letterSpacing: 0 }}> · {regionChart.sub}</span> : ""}</div>
+              {regionSegs.length > 0
+                ? <VizDonut segments={regionSegs} centerLabel={regionSegs.length} centerSub="REGIONS" />
+                : <div style={{ fontSize: 12.5, color: F.muted, fontStyle: "italic" }}>No region data yet.</div>}
             </div>
 
             {survey && sentimentChart && (

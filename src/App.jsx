@@ -719,6 +719,132 @@ function mergeCompetitive(saved) {
 const DEFAULT_MARKET = {
   validations: [
     {
+      id: "mkt-oa-aisurvey-2026-06",
+      product: "OpenApply",
+      schoolName: "AI in Admissions Survey — 75 responses (global)",
+      region: "Global",
+      stage: "interested",
+      contactedDate: "2026-06-17",
+      pilotedDate: "",
+      feedback: "Larger, multi-region read (75 responses across Europe, MEA, APAC, UK, the Americas) and the earlier UK pattern holds. Demand maps directly onto pain: chasing missing documents is the #1 time-sink (31 ranked it first) and document checking is the #1 wanted feature (59/75); responding to family inquiries (#2 pain) lines up with draft replies (#2 want, 54/75). Sentiment is ~95% positive (37 \"open but cautious\", 34 \"excited\"). Sellable — only 2 of 74 said \"unlikely to be approved\" — but \"worth it with proof of time saved\" (48) dominates, so ROI evidence remains the lever. Trust hesitations cluster on accuracy (22 of 48), then data privacy / security and GDPR, with a recurring ask to keep a human in the loop.",
+      willingnessToPay: "Sellable: 88% (65/74) say \"easy, clear value\" or \"worth it with proof of time saved\"; only 2 said \"unlikely to be approved\". \"Worth it with proof of time saved\" (48) dominates — proof of time saved is the unlock.",
+      contactName: "",
+      contactRole: "Survey respondents — admissions teams (global)",
+      contactEmail: "",
+      wowOutcomesValidated: "Top requested features validate OA AI Pro priorities: Document checking missing/mismatched/expired (59/75) → AI Document Verification; Draft replies to family inquiries (54) → AI Admissions Assistant; Applicant profile summarizer (45) → AI Applicant Insights; Auto-tagging & sorting (42) → screening/sorting; AI search across applicant data (32) → AI Search / Analyst; Lead scoring (26) → AI Lead Scoring.",
+      notes: "Source: OpenApply \"AI in Admissions\" survey, 15–17 Jun 2026, 75 responses across Europe excl. UK&I (26), Middle East & Africa (18), Asia-Pacific (16), UK & Ireland (11), Latin America (2), North America (1). 1 response flagged low-quality. Broadens the earlier UK user-group read to a global cohort — same pattern holds.",
+      survey: {
+        event: "AI in Admissions Survey",
+        date: "2026-06-17",
+        location: "Global · 6 regions",
+        participants: 75,
+        invited: null,
+        unit: "responses",
+        keyFindings: [
+          { k: "Top time-sink", v: "Chasing missing documents (31)" },
+          { k: "Top ask", v: "Document checking (59/75)" },
+          { k: "Sentiment", v: "~95% positive" },
+          { k: "Sell", v: "Only 2 \"unlikely to be approved\"" },
+          { k: "Top barrier", v: "Accuracy · data privacy" },
+        ],
+        charts: [
+          {
+            q: "Where do you lose the most time in your admissions cycle?",
+            sub: "Ranked #1 most time-consuming · 73 responses",
+            type: "bars",
+            data: [
+              { label: "Chasing missing documents", value: 31 },
+              { label: "Responding to family inquiries", value: 14 },
+              { label: "Scheduling (interviews, tours, tests)", value: 9 },
+              { label: "Reviewing & screening applications", value: 8 },
+              { label: "Following up with unconverted leads", value: 4 },
+              { label: "Verifying document accuracy", value: 4 },
+              { label: "Generating reports", value: 2 },
+              { label: "Manual data entry", value: 1 },
+              { label: "Coordinating internally across staff", value: 0 },
+            ],
+          },
+          {
+            q: "Which AI feature would help your team most?",
+            sub: "Multi-select · 75 responses",
+            type: "bars",
+            data: [
+              { label: "Document checking (missing, mismatched, expired)", value: 59 },
+              { label: "Draft replies to family inquiries", value: 54 },
+              { label: "Applicant profile summarizer", value: 45 },
+              { label: "Auto-tagging & sorting of applications", value: 42 },
+              { label: "AI search across applicant data", value: 32 },
+              { label: "Lead scoring / likelihood to enroll", value: 26 },
+              { label: "Translation of family communication", value: 20 },
+              { label: "Interview note summarization", value: 17 },
+              { label: "Natural-language reporting", value: 15 },
+            ],
+          },
+          {
+            q: "How do you feel about AI helping with admissions tasks today?",
+            sub: "75 responses",
+            type: "bars",
+            data: [
+              { label: "Open but cautious", value: 37 },
+              { label: "Excited, want it now", value: 34 },
+              { label: "Neutral", value: 2 },
+              { label: "Uncomfortable", value: 2 },
+              { label: "Skeptical", value: 0 },
+            ],
+          },
+          {
+            q: "Would an AI add-on be an easy or hard sell at your school?",
+            sub: "74 responses",
+            type: "bars",
+            data: [
+              { label: "Worth it with proof of time saved", value: 48 },
+              { label: "Easy, clear value", value: 17 },
+              { label: "Hard sell internally", value: 7 },
+              { label: "Unlikely to be approved", value: 2 },
+            ],
+          },
+          {
+            q: "One AI capability you want most in the next 12 months",
+            sub: "Open text · 56 responses · grouped into themes",
+            type: "themes",
+            data: [
+              { label: "Document checking & chasing", value: 17 },
+              { label: "Reporting & analytics", value: 15 },
+              { label: "Drafting replies & comms", value: 12 },
+              { label: "Applicant summaries", value: 9 },
+              { label: "Reviewing applications", value: 8 },
+              { label: "Translation & language help", value: 3 },
+            ],
+            quotes: [
+              "Detection of incomplete checklist items and chasing families for them.",
+              "Applicant profile summary that highlights next steps",
+              "Generate the data and reports we need — most of ours is still done manually",
+              "Auto reply emails and proof-reading for staff whose second language is English",
+              "Better search / filter and year-on-year reporting",
+              "Document checking (missing, mismatched, expired)",
+              "Summary of full applicant details",
+              "Translation and evaluation of transcripts",
+            ],
+            tail: "Grouped from 56 open responses (some touch more than one). Document checking / chasing and reporting & analytics lead — mirroring the top time-sinks.",
+          },
+          {
+            q: "What would make you hesitate to trust an AI feature?",
+            sub: "Open responses · 48 responses · grouped",
+            type: "tags",
+            data: [
+              { term: "accuracy", count: 22 },
+              { term: "data privacy", count: 14 },
+              { term: "security", count: 6 },
+              { term: "gdpr / compliance", count: 6 },
+              { term: "human in the loop", count: 5 },
+              { term: "cost", count: 3 },
+            ],
+            tail: "Accuracy dominates (22 of 48), then data privacy, security & GDPR; several ask explicitly to keep a human in the loop.",
+          },
+        ],
+      },
+    },
+    {
       id: "mkt-oa-ukug-2026-06",
       product: "OpenApply",
       schoolName: "UK User Group Conference — 45 schools",
@@ -2566,9 +2692,10 @@ function MonzMarketPage() {
   const pipelineSegs = stageMeta
     .map(s => ({ label: s.label, color: s.color, value: filtered.filter(v => v.stage === s.key).length }))
     .filter(s => s.value > 0);
-  // Survey to feature in the dashboard: first survey-backed validation in the filtered set.
-  const surveyV = filtered.find(v => v.survey);
+  // Survey to feature in the dashboard: the most recent survey-backed validation in the filtered set.
+  const surveyV = filtered.filter(v => v.survey).sort((a, b) => (b.survey.date || "").localeCompare(a.survey.date || ""))[0];
   const survey = surveyV?.survey;
+  const fmtSurveyDate = (iso) => { if (!iso) return ""; const [y, m, d] = iso.split("-"); const M = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]; return `${+d} ${M[+m - 1]} ${y}`; };
   const chartByKeyword = (kw) => survey?.charts.find(c => c.q.toLowerCase().includes(kw));
   const sentimentChart = chartByKeyword("how do you feel");
   const sellChart = chartByKeyword("easy or hard sell");
@@ -2635,7 +2762,7 @@ function MonzMarketPage() {
             {/* Headline strip */}
             <div style={{ marginTop: 18, marginBottom: 4, display: "flex", flexWrap: "wrap", gap: "6px 10px", alignItems: "center", fontSize: 12, color: F.muted }}>
               <span style={{ fontWeight: 800, color: F.plum }}>{survey.event}</span>
-              {[`${survey.participants} schools`, survey.location, "12 Jun 2026", `${positivePct}% positive`, `0 "unlikely to be approved"`].map((s, i) => (
+              {[`${survey.participants} ${survey.unit || "schools"}`, survey.location, fmtSurveyDate(survey.date), `${positivePct}% positive`, `${sellChart?.data.find(d => d.label.startsWith("Unlikely"))?.value ?? 0} "unlikely to be approved"`].map((s, i) => (
                 <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: 8 }}><span style={{ color: F.borderStrong }}>·</span>{s}</span>
               ))}
             </div>
@@ -2729,7 +2856,7 @@ function MonzMarketPage() {
             <div onClick={() => toggle(v.id)} style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", userSelect: "none", flexWrap: "wrap" }}>
               <span style={{ color: F.plum, fontSize: 11, transform: open ? "rotate(90deg)" : "none", transition: "transform 0.15s" }}>▶</span>
               <div style={{ flex: 1, minWidth: 200, fontSize: 15, fontWeight: 700, color: F.plum }}>{v.schoolName || <span style={{ color: F.muted2, fontStyle: "italic", fontWeight: 500 }}>(unnamed school)</span>}</div>
-              {v.survey && <span style={{ fontSize: 10, fontWeight: 800, padding: "2px 9px", borderRadius: 4, background: F.yellow, color: F.plum, textTransform: "uppercase", letterSpacing: "0.05em" }}>📊 Survey · {v.survey.participants} schools</span>}
+              {v.survey && <span style={{ fontSize: 10, fontWeight: 800, padding: "2px 9px", borderRadius: 4, background: F.yellow, color: F.plum, textTransform: "uppercase", letterSpacing: "0.05em" }}>📊 Survey · {v.survey.participants} {v.survey.unit || "schools"}</span>}
               <span style={{ fontSize: 10.5, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: F.bg, color: F.muted, textTransform: "uppercase", letterSpacing: "0.05em", border: `1px solid ${F.border}` }}>{v.product}</span>
               {v.region && <span style={{ fontSize: 11, color: F.muted }}>{v.region}</span>}
               <span style={{ fontSize: 10.5, fontWeight: 700, padding: "2px 8px", borderRadius: 4, background: stageColor(v.stage), color: "#fff", textTransform: "uppercase", letterSpacing: "0.05em" }}>{v.stage}</span>
@@ -2739,13 +2866,13 @@ function MonzMarketPage() {
               <div style={{ marginTop: 16, background: F.bg, border: `1px solid ${F.border}`, borderRadius: 10, padding: "14px 16px" }}>
                 <div style={{ ...sectionTitle, marginBottom: 10 }}>Key findings</div>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10 }}>
-                  {[
+                  {(v.survey.keyFindings || [
                     { k: "Top time-sinks", v: "Chasing docs · family inquiries" },
                     { k: "Top ask", v: "Draft family replies (33/49)" },
                     { k: "Sentiment", v: "~90% positive" },
                     { k: "Sell", v: "0 \"unlikely to be approved\"" },
                     { k: "Top barrier", v: "Security · impersonality" },
-                  ].map((s, i) => (
+                  ]).map((s, i) => (
                     <div key={i} style={{ background: F.surface, border: `1px solid ${F.border}`, borderRadius: 8, padding: "9px 11px" }}>
                       <div style={{ fontSize: 9.5, fontWeight: 800, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 3 }}>{s.k}</div>
                       <div style={{ fontSize: 12, fontWeight: 700, color: F.plum, lineHeight: 1.3 }}>{s.v}</div>

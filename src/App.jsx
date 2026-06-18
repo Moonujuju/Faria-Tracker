@@ -4901,21 +4901,37 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
       { id: "build", name: "Build", eyebrow: "Phase 02", tag: "Small pods, a release every Monday", accent: F.orange, dark: "#C9531E" },
       { id: "adopt", name: "Adopt", eyebrow: "Phase 03", tag: "Land, expand & close the loop", accent: F.pink, dark: "#B0277F" },
     ];
-    const STAGES = [
-      { ph: "prioritise", n: 1, ic: "📥", name: "Capture signal", event: "Every school touchpoint becomes signal — captured continuously across Salesforce, Pendo, Planhat, WhatsApp, the request board & surveys.", schools: "Schools feed it daily — user-group chats, surveys, support tickets, calls.", pod: "Product, Sales & Client Experience keep the pool flowing." },
-      { ph: "prioritise", n: 2, ic: "📊", name: "Synthesise & rank", event: "A monthly AI digest clusters the signal and ranks themes by revenue impact × adoption gap.", schools: "What schools ask for is what rises to the top.", pod: "Product leadership + RevOps read the evidence." },
-      { ph: "prioritise", n: 3, ic: "✅", name: "Decide & commit", event: "AI shortlist → product review → product day → schools sign-off → SLT/ExCo → QBR commits the quarter.", schools: "Schools sign off the plan before we build it.", pod: "Product, SLT/ExCo & Sales commit together." },
-      { ph: "build", n: 4, ic: "🎯", name: "Shape the slice", event: "The pod owner forms a hypothesis + success metric, grounded in usage data and school calls (Mon–Tue).", schools: "Shaped around a real school problem.", pod: "Pod owner leads; AI drafts the spec & prototype." },
-      { ph: "build", n: 5, ic: "📱", name: "Prototype to schools", event: "Wednesday: the same prototype goes to schools and internal teams — a full week ahead of dev.", schools: "Schools react to a real prototype, not a shipped feature.", pod: "Owner + Sales / Support / Implementation." },
-      { ph: "build", n: 6, ic: "🛠", name: "Build & QA", event: "Thu–Fri scope locks, then a one-week dev cycle with a full QA week running behind it.", schools: "Their feedback is folded in before the lock.", pod: "Pod devs ×2, QA, and a shock-absorber pod." },
-      { ph: "build", n: 7, ic: "🚢", name: "Ship every Monday", event: "A signed-off, sliced increment ships to production every Monday.", schools: "Schools see real progress in days, not months.", pod: "Pod dev + QA release together." },
-      { ph: "adopt", n: 8, ic: "📣", name: "Enable & launch", event: "Enablement auto-generates at release; marketing runs AAA campaigns and auto-built certifications.", schools: "Guided onboarding walks each school into the feature.", pod: "Marketing, Sales enablement & Support — ready day one." },
-      { ph: "adopt", n: 9, ic: "🔁", name: "Land, expand & learn", event: "Adoption & expansion signal (Pendo + Salesforce) flows back as the freshest input to the next Prioritise.", schools: "The most-engaged schools become references & expansion.", pod: "Customer success & Sales close the loop." },
+    const M = [
+      { ph: "prioritise", ic: "📥", t: "Capture", d: "Every school touchpoint becomes signal — captured continuously (Salesforce, Pendo, Planhat, WhatsApp, request board, surveys).", sc: "Daily input: WhatsApp groups, surveys, support, calls.", pod: "Product · Sales · Client Experience" },
+      { ph: "prioritise", ic: "📊", t: "AI digest", d: "A monthly AI digest clusters the signal and ranks themes by revenue impact × adoption gap.", sc: "What schools ask for rises to the top.", pod: "Product leadership · RevOps" },
+      { ph: "prioritise", ic: "🏫", t: "Schools sign-off", d: "Schools review the distilled shortlist and sign off before anything is committed.", sc: "Schools approve the plan.", pod: "Product · school advisory panel" },
+      { ph: "prioritise", ic: "🏛", t: "Commit", d: "SLT/ExCo ratify the revenue-ranked priorities; the QBR commits the quarter.", sc: null, pod: "SLT/ExCo · Product · Sales" },
+      { ph: "prioritise", ic: "✂️", t: "Into Build", d: "Committed bets are broken into weekly-sized, build-ready slices.", sc: null, pod: "Product → pods" },
+      { ph: "build", ic: "🎯", t: "Shape", d: "Owner forms a hypothesis + success metric (Mon–Tue), grounded in usage data & school calls.", sc: "Shaped around a real school problem.", pod: "Pod owner (AI drafts the spec)" },
+      { ph: "build", ic: "📱", t: "Prototype", d: "Wednesday: the same prototype goes to schools and internal teams — a week ahead of dev.", sc: "Schools react to a real prototype.", pod: "Owner · Sales / Support / Impl." },
+      { ph: "build", ic: "🔒", t: "Scope lock", d: "Thu–Fri: feedback folded in, PMT review, scope locked, handed to dev.", sc: "Feedback folded in before the lock.", pod: "Product · pod owner" },
+      { ph: "build", ic: "🛠", t: "Build & QA", d: "A one-week dev cycle with a full QA week running behind it.", sc: null, pod: "Devs ×2 · QA · shock-absorber pod" },
+      { ph: "build", ic: "🚢", t: "Ship Monday", d: "A signed-off, sliced increment ships to production every Monday.", sc: "Progress in days, not months.", pod: "Pod dev · QA" },
+      { ph: "adopt", ic: "📦", t: "Enable", d: "Enablement auto-generates at release — Sales & Support are ready day one.", sc: null, pod: "Product (auto) → Sales / Support" },
+      { ph: "adopt", ic: "📣", t: "AAA campaign", d: "Marketing runs campaigns for the marquee AAA features only.", sc: null, pod: "Marketing" },
+      { ph: "adopt", ic: "🎓", t: "Certify", d: "Auto-built certification paths get Sales & Support ready per AAA feature.", sc: null, pod: "Sales enablement" },
+      { ph: "adopt", ic: "🚀", t: "Land & onboard", d: "In-product guidance + CS outreach walk schools into each feature.", sc: "Guided onboarding into the feature.", pod: "Customer success · Implementation" },
+      { ph: "adopt", ic: "🔁", t: "Signal back", d: "Adoption & expansion signal (Pendo + Salesforce) feeds the next Prioritise — the loop closes.", sc: "Engaged schools → references & expansion.", pod: "Customer success · Sales" },
     ];
+    const phMeta = Object.fromEntries(PHASES.map(p => [p.id, p]));
     return (
       <>
+        <style>{`
+          .jrn-mark { outline: none; }
+          .jrn-mark .jrn-pop { opacity: 0; visibility: hidden; transition: opacity 0.14s ease, visibility 0.14s ease; }
+          .jrn-mark:hover .jrn-pop, .jrn-mark:focus .jrn-pop, .jrn-mark:focus-within .jrn-pop { opacity: 1; visibility: visible; }
+          .jrn-node { transition: transform 0.14s ease, box-shadow 0.14s ease; }
+          .jrn-mark:hover .jrn-node, .jrn-mark:focus .jrn-node { transform: scale(1.14); box-shadow: 0 6px 16px rgba(55,2,60,0.18); }
+          @media (max-width: 740px) { .jrn-scroll { overflow-x: auto; } .jrn-track { min-width: 720px; } }
+        `}</style>
+
         {/* nav row: back to cycle + jump into any phase */}
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
           <button onClick={() => setOpen(null)} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "10px 15px", borderRadius: 11, border: `1px solid ${F.borderStrong}`, background: F.surface, color: F.plum, fontSize: 12.5, fontWeight: 800, cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap" }}>⊙ Full cycle</button>
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
             {PHASES.map((p) => (
@@ -4926,66 +4942,55 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
           </div>
         </div>
 
-        {/* header band */}
-        <div style={{ background: F.gradient, borderRadius: 14, padding: "24px 26px 26px", position: "relative", overflow: "hidden", marginBottom: 18 }}>
-          <div style={{ position: "relative", zIndex: 2 }}>
-            <div style={{ fontSize: 10.5, fontWeight: 800, color: F.plum, opacity: 0.7, textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: 6 }}>The end-to-end journey</div>
-            <h1 style={{ fontSize: 28, fontWeight: 800, color: F.plum, margin: 0, lineHeight: 1.15, maxWidth: 720 }}>From the first signal to shipped value — and back again</h1>
-            <p style={{ fontSize: 14, fontWeight: 500, color: F.plum, opacity: 0.85, margin: "10px 0 0", maxWidth: 680 }}>One continuous loop across all three phases. Pods do the work at every stage; schools sit at the centre from start to finish.</p>
-          </div>
+        {/* compact header */}
+        <div style={{ background: F.gradient, borderRadius: 14, padding: "20px 24px", position: "relative", overflow: "hidden", marginBottom: 18 }}>
+          <div style={{ fontSize: 10.5, fontWeight: 800, color: F.plum, opacity: 0.7, textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: 5 }}>The end-to-end journey</div>
+          <h1 style={{ fontSize: 25, fontWeight: 800, color: F.plum, margin: 0, lineHeight: 1.15 }}>One cycle, start to finish</h1>
+          <p style={{ fontSize: 13.5, fontWeight: 500, color: F.plum, opacity: 0.85, margin: "8px 0 0", maxWidth: 640 }}>One continuous loop. Pods do the work at every stage; schools sit at the centre throughout. <strong>Hover any marker for detail.</strong></p>
         </div>
 
-        {/* the two threads that run through every stage */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 12, marginBottom: 18 }}>
-          <div style={{ background: "rgba(232,55,172,0.08)", border: `1px solid ${F.lightPink}`, borderLeft: `4px solid ${F.pink}`, borderRadius: 11, padding: "13px 16px" }}>
-            <div style={{ fontSize: 13, fontWeight: 800, color: F.plum, marginBottom: 3 }}>🏫 Customer-centric, end to end</div>
-            <div style={{ fontSize: 12, color: F.muted, lineHeight: 1.5 }}>Schools shape every stage — from the first signal, through sign-off and prototype, to the value they adopt and the signal that starts the next cycle.</div>
-          </div>
-          <div style={{ background: "rgba(55,2,60,0.05)", border: `1px solid ${F.border}`, borderLeft: `4px solid ${F.plum}`, borderRadius: 11, padding: "13px 16px" }}>
-            <div style={{ fontSize: 13, fontWeight: 800, color: F.plum, marginBottom: 3 }}>👥 Pods at every stage</div>
-            <div style={{ fontSize: 12, color: F.muted, lineHeight: 1.5 }}>Small, single-owner pods carry the work the whole way — backed by Product leadership, Sales, Client Experience, Marketing & Support.</div>
-          </div>
-        </div>
-
-        {/* vertical timeline, grouped by phase */}
-        <div style={card}>
-          {PHASES.map((P) => (
-            <div key={P.id}>
-              {/* phase band */}
-              <button onClick={() => setOpen(P.id)} style={{ width: "100%", textAlign: "left", display: "flex", alignItems: "center", gap: 12, background: P.accent, border: "none", borderRadius: 11, padding: "12px 16px", margin: "4px 0 14px", cursor: "pointer", fontFamily: "inherit" }}>
-                <span style={{ fontSize: 9.5, fontWeight: 800, color: F.plum, opacity: 0.7, textTransform: "uppercase", letterSpacing: "0.1em" }}>{P.eyebrow}</span>
-                <span style={{ fontSize: 16, fontWeight: 800, color: F.plum }}>{P.name}</span>
-                <span style={{ fontSize: 12, color: F.plum, opacity: 0.8 }}>· {P.tag}</span>
-                <span style={{ marginLeft: "auto", fontSize: 11, fontWeight: 800, color: F.plum }}>Open →</span>
-              </button>
-              {/* stage rows */}
-              {STAGES.filter((s) => s.ph === P.id).map((s, si, arr) => (
-                <div key={s.n} style={{ display: "flex", gap: 14, alignItems: "stretch" }}>
-                  {/* rail with connecting line + numbered node */}
-                  <div style={{ position: "relative", width: 40, flexShrink: 0, display: "flex", justifyContent: "center" }}>
-                    <div style={{ position: "absolute", top: 0, bottom: (P.id === "adopt" && si === arr.length - 1) ? "auto" : 0, height: (P.id === "adopt" && si === arr.length - 1) ? 18 : "100%", width: 3, background: P.accent, opacity: 0.45 }} />
-                    <div style={{ position: "relative", zIndex: 1, width: 30, height: 30, borderRadius: "50%", background: P.accent, color: F.plum, fontSize: 12, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", border: `2px solid ${F.surface}`, boxShadow: F.shadowSm }}>{s.n}</div>
-                  </div>
-                  {/* content card */}
-                  <div style={{ flex: 1, minWidth: 0, paddingBottom: 18 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                      <span style={{ fontSize: 17 }}>{s.ic}</span>
-                      <span style={{ fontSize: 14.5, fontWeight: 800, color: F.plum }}>{s.name}</span>
-                    </div>
-                    <p style={{ margin: "0 0 10px", fontSize: 12.5, color: F.muted, lineHeight: 1.5 }}>{s.event}</p>
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 8 }} className="plc-lane">
-                      <div style={{ background: "rgba(232,55,172,0.08)", border: `1px solid ${F.lightPink}`, borderRadius: 8, padding: "7px 11px", fontSize: 11.5, color: F.plum, lineHeight: 1.45 }}><strong style={{ color: F.pink }}>🏫 Schools</strong> — {s.schools}</div>
-                      <div style={{ background: "rgba(55,2,60,0.05)", border: `1px solid ${F.border}`, borderRadius: 8, padding: "7px 11px", fontSize: 11.5, color: F.plum, lineHeight: 1.45 }}><strong style={{ color: F.plum }}>👥 Pod & team</strong> — {s.pod}</div>
+        {/* horizontal timeline */}
+        <div style={{ ...card, overflow: "visible", paddingBottom: 26 }}>
+          <div className="jrn-scroll">
+            <div className="jrn-track" style={{ display: "flex", alignItems: "flex-start", gap: 0 }}>
+              {PHASES.map((P) => {
+                const ms = M.filter(m => m.ph === P.id);
+                return (
+                  <div key={P.id} style={{ flex: ms.length, minWidth: 0 }}>
+                    {/* phase label */}
+                    <button onClick={() => setOpen(P.id)} title={`Open ${P.name}`} style={{ display: "block", width: "100%", textAlign: "center", background: P.accent, border: "none", borderRadius: 8, padding: "6px 8px", marginBottom: 18, cursor: "pointer", fontFamily: "inherit" }}>
+                      <span style={{ fontSize: 12, fontWeight: 800, color: F.plum }}>{P.name}</span>
+                      <span style={{ fontSize: 9.5, fontWeight: 700, color: F.plum, opacity: 0.7 }}> · {P.eyebrow.replace("Phase ", "Ph ")}</span>
+                    </button>
+                    {/* spine + markers */}
+                    <div style={{ position: "relative", display: "flex" }}>
+                      <div style={{ position: "absolute", top: 19, left: "8%", right: "8%", height: 3, background: P.accent, opacity: 0.5, zIndex: 0 }} />
+                      {ms.map((m) => {
+                        const gi = M.indexOf(m);
+                        const popPos = gi <= 1 ? { left: 0 } : gi >= M.length - 2 ? { right: 0 } : { left: "50%", transform: "translateX(-50%)" };
+                        return (
+                          <div key={m.t} className="jrn-mark" tabIndex={0} style={{ flex: 1, minWidth: 0, position: "relative", display: "flex", flexDirection: "column", alignItems: "center", cursor: "default", padding: "0 2px" }}>
+                            <div className="jrn-node" style={{ width: 40, height: 40, borderRadius: "50%", background: P.accent, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, border: `2px solid ${F.surface}`, boxShadow: F.shadowSm, position: "relative", zIndex: 1 }}>{m.ic}</div>
+                            <div style={{ fontSize: 9.5, fontWeight: 700, color: F.plum, textAlign: "center", marginTop: 6, lineHeight: 1.2 }}>{m.t}</div>
+                            <div className="jrn-pop" style={{ position: "absolute", top: "100%", marginTop: 8, zIndex: 30, width: 212, background: F.surface, border: `1px solid ${P.accent}`, borderRadius: 10, padding: "10px 13px", boxShadow: F.shadowMd, ...popPos }}>
+                              <div style={{ fontSize: 12.5, fontWeight: 800, color: F.plum, marginBottom: 4 }}>{m.ic} {m.t}</div>
+                              <div style={{ fontSize: 11.5, color: F.muted, lineHeight: 1.5 }}>{m.d}</div>
+                              {m.sc && <div style={{ marginTop: 8, fontSize: 11, color: F.plum, lineHeight: 1.4 }}><strong style={{ color: F.pink }}>🏫 Schools</strong> — {m.sc}</div>}
+                              <div style={{ marginTop: 4, fontSize: 11, color: F.plum, lineHeight: 1.4 }}><strong>👥 Pod</strong> — {m.pod}</div>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
-          ))}
+          </div>
           {/* loop closes */}
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 4, marginLeft: 54, background: F.lightYellow + "66", border: `1px dashed ${F.yellow}`, borderRadius: 11, padding: "11px 15px" }}>
-            <span style={{ fontSize: 18 }}>↻</span>
-            <div style={{ fontSize: 12.5, color: F.plum, fontWeight: 700, lineHeight: 1.45 }}>Adoption signal feeds the next <span style={{ color: "#A9760A" }}>Prioritise</span> — the loop never ends, and every cycle starts from what schools actually adopted.</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 9, marginTop: 22, background: F.lightYellow + "66", border: `1px dashed ${F.yellow}`, borderRadius: 11, padding: "10px 14px" }}>
+            <span style={{ fontSize: 17 }}>↻</span>
+            <div style={{ fontSize: 12, color: F.plum, fontWeight: 700, lineHeight: 1.45 }}>Adoption signal feeds the next <span style={{ color: "#A9760A" }}>Prioritise</span> — the loop never ends.</div>
           </div>
         </div>
       </>

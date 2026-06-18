@@ -1198,6 +1198,17 @@ const BASELINE_TEMPLATE = () => ({ id: visionRowId(), metric: "", value: "" });
 const BET_TEMPLATE = () => ({ id: visionRowId(), choice: "", tradeoff: "", dependency: "" });
 const GOAL_TEMPLATE = () => ({ id: visionRowId(), kind: "product", metric: "", baseline: "", target: "", window: "now" });
 const INITIATIVE_TEMPLATE = () => ({ id: visionRowId(), program: "", deliversBet: "", team: "", budget: "", buildBuy: "build" });
+// Horizon build windows (section 10) — nearer-term & detailed; distinct from Vision's Now/Next/Outer (section 3).
+const HORIZON_WINDOWS = [
+  { key: "h0", label: "0–3 months", color: F.plum, bg: F.lightYellow + "55" },
+  { key: "h1", label: "3–6 months", color: F.orange, bg: "rgba(247,139,67,0.08)" },
+  { key: "h2", label: "6–12 months", color: F.green, bg: "rgba(26,122,62,0.08)" },
+];
+// Vision products = the 5 real products + a filled-out "Example" reference (OpenApply).
+const VISION_PRODUCTS = [...MONZ_PRODUCTS, "Example"];
+const VISION_PRODUCT_LABEL = { "Example": "📋 Example (OpenApply)" };
+const VISION_PRODUCT_SLUG = { "OpenApply": "openapply", "ManageBac+": "managebac", "Atlas": "atlas", "SchoolsBuddy": "schoolsbuddy", "Vectare": "vectare", "Example": "example" };
+const VISION_SLUG_PRODUCT = Object.fromEntries(Object.entries(VISION_PRODUCT_SLUG).map(([k, v]) => [v, k]));
 function BLANK_VISION() {
   return {
     who: { segment: "", buyer: "", payer: "", profiles: [] },
@@ -1209,42 +1220,140 @@ function BLANK_VISION() {
     bets: [],
     model: { packaging: "", pricing: "", expansion: "" },
     goals: [],
-    horizon: { now: [], next: [], outer: [] },
+    horizon: { h0: { building: [], state: "", customer: "" }, h1: { building: [], state: "", customer: "" }, h2: { building: [], state: "", customer: "" } },
     initiatives: [],
     alive: { owner: "", cadence: "" },
     updatedAt: "",
   };
 }
-const DEFAULT_VISION = { products: Object.fromEntries(MONZ_PRODUCTS.map(p => [p, BLANK_VISION()])) };
-// Deep-merge a saved product over a blank template so new fields forward-fill without losing edits.
-function mergeVisionProduct(saved) {
-  const b = BLANK_VISION();
-  if (!saved) return b;
+// Worked example — an ideal, fully-filled OpenApply-with-AI vision (reference / template).
+function EXAMPLE_VISION() {
+  const id = (n) => "ex-" + n;
   return {
-    who: { ...b.who, ...(saved.who || {}), profiles: saved.who?.profiles || [] },
-    current: { ...b.current, ...(saved.current || {}), baselines: saved.current?.baselines || [], working: saved.current?.working || [], notWorking: saved.current?.notWorking || [] },
+    who: {
+      segment: "International & private K-12 schools running selective admissions (~1,000 schools today); admissions-led buyers.",
+      buyer: "Director / Head of Admissions; final sign-off for paid add-ons often the Head of School or Bursar.",
+      payer: "The school, via its annual OpenApply SaaS contract — AI Pro is a paid add-on on top of the base license.",
+      profiles: [
+        { id: id("p1"), name: "Director of Admissions", role: "Buyer / champion", jtbd: "Hit enrolment targets with a lean team; cut manual chasing & reviewing so staff spend time on families, not paperwork." },
+        { id: id("p2"), name: "Admissions Officer", role: "Daily user", jtbd: "Process applications, chase missing documents, and answer family inquiries quickly and accurately." },
+      ],
+    },
+    current: {
+      position: "Category-leading admissions CRM for international/private K-12 with deep workflow lock-in (forms, checklists, family portal). AI is early — a few Essential conveniences shipped; no paid AI tier yet.",
+      baselines: [
+        { id: id("b1"), metric: "Schools on OpenApply", value: "~1,000" },
+        { id: id("b2"), metric: "AI Pro attach", value: "0% (not launched)" },
+        { id: id("b3"), metric: "Survey sentiment toward AI", value: "~95% positive (75 resp, Jun 2026)" },
+        { id: id("b4"), metric: "Top validated demand", value: "Document checking 59/75 · Draft replies 54/75" },
+      ],
+      working: ["Strong workflow lock-in & data position — the school's applicant data lives here.", "Validated demand for AI on the exact pains schools feel (chasing docs, family replies).", "Trusted brand in the segment; high renewal."],
+      notWorking: ["No paid AI tier yet — monetization left on the table.", "AI shipped piecemeal, not packaged or sold.", "Usage/cost not yet tracked, so free-tier pricing is guesswork (now being fixed)."],
+    },
+    vision: {
+      now: "AI Pro ships for back-to-school 2026: a packaged set of admissions AI that demonstrably saves teams 5+ hrs/week — Document Verification, draft family replies, Applicant Insights — sold as a per-account add-on with a genuinely useful free Essential tier underneath.",
+      next: "The admissions assistant goes agentic: it doesn't just draft, it runs the chase — follows up on missing documents, nurtures unconverted leads, answers routine family questions end-to-end, human-in-the-loop. AI becomes the way admissions runs in OpenApply.",
+      outer: "OpenApply is the AI-native system of record for school admissions: schools (and their own AI agents, via MCP) query and act on applicant data conversationally; the platform predicts enrolment and guides the funnel. The moat is the data + workflow, not any single model.",
+    },
+    northStar: {
+      value: "Admissions staff hours saved per school per month — 'proof of time saved' is the validated buying lever.",
+      commercial: "AI Pro ARR (attach rate × per-account price across the base).",
+    },
+    why: {
+      whyNow: "Open-source models are now cheap and good enough to run admissions tasks at viable cost; schools are actively evaluating AI (95% positive) and Finance wants AI monetized, not uncapped. The proxy + usage/cost stack to do this safely now exists.",
+      whyUs: "We already hold the applicant data and own the admissions workflow end-to-end, so the 'standalone AI tax' critique doesn't apply to us. The closest K-12 admissions competitor (Ravenna) has barely started on AI.",
+    },
+    whatTrue: {
+      assumptions: ["Schools will pay a per-account add-on for AI that proves time saved.", "We can keep inference cost low enough (cheap models on the free tier) to protect margin.", "Product can ship 2–3 'wow' Pro features by Aug–Sep 2026."],
+      risks: ["AI accuracy / trust failures in a sensitive admissions context (the top survey hesitation).", "Data privacy / GDPR concerns block adoption in some regions.", "Frontier-model cost spikes if usage isn't capped."],
+      watching: ["Free→Pro conversion and per-school usage once live.", "Accuracy / complaint rate on AI document checks.", "Ravenna and other K-12 admissions AI moves."],
+      doubleDown: "Free-tier engagement is high and proof-of-time-saved lands in pilots → fund the agentic roadmap.",
+      pivot: "Schools love the value but won't pay a separate add-on → fold AI into the base price with an uplift (Zoom/Adobe pattern).",
+      kill: "Accuracy/trust can't be made reliable enough for admissions → pull back to assistive-only, drop the autonomous bets.",
+    },
+    bets: [
+      { id: id("bet1"), choice: "Package admissions AI as a paid 'AI Pro' add-on with a useful free Essential tier", tradeoff: "Not bundling AI into the base price yet — forgoes simplicity for a clearer revenue line + upgrade path", dependency: "Shared FAIF proxy + usage/cost tracking (AI eng); Finance sign-off on free-tier spend" },
+      { id: id("bet2"), choice: "Go agentic on the admissions chase (documents, nurture, replies)", tradeoff: "Higher build + trust/safety cost vs. simple assistive features", dependency: "Frontier-model access via Bedrock; safeguarding / policy review" },
+      { id: id("bet3"), choice: "Open the data via MCP so schools' own AI agents can query OpenApply", tradeoff: "Platform/ecosystem play over short-term feature revenue", dependency: "MCP server build; security review" },
+    ],
+    model: {
+      packaging: "Two tiers: AI Essential (free, default-on, cheap/open models, low caps) and AI Pro (paid SKU, frontier models, higher caps). Multi-product bundle discount across Faria.",
+      pricing: "Per account / year add-on. Free-tier allowance sized from a comfortable annual spend (cost lab + finance model); credits/usage tracked under the hood, the customer sees a simple action allowance.",
+      expansion: "Land with Document Verification + draft replies → expand to agentic nurture + Analyst → bundle with ManageBac+ across the school.",
+    },
+    goals: [
+      { id: id("g1"), kind: "product", metric: "Pro 'wow' features live", baseline: "0", target: "3", window: "now" },
+      { id: id("g2"), kind: "product", metric: "Staff hours saved / school / month", baseline: "0", target: "5+", window: "now" },
+      { id: id("g3"), kind: "commercial", metric: "AI Pro attach (% of base)", baseline: "0%", target: "10%", window: "next" },
+      { id: id("g4"), kind: "commercial", metric: "AI Pro ARR", baseline: "$0", target: "first material ARR", window: "next" },
+      { id: id("g5"), kind: "product", metric: "Agentic tasks live (chase / nurture)", baseline: "0", target: "2", window: "outer" },
+    ],
+    horizon: {
+      h0: {
+        building: ["AI Document Verification (cross-check docs vs the school's checklist)", "AI Writing Assistant — draft family replies", "Usage + cost tracking wired in via the proxy", "Essential vs Pro packaging + paywall"],
+        state: "AI Pro is live for early-adopter schools with two flagship time-savers in production; we can measure hours saved and cost per school.",
+        customer: "OpenApply now drafts your family replies and auto-checks documents against your checklist — so your team spends time on families, not paperwork.",
+      },
+      h1: {
+        building: ["AI Applicant Insights / summaries on every profile", "AI Lead Scoring", "Buy-more / allowance UI", "Schools sign-off + Pro onboarding"],
+        state: "Pro covers review + screening end-to-end; attach is growing and the free→Pro funnel is instrumented.",
+        customer: "See every applicant at a glance and know who's most likely to enrol — review and screening done in minutes.",
+      },
+      h2: {
+        building: ["Agentic nurture workflows (autonomous, human-in-the-loop follow-ups)", "AI Admissions Assistant for parents", "AI Analyst (natural-language reporting)", "MCP server (beta)"],
+        state: "In 12 months OpenApply runs the admissions chase for you: autonomous follow-ups, conversational reporting, and applicant data open to the school's own AI via MCP.",
+        customer: "OpenApply becomes your AI admissions teammate — it follows up on missing documents, nurtures leads, and answers questions about your pipeline in plain language.",
+      },
+    },
+    initiatives: [
+      { id: id("i1"), program: "AI Pro launch (Document Verification + draft replies)", deliversBet: "Bet 1 — packaged AI Pro", team: "OA product + AI eng", budget: "TBD", buildBuy: "build" },
+      { id: id("i2"), program: "Usage & cost tracking + caps", deliversBet: "Bet 1 — margin & pricing", team: "AI eng + OA backend", budget: "shared", buildBuy: "build" },
+      { id: id("i3"), program: "Agentic nurture workflows", deliversBet: "Bet 2 — agentic chase", team: "OA product + AI eng", budget: "TBD", buildBuy: "build" },
+      { id: id("i4"), program: "MCP server", deliversBet: "Bet 3 — open data", team: "OA backend", budget: "TBD", buildBuy: "build" },
+    ],
+    alive: {
+      owner: "VP Product, OpenApply (with AI eng + Finance).",
+      cadence: "Now firm, reviewed monthly against usage + attach; Next/Outer refreshed quarterly. Feeds the AI Pods build cycle and the monetization finance model.",
+    },
+    updatedAt: "2026-06-18",
+  };
+}
+const DEFAULT_VISION = { products: Object.fromEntries(VISION_PRODUCTS.map(p => [p, p === "Example" ? EXAMPLE_VISION() : BLANK_VISION()])) };
+// Deep-merge a saved product over its SEED (blank for real products, the worked Example for "Example")
+// so new fields forward-fill without losing edits. Migrates the old horizon shape (now/next/outer) forward.
+function mergeVisionProduct(saved, seed) {
+  const b = seed || BLANK_VISION();
+  if (!saved) return b;
+  const oldHz = saved.horizon && saved.horizon.h0 === undefined && (saved.horizon.now || saved.horizon.next || saved.horizon.outer);
+  const hz = (hk, oldKey) => oldHz
+    ? { building: saved.horizon[oldKey] || [], state: "", customer: "" }
+    : { building: saved.horizon?.[hk]?.building ?? b.horizon[hk].building, state: saved.horizon?.[hk]?.state ?? b.horizon[hk].state, customer: saved.horizon?.[hk]?.customer ?? b.horizon[hk].customer };
+  return {
+    who: { ...b.who, ...(saved.who || {}), profiles: saved.who?.profiles ?? b.who.profiles },
+    current: { ...b.current, ...(saved.current || {}), baselines: saved.current?.baselines ?? b.current.baselines, working: saved.current?.working ?? b.current.working, notWorking: saved.current?.notWorking ?? b.current.notWorking },
     vision: { ...b.vision, ...(saved.vision || {}) },
     northStar: { ...b.northStar, ...(saved.northStar || {}) },
     why: { ...b.why, ...(saved.why || {}) },
-    whatTrue: { ...b.whatTrue, ...(saved.whatTrue || {}), assumptions: saved.whatTrue?.assumptions || [], risks: saved.whatTrue?.risks || [], watching: saved.whatTrue?.watching || [] },
-    bets: saved.bets || [],
+    whatTrue: { ...b.whatTrue, ...(saved.whatTrue || {}), assumptions: saved.whatTrue?.assumptions ?? b.whatTrue.assumptions, risks: saved.whatTrue?.risks ?? b.whatTrue.risks, watching: saved.whatTrue?.watching ?? b.whatTrue.watching },
+    bets: saved.bets ?? b.bets,
     model: { ...b.model, ...(saved.model || {}) },
-    goals: saved.goals || [],
-    horizon: { now: saved.horizon?.now || [], next: saved.horizon?.next || [], outer: saved.horizon?.outer || [] },
-    initiatives: saved.initiatives || [],
+    goals: saved.goals ?? b.goals,
+    horizon: { h0: hz("h0", "now"), h1: hz("h1", "next"), h2: hz("h2", "outer") },
+    initiatives: saved.initiatives ?? b.initiatives,
     alive: { ...b.alive, ...(saved.alive || {}) },
-    updatedAt: saved.updatedAt || "",
+    updatedAt: saved.updatedAt || b.updatedAt || "",
   };
 }
 function mergeVision(saved) {
   if (!saved) return DEFAULT_VISION;
-  return { ...DEFAULT_VISION, ...saved, products: Object.fromEntries(MONZ_PRODUCTS.map(p => [p, mergeVisionProduct(saved.products?.[p])])) };
+  return { ...DEFAULT_VISION, ...saved, products: Object.fromEntries(VISION_PRODUCTS.map(p => [p, mergeVisionProduct(saved.products?.[p], DEFAULT_VISION.products[p])])) };
 }
 // % of the 32 "slots" filled, for the progress bars.
 function visionCompletion(v) {
   if (!v) return 0;
   const t = (s) => (s || "").trim().length > 0 ? 1 : 0;
   const l = (a) => (a && a.length > 0) ? 1 : 0;
+  const hz = (hk) => (l(v.horizon[hk].building) || t(v.horizon[hk].state)) ? 1 : 0;
   const slots = [
     t(v.who.segment), t(v.who.buyer), t(v.who.payer), l(v.who.profiles),
     t(v.current.position), l(v.current.baselines), l(v.current.working), l(v.current.notWorking),
@@ -1255,7 +1364,7 @@ function visionCompletion(v) {
     l(v.bets),
     t(v.model.packaging), t(v.model.pricing), t(v.model.expansion),
     l(v.goals),
-    l(v.horizon.now), l(v.horizon.next), l(v.horizon.outer),
+    hz("h0"), hz("h1"), hz("h2"),
     l(v.initiatives),
     t(v.alive.owner), t(v.alive.cadence),
   ];
@@ -1272,7 +1381,7 @@ const VISION_SECTIONS = [
   { n: 7, key: "bets", group: "C", title: "Strategic bets", guide: "The 2–4 big choices, each with its explicit tradeoff and any dependency we don't own." },
   { n: 8, key: "model", group: "D", title: "Business model / value capture", guide: "Packaging, pricing, and the expansion path; how the bets turn into revenue." },
   { n: 9, key: "goals", group: "D", title: "Goals / outcomes", guide: "Product and commercial targets, baseline to target, phased to the windows." },
-  { n: 10, key: "horizon", group: "E", title: "Horizon", guide: "Bets and initiatives mapped onto the same Now / Next / Outer windows." },
+  { n: 10, key: "horizon", group: "E", title: "Horizon", guide: "What we're concretely building across 0–3 / 3–6 / 6–12 months and where the product will be by each — with a customer-facing version." },
   { n: 11, key: "initiatives", group: "E", title: "Initiatives", guide: "The concrete programs that deliver each bet and what they require (team, budget, build vs. buy)." },
   { n: 12, key: "alive", group: "F", title: "Keeping it alive", guide: "Owner and re-baseline cadence; Now is firm, Next and Outer refreshed quarterly." },
 ];
@@ -5292,8 +5401,9 @@ function VisionPage({ subRoute, setSubRoute }) {
   useEffect(() => { if (!ready) return; clearTimeout(saveTimer.current); saveTimer.current = setTimeout(() => saveState("faria-vision-v1", vision), 1000); return () => clearTimeout(saveTimer.current); }, [vision, ready]);
 
   // Product lives in the 2nd URL segment (Vision has no sub-view): #/vision/openapply
-  const focusedProduct = SLUG_PRODUCT[subRoute] || null; // null = Overview
-  const setFocusedProduct = (prod) => setSubRoute(prod ? (PRODUCT_SLUG[prod] || "") : "");
+  const focusedProduct = VISION_SLUG_PRODUCT[subRoute] || null; // null = Overview
+  const setFocusedProduct = (prod) => setSubRoute(prod ? (VISION_PRODUCT_SLUG[prod] || "") : "");
+  const [horizonView, setHorizonView] = useState("internal"); // "internal" | "customer"
 
   const card = { background: F.surface, border: `1px solid ${F.border}`, borderRadius: 12, padding: "18px 22px", marginBottom: 18, boxShadow: F.shadowSm };
   const sectionTitle = { fontSize: 11, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 };
@@ -5315,6 +5425,11 @@ function VisionPage({ subRoute, setSubRoute }) {
   const arrAdd = (k, tmpl) => patchP(c => ({ ...c, [k]: [...(c[k] || []), tmpl()] }));
   const arrSet = (k, id, patch) => patchP(c => ({ ...c, [k]: c[k].map(x => x.id === id ? { ...x, ...patch } : x) }));
   const arrDel = (k, id) => patchP(c => ({ ...c, [k]: c[k].filter(x => x.id !== id) }));
+  // horizon: nested window (h0/h1/h2) → { building:[], state, customer }
+  const hzField = (hk, f, val) => patchP(c => ({ ...c, horizon: { ...c.horizon, [hk]: { ...c.horizon[hk], [f]: val } } }));
+  const hzAdd = (hk) => patchP(c => ({ ...c, horizon: { ...c.horizon, [hk]: { ...c.horizon[hk], building: [...(c.horizon[hk].building || []), ""] } } }));
+  const hzSet = (hk, i, val) => patchP(c => ({ ...c, horizon: { ...c.horizon, [hk]: { ...c.horizon[hk], building: c.horizon[hk].building.map((x, ix) => ix === i ? val : x) } } }));
+  const hzDel = (hk, i) => patchP(c => ({ ...c, horizon: { ...c.horizon, [hk]: { ...c.horizon[hk], building: c.horizon[hk].building.filter((_, ix) => ix !== i) } } }));
 
   // ── small render helpers ──
   const Labeled = (label, node, hint) => (
@@ -5443,7 +5558,43 @@ function VisionPage({ subRoute, setSubRoute }) {
       ))}
       <button onClick={() => arrAdd("goals", GOAL_TEMPLATE)} style={addBtn}>+ Add goal</button>
     </>);
-    if (key === "horizon") return WindowsTriptych("list");
+    if (key === "horizon") return (<>
+      <div style={{ display: "flex", gap: 6, marginBottom: 12, alignItems: "center", flexWrap: "wrap" }}>
+        <span style={{ fontSize: 11, color: F.muted2, fontWeight: 700 }}>View:</span>
+        {[["internal", "Internal detail"], ["customer", "Customer-facing"]].map(([k, label]) => (
+          <button key={k} onClick={() => setHorizonView(k)} style={{ padding: "4px 11px", borderRadius: 999, fontSize: 11.5, fontWeight: 700, cursor: "pointer", background: horizonView === k ? F.plum : F.surface, color: horizonView === k ? F.paper : F.plum, border: `1px solid ${horizonView === k ? F.plum : F.borderStrong}`, fontFamily: "inherit" }}>{label}</button>
+        ))}
+        <span style={{ fontSize: 10.5, color: F.muted2, fontStyle: "italic", marginLeft: 4 }}>{horizonView === "customer" ? "high-level, shareable with schools" : "what we're building + where the product will be"}</span>
+      </div>
+      <div style={numWrapStyle} className="vis-tript">
+        {HORIZON_WINDOWS.map(w => (
+          <div key={w.key} style={{ background: w.bg, border: `1px solid ${F.border}`, borderTop: `3px solid ${w.color}`, borderRadius: 10, padding: "12px 14px" }}>
+            <div style={{ fontSize: 13, fontWeight: 800, color: F.plum, marginBottom: 8 }}>{w.label}</div>
+            {horizonView === "customer" ? (
+              (v.horizon[w.key].customer || "").trim()
+                ? <div style={{ fontSize: 12.5, color: F.plum, lineHeight: 1.5 }}>{v.horizon[w.key].customer}</div>
+                : <div style={{ fontSize: 11.5, color: F.muted2, fontStyle: "italic" }}>No customer-facing summary yet — add one in Internal detail.</div>
+            ) : (<>
+              <div style={lb}>What we're building</div>
+              <div>
+                {(v.horizon[w.key].building || []).map((row, i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8, padding: "4px 0", borderBottom: `1px solid ${F.border}` }}>
+                    <span style={{ color: w.color, fontSize: 11, paddingTop: 7, flexShrink: 0 }}>◆</span>
+                    <textarea value={row} onChange={e => hzSet(w.key, i, e.target.value)} placeholder="Feature / thing we're shipping" rows={1} style={{ flex: 1, ...inp, border: "none", background: "transparent", resize: "vertical", padding: "5px 0", minWidth: 0 }} />
+                    <button onClick={() => hzDel(w.key, i)} style={removeBtn}>×</button>
+                  </div>
+                ))}
+                <button onClick={() => hzAdd(w.key)} style={addBtn}>+ Add</button>
+              </div>
+              <div style={{ ...lb, marginTop: 12 }}>Where the product will be</div>
+              <textarea value={v.horizon[w.key].state} onChange={e => hzField(w.key, "state", e.target.value)} placeholder={w.key === "h2" ? "e.g. in 12 months, OpenApply will…" : "Concrete state / outcome by end of this window"} rows={3} style={ta} />
+              <div style={{ ...lb, marginTop: 12 }}>Customer-facing summary</div>
+              <textarea value={v.horizon[w.key].customer} onChange={e => hzField(w.key, "customer", e.target.value)} placeholder="High-level, no jargon — the version you'd show a school." rows={2} style={{ ...ta, background: F.lightYellow + "44" }} />
+            </>)}
+          </div>
+        ))}
+      </div>
+    </>);
     if (key === "initiatives") return (<>
       {v.initiatives.length === 0 && <div style={{ fontSize: 11.5, color: F.muted2, fontStyle: "italic", marginBottom: 6 }}>No initiatives yet.</div>}
       {v.initiatives.map(it => (
@@ -5471,7 +5622,7 @@ function VisionPage({ subRoute, setSubRoute }) {
     return null;
   };
 
-  function WindowsTriptych(mode) {
+  function WindowsTriptych() {
     return (
       <div style={numWrapStyle} className="vis-tript">
         {VISION_WINDOWS.map(w => (
@@ -5480,9 +5631,7 @@ function VisionPage({ subRoute, setSubRoute }) {
               <span style={{ fontSize: 13, fontWeight: 800, color: F.plum }}>{w.label}</span>
               <span style={{ fontSize: 10, color: F.muted2, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em" }}>{w.sub}</span>
             </div>
-            {mode === "text"
-              ? <textarea value={v.vision[w.key]} onChange={e => objField("vision", w.key, e.target.value)} placeholder={w.key === "now" ? "Committed, high resolution — the product state we're building toward." : w.key === "next" ? "Shaped — direction set, specifics flexible." : "Directional hypothesis, held loosely."} rows={4} style={ta} />
-              : StrList("horizon", w.key, "A bet or initiative in this window", w.color)}
+            <textarea value={v.vision[w.key]} onChange={e => objField("vision", w.key, e.target.value)} placeholder={w.key === "now" ? "Committed, high resolution — the product state we're building toward." : w.key === "next" ? "Shaped — direction set, specifics flexible." : "Directional hypothesis, held loosely."} rows={4} style={ta} />
           </div>
         ))}
       </div>
@@ -5533,13 +5682,13 @@ function VisionPage({ subRoute, setSubRoute }) {
         <div style={card}>
           <div style={sectionTitle}>Each product's vision · pick one to open</div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 12 }}>
-            {MONZ_PRODUCTS.map(p => {
+            {VISION_PRODUCTS.map(p => {
               const pv = vision.products[p];
               const pct = visionCompletion(pv);
               return (
-                <div key={p} onClick={() => setFocusedProduct(p)} style={{ background: F.bg, border: `1px solid ${F.border}`, borderRadius: 10, padding: "14px 16px", cursor: "pointer", transition: "all 0.15s" }}>
+                <div key={p} onClick={() => setFocusedProduct(p)} style={{ background: p === "Example" ? F.lightYellow + "44" : F.bg, border: `1px solid ${p === "Example" ? F.yellow : F.border}`, borderRadius: 10, padding: "14px 16px", cursor: "pointer", transition: "all 0.15s" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
-                    <div style={{ fontSize: 15, fontWeight: 800, color: F.plum }}>{p}</div>
+                    <div style={{ fontSize: 15, fontWeight: 800, color: F.plum }}>{VISION_PRODUCT_LABEL[p] || p}</div>
                     <div style={{ fontSize: 11, fontWeight: 800, color: pct > 0 ? F.green : F.muted2 }}>{pct}%</div>
                   </div>
                   <div style={{ height: 6, background: F.border, borderRadius: 999, overflow: "hidden", marginBottom: 10 }}><div style={{ width: `${pct}%`, height: "100%", background: F.gradient }} /></div>
@@ -5563,12 +5712,12 @@ function VisionPage({ subRoute, setSubRoute }) {
                 ))}
               </tr></thead>
               <tbody>
-                {MONZ_PRODUCTS.map((p, ri) => {
+                {VISION_PRODUCTS.map((p, ri) => {
                   const pv = vision.products[p];
                   const cellTxt = (s) => <span style={{ display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden", lineHeight: 1.4 }}>{s}</span>;
                   return (
-                    <tr key={p} style={{ background: ri % 2 ? F.bg : F.surface, cursor: "pointer" }} onClick={() => setFocusedProduct(p)}>
-                      <td style={{ padding: "10px 12px", fontWeight: 800, color: F.plum, verticalAlign: "top" }}>{p}</td>
+                    <tr key={p} style={{ background: p === "Example" ? F.lightYellow + "44" : (ri % 2 ? F.bg : F.surface), cursor: "pointer" }} onClick={() => setFocusedProduct(p)}>
+                      <td style={{ padding: "10px 12px", fontWeight: 800, color: F.plum, verticalAlign: "top" }}>{VISION_PRODUCT_LABEL[p] || p}</td>
                       <td style={{ padding: "10px 12px", color: F.plum, verticalAlign: "top" }}>{cellTxt(trunc(pv.northStar.value))}</td>
                       <td style={{ padding: "10px 12px", color: F.muted, verticalAlign: "top", borderLeft: `2px solid ${F.plum}` }}>{cellTxt(trunc(pv.vision.now))}</td>
                       <td style={{ padding: "10px 12px", color: F.muted, verticalAlign: "top", borderLeft: `2px solid ${F.orange}` }}>{cellTxt(trunc(pv.vision.next))}</td>
@@ -5592,7 +5741,7 @@ function VisionPage({ subRoute, setSubRoute }) {
         {/* sticky-ish header */}
         <div style={{ ...card, borderLeft: `4px solid ${F.pink}` }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: 10 }}>
-            <div style={{ fontSize: 20, fontWeight: 800, color: F.plum }}>{focusedProduct} <span style={{ fontSize: 12, fontWeight: 700, color: F.muted2 }}>· Product Vision</span></div>
+            <div style={{ fontSize: 20, fontWeight: 800, color: F.plum }}>{VISION_PRODUCT_LABEL[focusedProduct] || focusedProduct} <span style={{ fontSize: 12, fontWeight: 700, color: F.muted2 }}>· Product Vision</span></div>
             <div style={{ fontSize: 11.5, color: F.muted }}>Owner: <strong style={{ color: F.plum }}>{v.alive.owner || "—"}</strong> · Cadence: <strong style={{ color: F.plum }}>{v.alive.cadence || "—"}</strong>{v.updatedAt && <> · Updated {v.updatedAt}</>}</div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 10 }}>
@@ -5638,7 +5787,7 @@ function VisionPage({ subRoute, setSubRoute }) {
       </div>
       <div style={{ display: "flex", gap: 6, marginBottom: 18, flexWrap: "wrap", alignItems: "center" }}>
         {chip("Overview", null, !focusedProduct)}
-        {MONZ_PRODUCTS.map(p => chip(p, p, focusedProduct === p))}
+        {VISION_PRODUCTS.map(p => chip(VISION_PRODUCT_LABEL[p] || p, p, focusedProduct === p))}
       </div>
       {focusedProduct ? productPage() : overview()}
     </>

@@ -4928,6 +4928,57 @@ function AiPodsPage({ subRoute, setSubRoute }) {
   const VALID_TABS = ["rhythm", "pipeline", "slicing", "pods", "compare", "watch"];
   const tab = VALID_TABS.includes(subRoute) ? subRoute : "rhythm";
   const setTab = (t) => setSubRoute(t);
+  // Pod types — the shapes we run. Hover a card for examples + "best for" detail.
+  const PODS = [
+    {
+      key: "pm", name: "PM Pod", pair: "PM + Engineer", color: F.pink,
+      roles: ["PM (owner)", "Dev", "QA"],
+      focus: "Planned roadmap features, end to end — the PM owns prioritisation, spec and estimate; the engineer builds.",
+      best: "Well-scoped work that maps to the quarter's committed bets. The default pod for planned roadmap delivery.",
+      egs: [{ who: "Po-Han & James", what: "quarterly roadmap items" }],
+    },
+    {
+      key: "design", name: "Design Pod", pair: "Designer + Engineer", color: F.lightPlum,
+      roles: ["Designer (owner)", "Dev", "QA"],
+      focus: "Design-led, UX-heavy work owned end to end by the designer — new surfaces, redesigns, high-polish flows.",
+      best: "When the win is the experience, not the data model. The designer prototypes in-flow with the engineer so design intent survives to production.",
+      egs: [{ who: "Nobi & Roman", what: "design-heavy projects — e.g. the new applicant profile" }],
+    },
+    {
+      key: "shock", name: "Shock Absorber Pod", pair: "Scrum Master + Engineer(s)", color: F.orange,
+      roles: ["Scrum Master (owner)", "Dev (×1–2)"],
+      focus: "Catches incoming bugs, ad-hoc tasks and interruptions so the other pods keep their focus — the buffer that protects everyone's week.",
+      best: "Rotated to avoid burnout. Measured by how much unplanned work it keeps off the planned pods — triage, fix, or route.",
+      egs: [{ who: "Ivan K & Arance", what: "incoming bugs & tasks" }],
+    },
+    {
+      key: "fde", name: "FDE Pod", pair: "Engineer + Customer Experience", color: F.yellow,
+      roles: ["Engineer", "CX / CS (requirements)"],
+      focus: "A forward-deployed engineer embedded with a customer or internal team to gather requirements and ship directly against them.",
+      best: "Integrations and bespoke requests where the spec lives with a specific team. CX/CS owns the relationship; the engineer ships.",
+      egs: [
+        { who: "Ken & the Standards Team", what: "internal Dromo integration / AI Forms — a good way to start, since we gather requirements with internal teams Ken already works with closely" },
+        { who: "James (dev), Steven & Alex (CS)", what: "working the Inspired Group's requests" },
+      ],
+    },
+    {
+      key: "infra", name: "Infrastructure Pod", pair: "Principal Engineer + Engineer / Support", color: F.green,
+      roles: ["Principal Eng (owner)", "Dev", "Support rep"],
+      focus: "Performance, reliability and recurring/systemic bugs — deep fixes that need senior judgment, paired with support signal on what's actually breaking.",
+      best: "\"This keeps coming back\" problems. Support brings the real-world failure patterns; the principal engineer drives the root-cause fix, not just a patch.",
+      egs: [
+        { who: "Stephen K & Ryan", what: "performance issues" },
+        { who: "James (dev) & Nardia (Support)", what: "recurring bugs — finding the best fix" },
+      ],
+    },
+    {
+      key: "exp", name: "Experiment Pod", pair: "Sales + PM + Engineer", color: F.plum,
+      roles: ["Sales", "PM", "Engineer"],
+      focus: "Fast, speculative bets — test a new idea, market or AI feature with a thin build before it earns a place on the roadmap.",
+      best: "Time-boxed; the output is validated learning (or a killed idea), not production polish. Sales brings demand signal, PM scopes, the engineer ships a slice.",
+      egs: [{ who: "Sales + PM + a dev", what: "spike a new AI feature to test willingness-to-pay before it enters a PM Pod's roadmap" }],
+    },
+  ];
   const styles = `
     .aip-wrap { font-family: 'Nunito Sans','Trebuchet MS',system-ui,sans-serif; color: ${F.plum}; line-height: 1.2; -webkit-font-smoothing: antialiased; }
 
@@ -5012,6 +5063,22 @@ function AiPodsPage({ subRoute, setSubRoute }) {
     .aip-pod.special p { color: ${F.paper}; opacity: 0.85; }
     .aip-pod.special .aip-pod-owner { color: ${F.paper}; opacity: 0.6; }
     .aip-pod.special .aip-pod-role { background: rgba(240,235,235,0.15); color: ${F.paper}; }
+
+    /* Pod types (hover-to-reveal) */
+    .aip-podx-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 14px; }
+    .aip-podx { background: #fff; border-radius: 14px; padding: 18px 20px; border: 1px solid rgba(55,2,60,0.08); border-top: 4px solid var(--pc, ${F.plum}); position: relative; cursor: help; outline: none; transition: box-shadow 0.15s ease, transform 0.15s ease; }
+    .aip-podx:hover, .aip-podx:focus-visible { box-shadow: 0 8px 22px rgba(55,2,60,0.10); transform: translateY(-2px); }
+    .aip-podx h4 { font-size: 17px; font-weight: 800; margin: 0 0 3px; color: ${F.plum}; }
+    .aip-podx-pair { font-size: 12px; font-weight: 700; color: ${F.muted2}; margin-bottom: 10px; }
+    .aip-podx-focus { font-size: 13px; font-weight: 500; color: ${F.plum}; opacity: 0.85; line-height: 1.45; margin: 0; }
+    .aip-podx-roles { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 11px; }
+    .aip-podx-role { font-size: 10.5px; font-weight: 700; background: ${F.paper}; padding: 3px 9px; border-radius: 20px; color: ${F.plum}; }
+    .aip-podx-pop { position: absolute; left: -1px; right: -1px; top: calc(100% + 6px); z-index: 30; background: #fff; border: 1px solid var(--pc, ${F.plum}); border-radius: 12px; padding: 14px 16px; box-shadow: ${F.shadowMd}; opacity: 0; visibility: hidden; transform: translateY(-4px); transition: opacity 0.16s ease, transform 0.16s ease, visibility 0.16s ease; }
+    .aip-podx:hover .aip-podx-pop, .aip-podx:focus-within .aip-podx-pop { opacity: 1; visibility: visible; transform: none; }
+    .aip-podx-pop h5 { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: ${F.muted2}; margin: 0 0 4px; }
+    .aip-podx-pop p { font-size: 12.5px; line-height: 1.5; color: ${F.plum}; margin: 0 0 11px; font-weight: 500; }
+    .aip-podx-eg { font-size: 12px; line-height: 1.45; color: ${F.plum}; padding-left: 11px; border-left: 2px solid var(--pc, ${F.plum}); margin-bottom: 7px; }
+    .aip-podx-eg:last-child { margin-bottom: 0; }
 
     /* Compare table */
     .aip-cmp { width: 100%; border-collapse: separate; border-spacing: 0; background: #fff; border-radius: 16px; overflow: hidden; border: 1px solid rgba(55,2,60,0.08); }
@@ -5292,42 +5359,26 @@ function AiPodsPage({ subRoute, setSubRoute }) {
         {/* PODS */}
         {tab === "pods" && (
           <section className="aip-panel">
-            <h2>Five pods, five owners</h2>
-            <p className="aip-lead">Each pod is small, isolated, and works end to end. The owner has total ownership of everything that enters the pod — prioritise, spec, estimate, prototype.</p>
-            <div className="aip-pods">
-              <div className="aip-pod p1">
-                <div className="aip-pod-owner">PM-owned</div>
-                <h4>Pod 1</h4>
-                <p>Feature &amp; product development, end to end. ~2 developers.</p>
-                <span className="aip-pod-role">PM + Dev (×2) + QA</span>
-              </div>
-              <div className="aip-pod p2">
-                <div className="aip-pod-owner">PM-owned</div>
-                <h4>Pod 2</h4>
-                <p>Feature &amp; product development, end to end. ~2 developers.</p>
-                <span className="aip-pod-role">PM + Dev (×2) + QA</span>
-              </div>
-              <div className="aip-pod p3">
-                <div className="aip-pod-owner">PM-owned</div>
-                <h4>Pod 3</h4>
-                <p>Feature &amp; product development, end to end. ~2 developers.</p>
-                <span className="aip-pod-role">PM + Dev (×2) + QA</span>
-              </div>
-              <div className="aip-pod p4">
-                <div className="aip-pod-owner">Designer-owned</div>
-                <h4>Design Pod</h4>
-                <p>Design-led work, owned end to end by our designer. ~2 developers.</p>
-                <span className="aip-pod-role">Designer + Dev (×2) + QA</span>
-              </div>
-              <div className="aip-pod special">
-                <div className="aip-pod-owner">Scrum Master-owned</div>
-                <h4>The Shock Absorber</h4>
-                <p>Catches bugs, tasks, and incoming distractions so the other pods keep their focus. The buffer that protects everyone else's week. ~2 developers.</p>
-                <span className="aip-pod-role">Owner + Dev (×2) + QA</span>
-              </div>
+            <h2>Pod types</h2>
+            <p className="aip-lead">Pods are small and own their work end to end — prioritise, spec, estimate, prototype. Different work needs different pairings; these are the shapes we run. <span style={{ fontStyle: "italic", opacity: 0.8 }}>Hover a pod for examples &amp; detail.</span></p>
+            <div className="aip-podx-grid">
+              {PODS.map(pod => (
+                <div key={pod.key} className="aip-podx" tabIndex={0} style={{ "--pc": pod.color }}>
+                  <h4>{pod.name}</h4>
+                  <div className="aip-podx-pair">{pod.pair}</div>
+                  <p className="aip-podx-focus">{pod.focus}</p>
+                  <div className="aip-podx-roles">{pod.roles.map((r, i) => <span key={i} className="aip-podx-role">{r}</span>)}</div>
+                  <div className="aip-podx-pop">
+                    <h5>Best for</h5>
+                    <p>{pod.best}</p>
+                    <h5>Examples</h5>
+                    {pod.egs.map((e, i) => <div key={i} className="aip-podx-eg"><b>{e.who}</b> — {e.what}</div>)}
+                  </div>
+                </div>
+              ))}
             </div>
             <div className="aip-flow-note" style={{ marginTop: 18 }}>
-              <b>Rotation guards against burnout.</b> Developers can rotate across pods depending on the work, so no one stays on the same load or the distractions pod indefinitely.
+              <b>Rotation guards against burnout.</b> Developers rotate across pods depending on the work, so no one stays on the same load — or the shock-absorber pod — indefinitely.
             </div>
           </section>
         )}

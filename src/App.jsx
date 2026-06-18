@@ -1196,14 +1196,22 @@ const visionRowId = () => "vr-" + Date.now().toString(36) + Math.floor(Math.rand
 const PROFILE_TEMPLATE = () => ({ id: visionRowId(), name: "", role: "", jtbd: "" });
 const BASELINE_TEMPLATE = () => ({ id: visionRowId(), metric: "", value: "" });
 const BET_TEMPLATE = () => ({ id: visionRowId(), choice: "", tradeoff: "", dependency: "" });
-const GOAL_TEMPLATE = () => ({ id: visionRowId(), kind: "product", metric: "", baseline: "", target: "", window: "now" });
-const INITIATIVE_TEMPLATE = () => ({ id: visionRowId(), program: "", deliversBet: "", team: "", budget: "", buildBuy: "build" });
+const GOAL_TEMPLATE = () => ({ id: visionRowId(), kind: "product", metric: "", baseline: "", target: "", window: "h0" });
+const INITIATIVE_TEMPLATE = () => ({ id: visionRowId(), program: "", deliversBet: "", owner: "", team: "", budget: "", buildBuy: "build", targetDate: "", status: "planned", success: "" });
+const MILESTONE_TEMPLATE = () => ({ id: visionRowId(), milestone: "", window: "h0", owner: "", status: "planned" });
+const VISION_STATUSES = ["planned", "in-progress", "shipped", "blocked"];
 // Horizon build windows (section 10) — nearer-term & detailed; distinct from Vision's Now/Next/Outer (section 3).
+// Also the timeline for Goals (#9) and Milestones (#12).
 const HORIZON_WINDOWS = [
   { key: "h0", label: "0–3 months", color: F.plum, bg: F.lightYellow + "55" },
   { key: "h1", label: "3–6 months", color: F.orange, bg: "rgba(247,139,67,0.08)" },
   { key: "h2", label: "6–12 months", color: F.green, bg: "rgba(26,122,62,0.08)" },
 ];
+const HORIZON_LABEL = Object.fromEntries(HORIZON_WINDOWS.map(w => [w.key, w.label]));
+const HORIZON_COLOR = Object.fromEntries(HORIZON_WINDOWS.map(w => [w.key, w.color]));
+// The 13 section keys, in order (drives the customer-facing per-card config).
+const VISION_SECTION_KEYS = ["who", "current", "vision", "northStar", "why", "whatTrue", "bets", "model", "goals", "horizon", "initiatives", "milestones", "alive"];
+const customerBlank = () => Object.fromEntries(VISION_SECTION_KEYS.map(k => [k, { on: false, text: "" }]));
 // Vision products = the 5 real products + a filled-out "Example" reference (OpenApply).
 const VISION_PRODUCTS = [...MONZ_PRODUCTS, "Example"];
 const VISION_PRODUCT_LABEL = { "Example": "📋 Example (OpenApply)" };
@@ -1220,9 +1228,12 @@ function BLANK_VISION() {
     bets: [],
     model: { packaging: "", pricing: "", expansion: "" },
     goals: [],
-    horizon: { h0: { building: [], state: "", customer: "" }, h1: { building: [], state: "", customer: "" }, h2: { building: [], state: "", customer: "" } },
+    horizon: { h0: { building: [], state: "" }, h1: { building: [], state: "" }, h2: { building: [], state: "" } },
     initiatives: [],
+    milestones: [],
     alive: { owner: "", cadence: "" },
+    customerIntro: "",
+    customer: customerBlank(),
     updatedAt: "",
   };
 }
@@ -1282,38 +1293,52 @@ function EXAMPLE_VISION() {
       expansion: "Land with Document Verification + draft replies → expand to agentic nurture + Analyst → bundle with ManageBac+ across the school.",
     },
     goals: [
-      { id: id("g1"), kind: "product", metric: "Pro 'wow' features live", baseline: "0", target: "3", window: "now" },
-      { id: id("g2"), kind: "product", metric: "Staff hours saved / school / month", baseline: "0", target: "5+", window: "now" },
-      { id: id("g3"), kind: "commercial", metric: "AI Pro attach (% of base)", baseline: "0%", target: "10%", window: "next" },
-      { id: id("g4"), kind: "commercial", metric: "AI Pro ARR", baseline: "$0", target: "first material ARR", window: "next" },
-      { id: id("g5"), kind: "product", metric: "Agentic tasks live (chase / nurture)", baseline: "0", target: "2", window: "outer" },
+      { id: id("g1"), kind: "product", metric: "Pro 'wow' features live", baseline: "0", target: "3", window: "h0" },
+      { id: id("g2"), kind: "product", metric: "Staff hours saved / school / month", baseline: "0", target: "5+", window: "h1" },
+      { id: id("g3"), kind: "commercial", metric: "AI Pro attach (% of base)", baseline: "0%", target: "10%", window: "h2" },
+      { id: id("g4"), kind: "commercial", metric: "AI Pro ARR", baseline: "$0", target: "first material ARR", window: "h2" },
+      { id: id("g5"), kind: "product", metric: "Agentic tasks live (chase / nurture)", baseline: "0", target: "2", window: "h2" },
     ],
     horizon: {
       h0: {
         building: ["AI Document Verification (cross-check docs vs the school's checklist)", "AI Writing Assistant — draft family replies", "Usage + cost tracking wired in via the proxy", "Essential vs Pro packaging + paywall"],
         state: "AI Pro is live for early-adopter schools with two flagship time-savers in production; we can measure hours saved and cost per school.",
-        customer: "OpenApply now drafts your family replies and auto-checks documents against your checklist — so your team spends time on families, not paperwork.",
       },
       h1: {
         building: ["AI Applicant Insights / summaries on every profile", "AI Lead Scoring", "Buy-more / allowance UI", "Schools sign-off + Pro onboarding"],
         state: "Pro covers review + screening end-to-end; attach is growing and the free→Pro funnel is instrumented.",
-        customer: "See every applicant at a glance and know who's most likely to enrol — review and screening done in minutes.",
       },
       h2: {
         building: ["Agentic nurture workflows (autonomous, human-in-the-loop follow-ups)", "AI Admissions Assistant for parents", "AI Analyst (natural-language reporting)", "MCP server (beta)"],
         state: "In 12 months OpenApply runs the admissions chase for you: autonomous follow-ups, conversational reporting, and applicant data open to the school's own AI via MCP.",
-        customer: "OpenApply becomes your AI admissions teammate — it follows up on missing documents, nurtures leads, and answers questions about your pipeline in plain language.",
       },
     },
     initiatives: [
-      { id: id("i1"), program: "AI Pro launch (Document Verification + draft replies)", deliversBet: "Bet 1 — packaged AI Pro", team: "OA product + AI eng", budget: "TBD", buildBuy: "build" },
-      { id: id("i2"), program: "Usage & cost tracking + caps", deliversBet: "Bet 1 — margin & pricing", team: "AI eng + OA backend", budget: "shared", buildBuy: "build" },
-      { id: id("i3"), program: "Agentic nurture workflows", deliversBet: "Bet 2 — agentic chase", team: "OA product + AI eng", budget: "TBD", buildBuy: "build" },
-      { id: id("i4"), program: "MCP server", deliversBet: "Bet 3 — open data", team: "OA backend", budget: "TBD", buildBuy: "build" },
+      { id: id("i1"), program: "AI Pro launch (Document Verification + draft replies)", deliversBet: "Bet 1 — packaged AI Pro", owner: "OA PM (Admissions AI)", team: "OA product + AI eng", budget: "TBD", buildBuy: "build", targetDate: "2026-09-01", status: "in-progress", success: "2 Pro features in prod; ≥5 pilot schools; measured hours saved." },
+      { id: id("i2"), program: "Usage & cost tracking + caps", deliversBet: "Bet 1 — margin & pricing", owner: "AI eng lead", team: "AI eng + OA backend", budget: "shared", buildBuy: "build", targetDate: "2026-08-15", status: "in-progress", success: "Per-user/school usage + cost recorded; pre-flight cap check live." },
+      { id: id("i3"), program: "Agentic nurture workflows", deliversBet: "Bet 2 — agentic chase", owner: "OA PM (Agentic)", team: "OA product + AI eng", budget: "TBD", buildBuy: "build", targetDate: "2026-12-15", status: "planned", success: "2 autonomous tasks live with human-in-the-loop; opt-in pilots." },
+      { id: id("i4"), program: "MCP server", deliversBet: "Bet 3 — open data", owner: "OA backend lead", team: "OA backend", budget: "TBD", buildBuy: "build", targetDate: "2027-03-01", status: "planned", success: "Beta MCP endpoint; security review passed; 1+ design partner." },
+    ],
+    milestones: [
+      { id: id("m1"), milestone: "AI Pro beta — Document Verification + draft replies live for pilot schools", window: "h0", owner: "OA PM", status: "in-progress" },
+      { id: id("m2"), milestone: "Usage + cost tracking and caps in production", window: "h0", owner: "AI eng", status: "in-progress" },
+      { id: id("m3"), milestone: "AI Pro GA — packaging, paywall, buy-more flow", window: "h1", owner: "OA PM + GTM", status: "planned" },
+      { id: id("m4"), milestone: "Applicant Insights + Lead Scoring shipped", window: "h1", owner: "OA product", status: "planned" },
+      { id: id("m5"), milestone: "Agentic nurture pilot (autonomous follow-ups)", window: "h2", owner: "OA PM (Agentic)", status: "planned" },
+      { id: id("m6"), milestone: "MCP server beta", window: "h2", owner: "OA backend", status: "planned" },
     ],
     alive: {
       owner: "VP Product, OpenApply (with AI eng + Finance).",
       cadence: "Now firm, reviewed monthly against usage + attach; Next/Outer refreshed quarterly. Feeds the AI Pods build cycle and the monetization finance model.",
+    },
+    customerIntro: "OpenApply is becoming your AI admissions teammate — saving your team hours every week and helping more families through the funnel, without adding headcount.",
+    customer: {
+      ...customerBlank(),
+      who: { on: true, text: "Built for international & private K-12 admissions teams — the people processing applications, chasing documents, and answering families every day." },
+      vision: { on: true, text: "Today: OpenApply drafts your family replies and auto-checks documents. Soon: it runs the chase for you — following up, nurturing leads, answering pipeline questions in plain language." },
+      northStar: { on: true, text: "Our measure of success is simple: hours of your team's time saved every month." },
+      horizon: { on: true, text: "Next 3 months: AI drafting + document checking. By 6 months: applicant summaries and who's-likely-to-enrol scoring. By 12 months: an AI teammate that follows up and reports for you." },
+      goals: { on: true, text: "By next school year: AI Pro saving teams 5+ hours/week, covering review, screening and follow-up." },
     },
     updatedAt: "2026-06-18",
   };
@@ -1326,8 +1351,10 @@ function mergeVisionProduct(saved, seed) {
   if (!saved) return b;
   const oldHz = saved.horizon && saved.horizon.h0 === undefined && (saved.horizon.now || saved.horizon.next || saved.horizon.outer);
   const hz = (hk, oldKey) => oldHz
-    ? { building: saved.horizon[oldKey] || [], state: "", customer: "" }
-    : { building: saved.horizon?.[hk]?.building ?? b.horizon[hk].building, state: saved.horizon?.[hk]?.state ?? b.horizon[hk].state, customer: saved.horizon?.[hk]?.customer ?? b.horizon[hk].customer };
+    ? { building: saved.horizon[oldKey] || [], state: "" }
+    : { building: saved.horizon?.[hk]?.building ?? b.horizon[hk].building, state: saved.horizon?.[hk]?.state ?? b.horizon[hk].state };
+  const savedCust = saved.customer || {};
+  const cust = Object.fromEntries(VISION_SECTION_KEYS.map(k => [k, { on: savedCust[k]?.on ?? (b.customer?.[k]?.on || false), text: savedCust[k]?.text ?? (b.customer?.[k]?.text || "") }]));
   return {
     who: { ...b.who, ...(saved.who || {}), profiles: saved.who?.profiles ?? b.who.profiles },
     current: { ...b.current, ...(saved.current || {}), baselines: saved.current?.baselines ?? b.current.baselines, working: saved.current?.working ?? b.current.working, notWorking: saved.current?.notWorking ?? b.current.notWorking },
@@ -1340,7 +1367,10 @@ function mergeVisionProduct(saved, seed) {
     goals: saved.goals ?? b.goals,
     horizon: { h0: hz("h0", "now"), h1: hz("h1", "next"), h2: hz("h2", "outer") },
     initiatives: saved.initiatives ?? b.initiatives,
+    milestones: saved.milestones ?? b.milestones,
     alive: { ...b.alive, ...(saved.alive || {}) },
+    customerIntro: saved.customerIntro ?? b.customerIntro ?? "",
+    customer: cust,
     updatedAt: saved.updatedAt || b.updatedAt || "",
   };
 }
@@ -1365,7 +1395,7 @@ function visionCompletion(v) {
     t(v.model.packaging), t(v.model.pricing), t(v.model.expansion),
     l(v.goals),
     hz("h0"), hz("h1"), hz("h2"),
-    l(v.initiatives),
+    l(v.initiatives), l(v.milestones),
     t(v.alive.owner), t(v.alive.cadence),
   ];
   return Math.round(slots.reduce((s, x) => s + x, 0) / slots.length * 100);
@@ -1380,10 +1410,11 @@ const VISION_SECTIONS = [
   { n: 6, key: "whatTrue", group: "C", title: "What has to be true", guide: "Core assumptions, top risks, what we're watching, and the triggers to double down, pivot, or kill a bet." },
   { n: 7, key: "bets", group: "C", title: "Strategic bets", guide: "The 2–4 big choices, each with its explicit tradeoff and any dependency we don't own." },
   { n: 8, key: "model", group: "D", title: "Business model / value capture", guide: "Packaging, pricing, and the expansion path; how the bets turn into revenue." },
-  { n: 9, key: "goals", group: "D", title: "Goals / outcomes", guide: "Product and commercial targets, baseline to target, phased to the windows." },
-  { n: 10, key: "horizon", group: "E", title: "Horizon", guide: "What we're concretely building across 0–3 / 3–6 / 6–12 months and where the product will be by each — with a customer-facing version." },
-  { n: 11, key: "initiatives", group: "E", title: "Initiatives", guide: "The concrete programs that deliver each bet and what they require (team, budget, build vs. buy)." },
-  { n: 12, key: "alive", group: "F", title: "Keeping it alive", guide: "Owner and re-baseline cadence; Now is firm, Next and Outer refreshed quarterly." },
+  { n: 9, key: "goals", group: "D", title: "Goals / outcomes", guide: "Product and commercial targets, baseline to target, phased to the 0–3 / 3–6 / 6–12 month horizon windows." },
+  { n: 10, key: "horizon", group: "E", title: "Horizon", guide: "What we're concretely building across 0–3 / 3–6 / 6–12 months and where the product will be by each." },
+  { n: 11, key: "initiatives", group: "E", title: "Initiatives", guide: "The concrete programs that deliver each bet — owner, team, build vs. buy, target date, status, and what 'done' means." },
+  { n: 12, key: "milestones", group: "E", title: "Milestones & commitments", guide: "Dated, tangible deliverables mapped to the horizon windows — the explicit commitments of what ships when and who owns it." },
+  { n: 13, key: "alive", group: "F", title: "Keeping it alive", guide: "Owner and re-baseline cadence; Now is firm, Next and Outer refreshed quarterly." },
 ];
 const VISION_GROUPS = { A: "Where we stand", B: "Where we're going", C: "What must hold", D: "How it pays", E: "How we execute", F: "How we sustain it" };
 
@@ -5402,8 +5433,8 @@ function VisionPage({ subRoute, setSubRoute }) {
 
   // Product lives in the 2nd URL segment (Vision has no sub-view): #/vision/openapply
   const focusedProduct = VISION_SLUG_PRODUCT[subRoute] || null; // null = Overview
-  const setFocusedProduct = (prod) => setSubRoute(prod ? (VISION_PRODUCT_SLUG[prod] || "") : "");
-  const [horizonView, setHorizonView] = useState("internal"); // "internal" | "customer"
+  const setFocusedProduct = (prod) => { setViewMode("read"); setSubRoute(prod ? (VISION_PRODUCT_SLUG[prod] || "") : ""); };
+  const [viewMode, setViewMode] = useState("read"); // "read" (visual doc) | "edit" | "customer"
 
   const card = { background: F.surface, border: `1px solid ${F.border}`, borderRadius: 12, padding: "18px 22px", marginBottom: 18, boxShadow: F.shadowSm };
   const sectionTitle = { fontSize: 11, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 };
@@ -5425,11 +5456,14 @@ function VisionPage({ subRoute, setSubRoute }) {
   const arrAdd = (k, tmpl) => patchP(c => ({ ...c, [k]: [...(c[k] || []), tmpl()] }));
   const arrSet = (k, id, patch) => patchP(c => ({ ...c, [k]: c[k].map(x => x.id === id ? { ...x, ...patch } : x) }));
   const arrDel = (k, id) => patchP(c => ({ ...c, [k]: c[k].filter(x => x.id !== id) }));
-  // horizon: nested window (h0/h1/h2) → { building:[], state, customer }
+  // horizon: nested window (h0/h1/h2) → { building:[], state }
   const hzField = (hk, f, val) => patchP(c => ({ ...c, horizon: { ...c.horizon, [hk]: { ...c.horizon[hk], [f]: val } } }));
   const hzAdd = (hk) => patchP(c => ({ ...c, horizon: { ...c.horizon, [hk]: { ...c.horizon[hk], building: [...(c.horizon[hk].building || []), ""] } } }));
   const hzSet = (hk, i, val) => patchP(c => ({ ...c, horizon: { ...c.horizon, [hk]: { ...c.horizon[hk], building: c.horizon[hk].building.map((x, ix) => ix === i ? val : x) } } }));
   const hzDel = (hk, i) => patchP(c => ({ ...c, horizon: { ...c.horizon, [hk]: { ...c.horizon[hk], building: c.horizon[hk].building.filter((_, ix) => ix !== i) } } }));
+  // customer-facing config: per-section { on, text } + a top-level intro
+  const custSet = (k, patch) => patchP(c => ({ ...c, customer: { ...c.customer, [k]: { ...c.customer[k], ...patch } } }));
+  const setIntro = (val) => patchP(c => ({ ...c, customerIntro: val }));
 
   // ── small render helpers ──
   const Labeled = (label, node, hint) => (
@@ -5550,51 +5584,36 @@ function VisionPage({ subRoute, setSubRoute }) {
           <input value={g.baseline} onChange={e => arrSet("goals", g.id, { baseline: e.target.value })} placeholder="Baseline" style={{ ...inp, width: 100 }} />
           <span style={{ color: F.muted2 }}>→</span>
           <input value={g.target} onChange={e => arrSet("goals", g.id, { target: e.target.value })} placeholder="Target" style={{ ...inp, width: 100 }} />
-          <select value={g.window} onChange={e => arrSet("goals", g.id, { window: e.target.value })} style={{ ...inp, width: 90, cursor: "pointer" }}>
-            <option value="now">Now</option><option value="next">Next</option><option value="outer">Outer</option>
+          <select value={HORIZON_LABEL[g.window] ? g.window : "h0"} onChange={e => arrSet("goals", g.id, { window: e.target.value })} style={{ ...inp, width: 120, cursor: "pointer" }}>
+            {HORIZON_WINDOWS.map(w => <option key={w.key} value={w.key}>{w.label}</option>)}
           </select>
           <button onClick={() => arrDel("goals", g.id)} style={removeBtn}>×</button>
         </div>
       ))}
       <button onClick={() => arrAdd("goals", GOAL_TEMPLATE)} style={addBtn}>+ Add goal</button>
     </>);
-    if (key === "horizon") return (<>
-      <div style={{ display: "flex", gap: 6, marginBottom: 12, alignItems: "center", flexWrap: "wrap" }}>
-        <span style={{ fontSize: 11, color: F.muted2, fontWeight: 700 }}>View:</span>
-        {[["internal", "Internal detail"], ["customer", "Customer-facing"]].map(([k, label]) => (
-          <button key={k} onClick={() => setHorizonView(k)} style={{ padding: "4px 11px", borderRadius: 999, fontSize: 11.5, fontWeight: 700, cursor: "pointer", background: horizonView === k ? F.plum : F.surface, color: horizonView === k ? F.paper : F.plum, border: `1px solid ${horizonView === k ? F.plum : F.borderStrong}`, fontFamily: "inherit" }}>{label}</button>
-        ))}
-        <span style={{ fontSize: 10.5, color: F.muted2, fontStyle: "italic", marginLeft: 4 }}>{horizonView === "customer" ? "high-level, shareable with schools" : "what we're building + where the product will be"}</span>
-      </div>
+    if (key === "horizon") return (
       <div style={numWrapStyle} className="vis-tript">
         {HORIZON_WINDOWS.map(w => (
           <div key={w.key} style={{ background: w.bg, border: `1px solid ${F.border}`, borderTop: `3px solid ${w.color}`, borderRadius: 10, padding: "12px 14px" }}>
             <div style={{ fontSize: 13, fontWeight: 800, color: F.plum, marginBottom: 8 }}>{w.label}</div>
-            {horizonView === "customer" ? (
-              (v.horizon[w.key].customer || "").trim()
-                ? <div style={{ fontSize: 12.5, color: F.plum, lineHeight: 1.5 }}>{v.horizon[w.key].customer}</div>
-                : <div style={{ fontSize: 11.5, color: F.muted2, fontStyle: "italic" }}>No customer-facing summary yet — add one in Internal detail.</div>
-            ) : (<>
-              <div style={lb}>What we're building</div>
-              <div>
-                {(v.horizon[w.key].building || []).map((row, i) => (
-                  <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8, padding: "4px 0", borderBottom: `1px solid ${F.border}` }}>
-                    <span style={{ color: w.color, fontSize: 11, paddingTop: 7, flexShrink: 0 }}>◆</span>
-                    <textarea value={row} onChange={e => hzSet(w.key, i, e.target.value)} placeholder="Feature / thing we're shipping" rows={1} style={{ flex: 1, ...inp, border: "none", background: "transparent", resize: "vertical", padding: "5px 0", minWidth: 0 }} />
-                    <button onClick={() => hzDel(w.key, i)} style={removeBtn}>×</button>
-                  </div>
-                ))}
-                <button onClick={() => hzAdd(w.key)} style={addBtn}>+ Add</button>
-              </div>
-              <div style={{ ...lb, marginTop: 12 }}>Where the product will be</div>
-              <textarea value={v.horizon[w.key].state} onChange={e => hzField(w.key, "state", e.target.value)} placeholder={w.key === "h2" ? "e.g. in 12 months, OpenApply will…" : "Concrete state / outcome by end of this window"} rows={3} style={ta} />
-              <div style={{ ...lb, marginTop: 12 }}>Customer-facing summary</div>
-              <textarea value={v.horizon[w.key].customer} onChange={e => hzField(w.key, "customer", e.target.value)} placeholder="High-level, no jargon — the version you'd show a school." rows={2} style={{ ...ta, background: F.lightYellow + "44" }} />
-            </>)}
+            <div style={lb}>What we're building</div>
+            <div>
+              {(v.horizon[w.key].building || []).map((row, i) => (
+                <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8, padding: "4px 0", borderBottom: `1px solid ${F.border}` }}>
+                  <span style={{ color: w.color, fontSize: 11, paddingTop: 7, flexShrink: 0 }}>◆</span>
+                  <textarea value={row} onChange={e => hzSet(w.key, i, e.target.value)} placeholder="Feature / thing we're shipping" rows={1} style={{ flex: 1, ...inp, border: "none", background: "transparent", resize: "vertical", padding: "5px 0", minWidth: 0 }} />
+                  <button onClick={() => hzDel(w.key, i)} style={removeBtn}>×</button>
+                </div>
+              ))}
+              <button onClick={() => hzAdd(w.key)} style={addBtn}>+ Add</button>
+            </div>
+            <div style={{ ...lb, marginTop: 12 }}>Where the product will be</div>
+            <textarea value={v.horizon[w.key].state} onChange={e => hzField(w.key, "state", e.target.value)} placeholder={w.key === "h2" ? "e.g. in 12 months, OpenApply will…" : "Concrete state / outcome by end of this window"} rows={3} style={ta} />
           </div>
         ))}
       </div>
-    </>);
+    );
     if (key === "initiatives") return (<>
       {v.initiatives.length === 0 && <div style={{ fontSize: 11.5, color: F.muted2, fontStyle: "italic", marginBottom: 6 }}>No initiatives yet.</div>}
       {v.initiatives.map(it => (
@@ -5604,16 +5623,43 @@ function VisionPage({ subRoute, setSubRoute }) {
             <input value={it.deliversBet} onChange={e => arrSet("initiatives", it.id, { deliversBet: e.target.value })} placeholder="Delivers which bet?" style={{ ...inp, flex: 1 }} />
             <button onClick={() => arrDel("initiatives", it.id)} style={removeBtn}>×</button>
           </div>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 8 }}>
+            <input value={it.owner} onChange={e => arrSet("initiatives", it.id, { owner: e.target.value })} placeholder="Owner / DRI" style={{ ...inp, flex: 1, minWidth: 120 }} />
             <input value={it.team} onChange={e => arrSet("initiatives", it.id, { team: e.target.value })} placeholder="Team" style={{ ...inp, flex: 1, minWidth: 120 }} />
-            <input value={it.budget} onChange={e => arrSet("initiatives", it.id, { budget: e.target.value })} placeholder="Budget" style={{ ...inp, flex: 1, minWidth: 120 }} />
-            <select value={it.buildBuy} onChange={e => arrSet("initiatives", it.id, { buildBuy: e.target.value })} style={{ ...inp, width: 110, cursor: "pointer" }}>
+            <input value={it.budget} onChange={e => arrSet("initiatives", it.id, { budget: e.target.value })} placeholder="Budget" style={{ ...inp, flex: 1, minWidth: 100 }} />
+            <select value={it.buildBuy} onChange={e => arrSet("initiatives", it.id, { buildBuy: e.target.value })} style={{ ...inp, width: 100, cursor: "pointer" }}>
               <option value="build">Build</option><option value="buy">Buy</option><option value="partner">Partner</option>
             </select>
+          </div>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+            <span style={{ fontSize: 10.5, color: F.muted2, fontWeight: 700 }}>Target</span>
+            <input type="date" value={it.targetDate || ""} onChange={e => arrSet("initiatives", it.id, { targetDate: e.target.value })} style={{ ...inp, width: 150 }} />
+            <select value={it.status || "planned"} onChange={e => arrSet("initiatives", it.id, { status: e.target.value })} style={{ ...inp, width: 120, cursor: "pointer" }}>
+              {VISION_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+            <input value={it.success || ""} onChange={e => arrSet("initiatives", it.id, { success: e.target.value })} placeholder="Definition of done / success metric" style={{ ...inp, flex: 1, minWidth: 180 }} />
           </div>
         </div>
       ))}
       <button onClick={() => arrAdd("initiatives", INITIATIVE_TEMPLATE)} style={addBtn}>+ Add initiative</button>
+    </>);
+    if (key === "milestones") return (<>
+      {v.milestones.length === 0 && <div style={{ fontSize: 11.5, color: F.muted2, fontStyle: "italic", marginBottom: 6 }}>No milestones yet — add the dated commitments of what ships when.</div>}
+      {v.milestones.map(m => (
+        <div key={m.id} style={{ display: "flex", gap: 8, marginBottom: 6, flexWrap: "wrap", alignItems: "center" }}>
+          <span style={{ width: 9, height: 9, borderRadius: "50%", background: HORIZON_COLOR[m.window] || F.muted2, flexShrink: 0 }} />
+          <input value={m.milestone} onChange={e => arrSet("milestones", m.id, { milestone: e.target.value })} placeholder="Concrete deliverable" style={{ ...inp, flex: 2, minWidth: 200, fontWeight: 600 }} />
+          <select value={HORIZON_LABEL[m.window] ? m.window : "h0"} onChange={e => arrSet("milestones", m.id, { window: e.target.value })} style={{ ...inp, width: 120, cursor: "pointer" }}>
+            {HORIZON_WINDOWS.map(w => <option key={w.key} value={w.key}>{w.label}</option>)}
+          </select>
+          <input value={m.owner} onChange={e => arrSet("milestones", m.id, { owner: e.target.value })} placeholder="Owner" style={{ ...inp, width: 130 }} />
+          <select value={m.status || "planned"} onChange={e => arrSet("milestones", m.id, { status: e.target.value })} style={{ ...inp, width: 120, cursor: "pointer" }}>
+            {VISION_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+          </select>
+          <button onClick={() => arrDel("milestones", m.id)} style={removeBtn}>×</button>
+        </div>
+      ))}
+      <button onClick={() => arrAdd("milestones", MILESTONE_TEMPLATE)} style={addBtn}>+ Add milestone</button>
     </>);
     if (key === "alive") return (<div style={numWrapStyle}>
       {Labeled("Owner", Field("alive", "owner", "Who keeps this vision alive?", 1))}
@@ -5637,6 +5683,96 @@ function VisionPage({ subRoute, setSubRoute }) {
       </div>
     );
   }
+
+  // ── read-only (visual document) renderers ──
+  const roMuted = <span style={{ color: F.muted2, fontStyle: "italic", fontSize: 12.5 }}>Not filled in yet.</span>;
+  const roPara = (txt, size = 13) => <div style={{ fontSize: size, color: F.plum, lineHeight: 1.55 }}>{txt}</div>;
+  const roKV = (label, txt) => (txt && txt.trim()) ? <div style={{ marginBottom: 10 }}><div style={lb}>{label}</div>{roPara(txt)}</div> : null;
+  const roBullets = (arr, accent = F.pink) => {
+    const items = (arr || []).filter(x => (x || "").trim());
+    if (!items.length) return null;
+    return <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>{items.map((x, i) => (<div key={i} style={{ display: "flex", gap: 8, fontSize: 12.5, color: F.plum, lineHeight: 1.5 }}><span style={{ color: accent, flexShrink: 0 }}>◆</span>{x}</div>))}</div>;
+  };
+  const statusChip = (st) => { const c = st === "shipped" ? F.green : st === "in-progress" ? F.orange : st === "blocked" ? F.pink : F.muted2; return <span style={{ fontSize: 9.5, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.04em", color: "#fff", background: c, padding: "2px 7px", borderRadius: 4 }}>{st}</span>; };
+  const winCard = (w, body) => <div key={w.key} style={{ background: w.bg, border: `1px ${w.dash ? "dashed" : "solid"} ${F.border}`, borderTop: `3px solid ${w.color}`, borderRadius: 10, padding: "12px 14px" }}>{body}</div>;
+
+  const renderRead = (key) => {
+    const empty = (cond) => cond ? roMuted : null;
+    if (key === "who") return (<>
+      {roKV("Segment", v.who.segment)}{roKV("Buyer", v.who.buyer)}{roKV("Payer", v.who.payer)}
+      {v.who.profiles.filter(p => p.name || p.role || p.jtbd).map(p => (
+        <div key={p.id} style={{ background: F.bg, border: `1px solid ${F.border}`, borderRadius: 8, padding: "9px 12px", marginTop: 8 }}>
+          <div style={{ fontSize: 13, fontWeight: 800, color: F.plum }}>{p.name || "—"} {p.role && <span style={{ fontSize: 11, fontWeight: 700, color: F.muted2 }}>· {p.role}</span>}</div>
+          {p.jtbd && <div style={{ fontSize: 12.5, color: F.muted, lineHeight: 1.5, marginTop: 3 }}>{p.jtbd}</div>}
+        </div>
+      ))}
+      {empty(!v.who.segment && !v.who.buyer && !v.who.payer && !v.who.profiles.length)}
+    </>);
+    if (key === "current") return (<>
+      {roKV("Position & traction", v.current.position)}
+      {v.current.baselines.filter(b => b.metric || b.value).length > 0 && <div style={{ marginBottom: 10 }}><div style={lb}>Baselines</div><div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>{v.current.baselines.filter(b => b.metric || b.value).map(b => <span key={b.id} style={{ fontSize: 12, color: F.plum, background: F.bg, border: `1px solid ${F.border}`, borderRadius: 6, padding: "4px 9px" }}><strong>{b.metric}</strong> {b.value}</span>)}</div></div>}
+      <div style={numWrapStyle}>
+        {v.current.working.filter(x => x.trim()).length > 0 && <div><div style={lb}>Working</div>{roBullets(v.current.working, F.green)}</div>}
+        {v.current.notWorking.filter(x => x.trim()).length > 0 && <div><div style={lb}>Not working</div>{roBullets(v.current.notWorking, F.pink)}</div>}
+      </div>
+      {empty(!v.current.position && !v.current.baselines.length && !v.current.working.length && !v.current.notWorking.length)}
+    </>);
+    if (key === "vision") return (<div style={numWrapStyle} className="vis-tript">{VISION_WINDOWS.map(w => winCard(w, <><div style={{ fontSize: 13, fontWeight: 800, color: F.plum }}>{w.label} <span style={{ fontSize: 10, color: F.muted2, fontWeight: 700 }}>{w.sub}</span></div><div style={{ marginTop: 6 }}>{v.vision[w.key]?.trim() ? roPara(v.vision[w.key], 12.5) : roMuted}</div></>))}</div>);
+    if (key === "northStar") return (<div style={numWrapStyle}>
+      <div style={{ background: F.lightYellow + "55", border: `1px solid ${F.yellow}`, borderRadius: 10, padding: "12px 14px" }}><div style={lb}>Value measure</div>{v.northStar.value?.trim() ? roPara(v.northStar.value) : roMuted}</div>
+      <div style={{ background: F.bg, border: `1px solid ${F.border}`, borderRadius: 10, padding: "12px 14px" }}><div style={lb}>Commercial measure</div>{v.northStar.commercial?.trim() ? roPara(v.northStar.commercial) : roMuted}</div>
+    </div>);
+    if (key === "why") return (<div style={numWrapStyle}>{roKV("Why now", v.why.whyNow)}{roKV("Why us", v.why.whyUs)}{empty(!v.why.whyNow && !v.why.whyUs)}</div>);
+    if (key === "whatTrue") return (<>
+      <div style={numWrapStyle}>
+        {v.whatTrue.assumptions.filter(x => x.trim()).length > 0 && <div><div style={lb}>Assumptions</div>{roBullets(v.whatTrue.assumptions, F.plum)}</div>}
+        {v.whatTrue.risks.filter(x => x.trim()).length > 0 && <div><div style={lb}>Risks</div>{roBullets(v.whatTrue.risks, F.pink)}</div>}
+        {v.whatTrue.watching.filter(x => x.trim()).length > 0 && <div><div style={lb}>Watching</div>{roBullets(v.whatTrue.watching, F.orange)}</div>}
+      </div>
+      {(v.whatTrue.doubleDown || v.whatTrue.pivot || v.whatTrue.kill) && <div style={{ ...numWrapStyle, marginTop: 10 }}>{roKV("Double down if", v.whatTrue.doubleDown)}{roKV("Pivot if", v.whatTrue.pivot)}{roKV("Kill if", v.whatTrue.kill)}</div>}
+    </>);
+    if (key === "bets") return v.bets.length ? (<>{v.bets.map((b, i) => (
+      <div key={b.id} style={{ background: F.bg, border: `1px solid ${F.border}`, borderTop: `3px solid ${F.pink}`, borderRadius: 8, padding: "11px 13px", marginBottom: 8 }}>
+        <div style={{ fontSize: 13.5, fontWeight: 800, color: F.plum, marginBottom: 6 }}><span style={{ color: F.pink }}>{i + 1}.</span> {b.choice || "—"}</div>
+        {b.tradeoff && <div style={{ fontSize: 12.5, color: F.muted, lineHeight: 1.5 }}><strong style={{ color: F.plum }}>Tradeoff:</strong> {b.tradeoff}</div>}
+        {b.dependency && <div style={{ fontSize: 12.5, color: F.muted, lineHeight: 1.5 }}><strong style={{ color: F.plum }}>Dependency:</strong> {b.dependency}</div>}
+      </div>
+    ))}</>) : roMuted;
+    if (key === "model") return (<div style={numWrapStyle}>{roKV("Packaging", v.model.packaging)}{roKV("Pricing", v.model.pricing)}{roKV("Expansion", v.model.expansion)}{empty(!v.model.packaging && !v.model.pricing && !v.model.expansion)}</div>);
+    if (key === "goals") return v.goals.length ? (<div style={numWrapStyle} className="vis-tript">{HORIZON_WINDOWS.map(w => { const gs = v.goals.filter(g => g.window === w.key); return winCard(w, <><div style={{ fontSize: 12.5, fontWeight: 800, color: F.plum, marginBottom: 6 }}>{w.label}</div>{gs.length ? gs.map(g => <div key={g.id} style={{ fontSize: 12, color: F.plum, lineHeight: 1.5, marginBottom: 4 }}><span style={{ fontSize: 9, fontWeight: 800, textTransform: "uppercase", color: F.muted2 }}>{g.kind}</span> {g.metric}: <strong>{g.baseline || "?"} → {g.target || "?"}</strong></div>) : <span style={{ fontSize: 11.5, color: F.muted2, fontStyle: "italic" }}>—</span>}</>); })}</div>) : roMuted;
+    if (key === "horizon") return (<div style={numWrapStyle} className="vis-tript">{HORIZON_WINDOWS.map(w => winCard(w, <><div style={{ fontSize: 13, fontWeight: 800, color: F.plum, marginBottom: 6 }}>{w.label}</div>{roBullets(v.horizon[w.key].building, w.color) || <span style={{ fontSize: 11.5, color: F.muted2, fontStyle: "italic" }}>—</span>}{v.horizon[w.key].state?.trim() && <div style={{ marginTop: 8, fontSize: 12, color: F.muted, lineHeight: 1.5, fontStyle: "italic" }}>{v.horizon[w.key].state}</div>}</>))}</div>);
+    if (key === "initiatives") return v.initiatives.length ? (<>{v.initiatives.map(it => (
+      <div key={it.id} style={{ background: F.bg, border: `1px solid ${F.border}`, borderRadius: 8, padding: "11px 13px", marginBottom: 8 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 4 }}><div style={{ fontSize: 13, fontWeight: 800, color: F.plum }}>{it.program || "—"}</div>{statusChip(it.status || "planned")}{it.targetDate && <span style={{ fontSize: 11, color: F.muted2 }}>· {it.targetDate}</span>}</div>
+        <div style={{ fontSize: 12, color: F.muted, lineHeight: 1.5 }}>{[it.deliversBet && `Delivers: ${it.deliversBet}`, it.owner && `Owner: ${it.owner}`, it.team && `Team: ${it.team}`, it.buildBuy && `(${it.buildBuy})`].filter(Boolean).join(" · ")}</div>
+        {it.success && <div style={{ fontSize: 12, color: F.muted, lineHeight: 1.5, marginTop: 2 }}><strong style={{ color: F.plum }}>Done =</strong> {it.success}</div>}
+      </div>
+    ))}</>) : roMuted;
+    if (key === "milestones") return v.milestones.length ? (<div style={numWrapStyle} className="vis-tript">{HORIZON_WINDOWS.map(w => { const ms = v.milestones.filter(m => m.window === w.key); return winCard(w, <><div style={{ fontSize: 12.5, fontWeight: 800, color: F.plum, marginBottom: 6 }}>{w.label}</div>{ms.length ? ms.map(m => <div key={m.id} style={{ fontSize: 12, color: F.plum, lineHeight: 1.45, marginBottom: 7 }}><div style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 2 }}>{statusChip(m.status || "planned")}{m.owner && <span style={{ fontSize: 10.5, color: F.muted2 }}>{m.owner}</span>}</div>{m.milestone}</div>) : <span style={{ fontSize: 11.5, color: F.muted2, fontStyle: "italic" }}>—</span>}</>); })}</div>) : roMuted;
+    if (key === "alive") return (<div style={numWrapStyle}>{roKV("Owner", v.alive.owner)}{roKV("Cadence", v.alive.cadence)}{empty(!v.alive.owner && !v.alive.cadence)}</div>);
+    return null;
+  };
+
+  // ── customer-facing view (only the sections toggled on, showing their curated text) ──
+  const customerView = () => {
+    const included = VISION_SECTIONS.filter(s => v.customer[s.key]?.on && (v.customer[s.key].text || "").trim());
+    return (
+      <>
+        <div style={{ ...card, background: `linear-gradient(135deg, ${F.plum}, ${F.lightPlum})`, border: "none", color: F.paper, padding: "24px 26px" }}>
+          <div style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase", color: F.yellow, marginBottom: 8 }}>{focusedProduct === "Example" ? "OpenApply" : focusedProduct} · Vision</div>
+          <p style={{ margin: 0, fontSize: 15, lineHeight: 1.6, color: F.paper, opacity: 0.96, maxWidth: 780 }}>{v.customerIntro?.trim() || <span style={{ fontStyle: "italic", opacity: 0.8 }}>Add a customer-facing intro in Edit mode.</span>}</p>
+        </div>
+        {included.length === 0
+          ? <div style={card}><div style={{ fontSize: 13, color: F.muted, fontStyle: "italic" }}>No sections added to the customer-facing version yet. Switch to <strong style={{ color: F.plum, fontStyle: "normal" }}>Edit</strong> and toggle "Show in customer-facing version" on the cards you want customers to see.</div></div>
+          : included.map(s => (
+            <div key={s.key} style={card}>
+              <div style={{ fontSize: 15, fontWeight: 800, color: F.plum, marginBottom: 8 }}>{s.title}</div>
+              <div style={{ fontSize: 13.5, color: F.plum, lineHeight: 1.6 }}>{v.customer[s.key].text}</div>
+            </div>
+          ))}
+      </>
+    );
+  };
 
   // ── chip nav ──
   const chip = (label, prod, active) => (
@@ -5662,7 +5798,7 @@ function VisionPage({ subRoute, setSubRoute }) {
 
         {/* The framework — 12 sections grouped */}
         <div style={card}>
-          <div style={sectionTitle}>The framework · 12 sections each product works through</div>
+          <div style={sectionTitle}>The framework · 13 sections each product works through</div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 12 }}>
             {Object.entries(VISION_GROUPS).map(([g, gname]) => (
               <div key={g} style={{ background: F.bg, border: `1px solid ${F.border}`, borderRadius: 10, padding: "12px 14px" }}>
@@ -5736,9 +5872,10 @@ function VisionPage({ subRoute, setSubRoute }) {
   // ── Per-product page ──
   const productPage = () => {
     const pct = visionCompletion(v);
+    const modeBtn = (m, label) => <button onClick={() => setViewMode(m)} style={{ padding: "5px 14px", borderRadius: 999, fontSize: 12, fontWeight: 700, cursor: "pointer", background: viewMode === m ? F.plum : F.surface, color: viewMode === m ? F.paper : F.plum, border: `1px solid ${viewMode === m ? F.plum : F.borderStrong}`, fontFamily: "inherit" }}>{label}</button>;
     return (
       <>
-        {/* sticky-ish header */}
+        {/* header */}
         <div style={{ ...card, borderLeft: `4px solid ${F.pink}` }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: 10 }}>
             <div style={{ fontSize: 20, fontWeight: 800, color: F.plum }}>{VISION_PRODUCT_LABEL[focusedProduct] || focusedProduct} <span style={{ fontSize: 12, fontWeight: 700, color: F.muted2 }}>· Product Vision</span></div>
@@ -5748,32 +5885,60 @@ function VisionPage({ subRoute, setSubRoute }) {
             <div style={{ flex: 1, height: 7, background: F.border, borderRadius: 999, overflow: "hidden" }}><div style={{ width: `${pct}%`, height: "100%", background: F.gradient }} /></div>
             <div style={{ fontSize: 12, fontWeight: 800, color: pct > 0 ? F.green : F.muted2 }}>{pct}% complete</div>
           </div>
-          {/* section index */}
-          <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginTop: 12 }}>
-            {VISION_SECTIONS.map(s => (
-              <button key={s.n} onClick={() => { const el = document.getElementById("vis-sec-" + s.n); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); }}
-                title={s.title} style={{ width: 26, height: 26, borderRadius: 7, border: `1px solid ${F.borderStrong}`, background: F.surface, color: F.plum, fontSize: 11, fontWeight: 800, cursor: "pointer", fontFamily: "inherit" }}>{s.n}</button>
-            ))}
+          <div style={{ display: "flex", gap: 6, marginTop: 14, alignItems: "center", flexWrap: "wrap" }}>
+            {modeBtn("read", "📄 Read")}{modeBtn("edit", "✏️ Edit")}{modeBtn("customer", "👥 Customer-facing")}
+            <span style={{ fontSize: 10.5, color: F.muted2, fontStyle: "italic", marginLeft: 4 }}>{viewMode === "read" ? "the visual document — switch to Edit to change it" : viewMode === "edit" ? "edit fields; tick a card to add it to the customer version" : "only the cards you opted in, high-level for sharing"}</span>
           </div>
+          {viewMode !== "customer" && (
+            <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginTop: 12 }}>
+              {VISION_SECTIONS.map(s => (
+                <button key={s.n} onClick={() => { const el = document.getElementById("vis-sec-" + s.n); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); }}
+                  title={s.title} style={{ width: 26, height: 26, borderRadius: 7, border: `1px solid ${F.borderStrong}`, background: F.surface, color: F.plum, fontSize: 11, fontWeight: 800, cursor: "pointer", fontFamily: "inherit" }}>{s.n}</button>
+              ))}
+            </div>
+          )}
         </div>
 
-        {Object.entries(VISION_GROUPS).map(([g, gname]) => (
-          <div key={g}>
-            <div style={{ fontSize: 11, fontWeight: 800, color: F.pink, textTransform: "uppercase", letterSpacing: "0.08em", margin: "4px 2px 10px" }}>{gname}</div>
-            {VISION_SECTIONS.filter(s => s.group === g).map(s => (
-              <div key={s.n} id={"vis-sec-" + s.n} style={{ ...card, scrollMarginTop: 16 }}>
-                <div style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: 4 }}>
-                  <span style={{ width: 24, height: 24, borderRadius: "50%", background: F.plum, color: F.paper, fontSize: 12, fontWeight: 800, display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{s.n}</span>
-                  <div>
-                    <div style={{ fontSize: 15, fontWeight: 800, color: F.plum, lineHeight: 1.2 }}>{s.title}</div>
-                    <div style={{ fontSize: 11.5, color: F.muted, lineHeight: 1.4, fontStyle: "italic" }}>{s.guide}</div>
+        {viewMode === "customer" ? customerView() : (<>
+          {viewMode === "edit" && (
+            <div style={{ ...card, borderLeft: `4px solid ${F.yellow}` }}>
+              <div style={lb}>Customer-facing intro</div>
+              <div style={{ fontSize: 11, color: F.muted2, fontStyle: "italic", margin: "-2px 0 6px" }}>The one-paragraph headline customers see at the top of the shared vision. Then tick "Show in customer-facing version" on each card you want to include.</div>
+              <textarea value={v.customerIntro} onChange={e => setIntro(e.target.value)} placeholder="e.g. OpenApply is becoming your AI admissions teammate — saving your team hours every week." rows={2} style={{ ...ta, background: F.lightYellow + "44" }} />
+            </div>
+          )}
+          {Object.entries(VISION_GROUPS).map(([g, gname]) => (
+            <div key={g}>
+              <div style={{ fontSize: 11, fontWeight: 800, color: F.pink, textTransform: "uppercase", letterSpacing: "0.08em", margin: "4px 2px 10px" }}>{gname}</div>
+              {VISION_SECTIONS.filter(s => s.group === g).map(s => {
+                const custOn = !!v.customer[s.key]?.on;
+                return (
+                  <div key={s.n} id={"vis-sec-" + s.n} style={{ ...card, scrollMarginTop: 16, ...(viewMode === "edit" && custOn ? { borderLeft: `4px solid ${F.yellow}` } : {}) }}>
+                    <div style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: 4 }}>
+                      <span style={{ width: 24, height: 24, borderRadius: "50%", background: F.plum, color: F.paper, fontSize: 12, fontWeight: 800, display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{s.n}</span>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                          <div style={{ fontSize: 15, fontWeight: 800, color: F.plum, lineHeight: 1.2 }}>{s.title}</div>
+                          {custOn && <span style={{ fontSize: 9, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.05em", color: F.plum, background: F.yellow, padding: "2px 7px", borderRadius: 4 }}>In customer view</span>}
+                        </div>
+                        <div style={{ fontSize: 11.5, color: F.muted, lineHeight: 1.4, fontStyle: "italic" }}>{s.guide}</div>
+                      </div>
+                    </div>
+                    <div style={{ marginTop: 12 }}>{viewMode === "read" ? renderRead(s.key) : sectionBody(s.key)}</div>
+                    {viewMode === "edit" && (
+                      <div style={{ marginTop: 14, paddingTop: 12, borderTop: `1px dashed ${F.border}` }}>
+                        <label style={{ display: "inline-flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 11.5, fontWeight: 700, color: F.plum }}>
+                          <input type="checkbox" checked={custOn} onChange={e => custSet(s.key, { on: e.target.checked })} /> Show in customer-facing version
+                        </label>
+                        {custOn && <textarea value={v.customer[s.key].text} onChange={e => custSet(s.key, { text: e.target.value })} placeholder="What customers see for this section — high-level, no jargon." rows={2} style={{ ...ta, marginTop: 8, background: F.lightYellow + "44" }} />}
+                      </div>
+                    )}
                   </div>
-                </div>
-                <div style={{ marginTop: 12 }}>{sectionBody(s.key)}</div>
-              </div>
-            ))}
-          </div>
-        ))}
+                );
+              })}
+            </div>
+          ))}
+        </>)}
       </>
     );
   };

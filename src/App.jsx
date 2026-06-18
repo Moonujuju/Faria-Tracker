@@ -4902,23 +4902,39 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
       { id: "adopt", name: "Adopt", eyebrow: "Phase 03", tag: "Land, expand & close the loop", accent: F.pink, dark: "#B0277F" },
     ];
     const M = [
-      { ph: "prioritise", ic: "📥", t: "Capture", d: "Every school touchpoint becomes signal — captured continuously (Salesforce, Pendo, Planhat, WhatsApp, request board, surveys).", sc: "Daily input: WhatsApp groups, surveys, support, calls.", pod: "Product · Sales · Client Experience" },
-      { ph: "prioritise", ic: "📊", t: "AI digest", d: "A monthly AI digest clusters the signal and ranks themes by revenue impact × adoption gap.", sc: "What schools ask for rises to the top.", pod: "Product leadership · RevOps" },
-      { ph: "prioritise", ic: "🏫", t: "Schools sign-off", d: "Schools review the distilled shortlist and sign off before anything is committed.", sc: "Schools approve the plan.", pod: "Product · school advisory panel" },
-      { ph: "prioritise", ic: "🏛", t: "Commit", d: "SLT/ExCo ratify the revenue-ranked priorities; the QBR commits the quarter.", sc: null, pod: "SLT/ExCo · Product · Sales" },
-      { ph: "prioritise", ic: "✂️", t: "Into Build", d: "Committed bets are broken into weekly-sized, build-ready slices.", sc: null, pod: "Product → pods" },
-      { ph: "build", ic: "🎯", t: "Shape", d: "Owner forms a hypothesis + success metric (Mon–Tue), grounded in usage data & school calls.", sc: "Shaped around a real school problem.", pod: "Pod owner (AI drafts the spec)" },
-      { ph: "build", ic: "📱", t: "Prototype", d: "Wednesday: the same prototype goes to schools and internal teams — a week ahead of dev.", sc: "Schools react to a real prototype.", pod: "Owner · Sales / Support / Impl." },
-      { ph: "build", ic: "🔒", t: "Scope lock", d: "Thu–Fri: feedback folded in, PMT review, scope locked, handed to dev.", sc: "Feedback folded in before the lock.", pod: "Product · pod owner" },
-      { ph: "build", ic: "🛠", t: "Build & QA", d: "A one-week dev cycle with a full QA week running behind it.", sc: null, pod: "Devs ×2 · QA · shock-absorber pod" },
-      { ph: "build", ic: "🚢", t: "Ship Monday", d: "A signed-off, sliced increment ships to production every Monday.", sc: "Progress in days, not months.", pod: "Pod dev · QA" },
-      { ph: "adopt", ic: "📦", t: "Enable", d: "Enablement auto-generates at release — Sales & Support are ready day one.", sc: null, pod: "Product (auto) → Sales / Support" },
-      { ph: "adopt", ic: "📣", t: "AAA campaign", d: "Marketing runs campaigns for the marquee AAA features only.", sc: null, pod: "Marketing" },
-      { ph: "adopt", ic: "🎓", t: "Certify", d: "Auto-built certification paths get Sales & Support ready per AAA feature.", sc: null, pod: "Sales enablement" },
-      { ph: "adopt", ic: "🚀", t: "Land & onboard", d: "In-product guidance + CS outreach walk schools into each feature.", sc: "Guided onboarding into the feature.", pod: "Customer success · Implementation" },
-      { ph: "adopt", ic: "🔁", t: "Signal back", d: "Adoption & expansion signal (Pendo + Salesforce) feeds the next Prioritise — the loop closes.", sc: "Engaged schools → references & expansion.", pod: "Customer success · Sales" },
+      { ph: "prioritise", ic: "📥", t: "Capture", d: "Every school touchpoint becomes signal — captured continuously (Salesforce, Pendo, Planhat, WhatsApp, the request board & surveys).", who: ["schools", "sales", "cx"] },
+      { ph: "prioritise", ic: "📊", t: "AI digest", d: "A monthly AI digest clusters the signal and ranks themes by revenue impact × adoption gap.", who: ["pm", "lead"] },
+      { ph: "prioritise", ic: "🏫", t: "Schools", key: true, d: "Schools review the distilled shortlist and sign off before anything is committed — via the advisory panel and user-group conferences.", who: ["schools", "cx"] },
+      { ph: "prioritise", ic: "🏛", t: "Commit", d: "SLT/ExCo ratify the revenue-ranked priorities; the QBR commits the quarter.", who: ["lead", "sales", "pm"] },
+      { ph: "prioritise", ic: "✂️", t: "Into Build", d: "Committed bets are broken into weekly-sized, build-ready slices and handed to the pods.", who: ["pods", "pm"] },
+      { ph: "build", ic: "🎯", t: "Shape", d: "The pod owner forms a hypothesis + success metric (Mon–Tue), grounded in usage data & school calls.", who: ["pods"] },
+      { ph: "build", ic: "📱", t: "Prototype", key: true, d: "Wednesday: the same prototype goes to schools and internal teams — a full week ahead of dev.", who: ["pods", "schools", "sales", "cx", "pm"] },
+      { ph: "build", ic: "🔒", t: "Scope lock", d: "Thu–Fri: feedback folded in, PMT review, scope locked, handed to dev.", who: ["pods"] },
+      { ph: "build", ic: "🛠", t: "Build & QA", d: "A one-week dev cycle with a full QA week running behind it; a shock-absorber pod soaks up interruptions.", who: ["pods"] },
+      { ph: "build", ic: "🚢", t: "Ship weekly", key: true, d: "A signed-off, sliced increment ships to production every week (Monday cadence).", who: ["pods", "schools", "pm"] },
+      { ph: "adopt", ic: "📦", t: "Enable", d: "Enablement auto-generates at release — collateral & talking points ready day one.", who: ["pm", "sales", "cx"] },
+      { ph: "adopt", ic: "📣", t: "AAA campaign", d: "Product marketing leads campaigns for the marquee AAA features.", who: ["pm", "sales"] },
+      { ph: "adopt", ic: "🎓", t: "Certify", d: "Auto-built certification paths get Sales & Support ready per AAA feature.", who: ["sales", "cx", "pm"] },
+      { ph: "adopt", ic: "🚀", t: "Land & onboard", key: true, d: "In-product guidance + CS outreach walk schools into each feature.", who: ["cx", "sales", "schools", "pm"] },
+      { ph: "adopt", ic: "🔁", t: "Signal back", d: "Adoption & expansion signal (Pendo + Salesforce) feeds the next Prioritise — the loop closes.", who: ["schools", "cx", "sales", "pods"] },
+    ];
+    const ACTOR_META = {
+      schools: { ic: "🏫", label: "Schools", color: F.pink },
+      pods: { ic: "👥", label: "Pods", color: F.orange },
+      pm: { ic: "📣", label: "Product Marketing", color: F.plum },
+      sales: { ic: "💼", label: "Sales", color: F.green },
+      cx: { ic: "🤝", label: "Client Experience", color: F.lightPlum },
+      lead: { ic: "🏛", label: "SLT / ExCo", color: F.muted },
+    };
+    const LANES = [
+      { id: "schools", role: "At the centre, start to finish — feed the signal, sign off the plan, react to prototypes, adopt each release, and their usage starts the next cycle." },
+      { id: "pods", role: "Single-owner pods (owner · dev · QA) run the weekly build cycle; a shock-absorber pod protects focus. They take the brief, prototype with schools, ship weekly, and review what adopted." },
+      { id: "pm", role: "Embedded early — shapes positioning as themes are ranked and committed, names features at prototype, then leads launch collateral and AAA campaigns." },
+      { id: "sales", role: "In from the first signal — feeds win/loss, commits at the QBR, reviews prototypes, sells the release, and closes the loop with expansion." },
+      { id: "cx", role: "Carries the school voice — support & CX signal in, advisory input, onboarding out, and adoption health back into Prioritise." },
     ];
     const phMeta = Object.fromEntries(PHASES.map(p => [p.id, p]));
+    const LABELW = 130;
     return (
       <>
         <style>{`
@@ -4927,7 +4943,7 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
           .jrn-mark:hover .jrn-pop, .jrn-mark:focus .jrn-pop, .jrn-mark:focus-within .jrn-pop { opacity: 1; visibility: visible; }
           .jrn-node { transition: transform 0.14s ease, box-shadow 0.14s ease; }
           .jrn-mark:hover .jrn-node, .jrn-mark:focus .jrn-node { transform: scale(1.14); box-shadow: 0 6px 16px rgba(55,2,60,0.18); }
-          @media (max-width: 740px) { .jrn-scroll { overflow-x: auto; } .jrn-track { min-width: 720px; } }
+          @media (max-width: 900px) { .jrn-scroll { overflow-x: auto; } .jrn-track { min-width: 880px; } }
         `}</style>
 
         {/* nav row: back to cycle + jump into any phase */}
@@ -4946,49 +4962,93 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
         <div style={{ background: F.gradient, borderRadius: 14, padding: "20px 24px", position: "relative", overflow: "hidden", marginBottom: 18 }}>
           <div style={{ fontSize: 10.5, fontWeight: 800, color: F.plum, opacity: 0.7, textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: 5 }}>The end-to-end journey</div>
           <h1 style={{ fontSize: 25, fontWeight: 800, color: F.plum, margin: 0, lineHeight: 1.15 }}>One cycle, start to finish</h1>
-          <p style={{ fontSize: 13.5, fontWeight: 500, color: F.plum, opacity: 0.85, margin: "8px 0 0", maxWidth: 640 }}>One continuous loop. Pods do the work at every stage; schools sit at the centre throughout. <strong>Hover any marker for detail.</strong></p>
+          <p style={{ fontSize: 13.5, fontWeight: 500, color: F.plum, opacity: 0.85, margin: "8px 0 0", maxWidth: 640 }}>One continuous loop. <strong>Hover a marker</strong> for detail and who's involved — the lanes below show how each team threads through every phase.</p>
         </div>
 
-        {/* horizontal timeline */}
-        <div style={{ ...card, overflow: "visible", paddingBottom: 26 }}>
+        {/* horizontal timeline + actor swimlanes (aligned columns) */}
+        <div style={{ ...card, overflow: "visible", paddingBottom: 22 }}>
           <div className="jrn-scroll">
-            <div className="jrn-track" style={{ display: "flex", alignItems: "flex-start", gap: 0 }}>
-              {PHASES.map((P) => {
-                const ms = M.filter(m => m.ph === P.id);
-                return (
-                  <div key={P.id} style={{ flex: ms.length, minWidth: 0 }}>
-                    {/* phase label */}
-                    <button onClick={() => setOpen(P.id)} title={`Open ${P.name}`} style={{ display: "block", width: "100%", textAlign: "center", background: P.accent, border: "none", borderRadius: 8, padding: "6px 8px", marginBottom: 18, cursor: "pointer", fontFamily: "inherit" }}>
-                      <span style={{ fontSize: 12, fontWeight: 800, color: F.plum }}>{P.name}</span>
-                      <span style={{ fontSize: 9.5, fontWeight: 700, color: F.plum, opacity: 0.7 }}> · {P.eyebrow.replace("Phase ", "Ph ")}</span>
-                    </button>
-                    {/* spine + markers */}
-                    <div style={{ position: "relative", display: "flex" }}>
-                      <div style={{ position: "absolute", top: 19, left: "8%", right: "8%", height: 3, background: P.accent, opacity: 0.5, zIndex: 0 }} />
-                      {ms.map((m) => {
-                        const gi = M.indexOf(m);
-                        const popPos = gi <= 1 ? { left: 0 } : gi >= M.length - 2 ? { right: 0 } : { left: "50%", transform: "translateX(-50%)" };
-                        return (
-                          <div key={m.t} className="jrn-mark" tabIndex={0} style={{ flex: 1, minWidth: 0, position: "relative", display: "flex", flexDirection: "column", alignItems: "center", cursor: "default", padding: "0 2px" }}>
-                            <div className="jrn-node" style={{ width: 40, height: 40, borderRadius: "50%", background: P.accent, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, border: `2px solid ${F.surface}`, boxShadow: F.shadowSm, position: "relative", zIndex: 1 }}>{m.ic}</div>
-                            <div style={{ fontSize: 9.5, fontWeight: 700, color: F.plum, textAlign: "center", marginTop: 6, lineHeight: 1.2 }}>{m.t}</div>
-                            <div className="jrn-pop" style={{ position: "absolute", top: "100%", marginTop: 8, zIndex: 30, width: 212, background: F.surface, border: `1px solid ${P.accent}`, borderRadius: 10, padding: "10px 13px", boxShadow: F.shadowMd, ...popPos }}>
-                              <div style={{ fontSize: 12.5, fontWeight: 800, color: F.plum, marginBottom: 4 }}>{m.ic} {m.t}</div>
-                              <div style={{ fontSize: 11.5, color: F.muted, lineHeight: 1.5 }}>{m.d}</div>
-                              {m.sc && <div style={{ marginTop: 8, fontSize: 11, color: F.plum, lineHeight: 1.4 }}><strong style={{ color: F.pink }}>🏫 Schools</strong> — {m.sc}</div>}
-                              <div style={{ marginTop: 4, fontSize: 11, color: F.plum, lineHeight: 1.4 }}><strong>👥 Pod</strong> — {m.pod}</div>
-                            </div>
+            <div className="jrn-track">
+              {/* phase bands */}
+              <div style={{ display: "flex" }}>
+                <div style={{ width: LABELW, flexShrink: 0 }} />
+                <div style={{ flex: 1, display: "flex", gap: 6 }}>
+                  {PHASES.map((P) => {
+                    const c = M.filter(m => m.ph === P.id).length;
+                    return (
+                      <button key={P.id} onClick={() => setOpen(P.id)} title={`Open ${P.name}`} style={{ flex: c, background: P.accent, border: "none", borderRadius: 8, padding: "6px 8px", cursor: "pointer", fontFamily: "inherit", textAlign: "center" }}>
+                        <span style={{ fontSize: 12, fontWeight: 800, color: F.plum }}>{P.name}</span>
+                        <span style={{ fontSize: 9.5, fontWeight: 700, color: F.plum, opacity: 0.7 }}> · {P.eyebrow.replace("Phase ", "Ph ")}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* milestone markers */}
+              <div style={{ display: "flex", marginTop: 12 }}>
+                <div style={{ width: LABELW, flexShrink: 0 }} />
+                <div style={{ flex: 1, display: "flex", position: "relative" }}>
+                  <div style={{ position: "absolute", top: 22, left: "3%", right: "3%", height: 3, zIndex: 0, background: `linear-gradient(90deg, ${F.yellow} 0%, ${F.yellow} 33%, ${F.orange} 33%, ${F.orange} 66%, ${F.pink} 66%, ${F.pink} 100%)`, opacity: 0.55 }} />
+                  {M.map((m, gi) => {
+                    const acc = phMeta[m.ph].accent;
+                    const popPos = gi <= 1 ? { left: 0 } : gi >= M.length - 2 ? { right: 0 } : { left: "50%", transform: "translateX(-50%)" };
+                    const sz = m.key ? 46 : 38;
+                    return (
+                      <div key={m.t} className="jrn-mark" tabIndex={0} style={{ flex: 1, minWidth: 0, position: "relative", display: "flex", flexDirection: "column", alignItems: "center", cursor: "default", padding: "0 2px" }}>
+                        <div className="jrn-node" style={{ width: sz, height: sz, borderRadius: "50%", background: acc, display: "flex", alignItems: "center", justifyContent: "center", fontSize: m.key ? 20 : 17, border: `2px solid ${F.surface}`, boxShadow: m.key ? `0 0 0 3px ${acc}55, ${F.shadowSm}` : F.shadowSm, position: "relative", zIndex: 1 }}>{m.ic}</div>
+                        <div style={{ fontSize: 9.5, fontWeight: m.key ? 800 : 700, color: F.plum, textAlign: "center", marginTop: 6, lineHeight: 1.2 }}>{m.t}</div>
+                        <div className="jrn-pop" style={{ position: "absolute", top: "100%", marginTop: 8, zIndex: 30, width: 220, background: F.surface, border: `1px solid ${acc}`, borderRadius: 10, padding: "11px 13px", boxShadow: F.shadowMd, ...popPos }}>
+                          <div style={{ fontSize: 12.5, fontWeight: 800, color: F.plum, marginBottom: 4 }}>{m.ic} {m.t}</div>
+                          <div style={{ fontSize: 11.5, color: F.muted, lineHeight: 1.5 }}>{m.d}</div>
+                          <div style={{ marginTop: 9, fontSize: 9, fontWeight: 800, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 5 }}>Who's in</div>
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+                            {m.who.map(id => (
+                              <span key={id} style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10, fontWeight: 700, color: F.plum, background: F.bg, border: `1px solid ${F.border}`, borderRadius: 999, padding: "2px 8px" }}>{ACTOR_META[id].ic} {ACTOR_META[id].label}</span>
+                            ))}
                           </div>
-                        );
-                      })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* actor swimlanes — who threads through every phase */}
+              <div style={{ marginTop: 18, borderTop: `1px solid ${F.border}`, paddingTop: 12 }}>
+                <div style={{ fontSize: 9.5, fontWeight: 800, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>Who's involved — across every phase</div>
+                {LANES.map((L) => {
+                  const meta = ACTOR_META[L.id];
+                  return (
+                    <div key={L.id} style={{ display: "flex", alignItems: "center", marginTop: 7 }}>
+                      <div className="jrn-mark" tabIndex={0} style={{ width: LABELW, flexShrink: 0, position: "relative", display: "flex", alignItems: "center", gap: 6, cursor: "help", paddingRight: 8 }}>
+                        <span style={{ width: 8, height: 8, borderRadius: "50%", background: meta.color, flexShrink: 0 }} />
+                        <span style={{ fontSize: 11, fontWeight: 700, color: F.plum, lineHeight: 1.15 }}>{meta.ic} {meta.label}</span>
+                        <div className="jrn-pop" style={{ position: "absolute", top: "100%", left: 0, marginTop: 6, zIndex: 30, width: 240, background: F.surface, border: `1px solid ${meta.color}`, borderRadius: 10, padding: "10px 13px", boxShadow: F.shadowMd }}>
+                          <div style={{ fontSize: 12, fontWeight: 800, color: F.plum, marginBottom: 4 }}>{meta.ic} {meta.label}</div>
+                          <div style={{ fontSize: 11.5, color: F.muted, lineHeight: 1.5 }}>{L.role}</div>
+                        </div>
+                      </div>
+                      <div style={{ flex: 1, display: "flex", position: "relative", alignItems: "center" }}>
+                        <div style={{ position: "absolute", left: "3%", right: "3%", height: 2, background: F.border, zIndex: 0 }} />
+                        {M.map((m) => {
+                          const active = m.who.includes(L.id);
+                          const acc = phMeta[m.ph].accent;
+                          return (
+                            <div key={m.t} style={{ flex: 1, minWidth: 0, display: "flex", justifyContent: "center", zIndex: 1 }} title={active ? `${meta.label} · ${m.t}` : undefined}>
+                              <span style={{ width: active ? 13 : 5, height: active ? 13 : 5, borderRadius: "50%", background: active ? acc : F.borderStrong, border: active ? `2px solid ${F.surface}` : "none", boxShadow: active ? F.shadowSm : "none" }} />
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
           </div>
           {/* loop closes */}
-          <div style={{ display: "flex", alignItems: "center", gap: 9, marginTop: 22, background: F.lightYellow + "66", border: `1px dashed ${F.yellow}`, borderRadius: 11, padding: "10px 14px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 9, marginTop: 18, background: F.lightYellow + "66", border: `1px dashed ${F.yellow}`, borderRadius: 11, padding: "10px 14px" }}>
             <span style={{ fontSize: 17 }}>↻</span>
             <div style={{ fontSize: 12, color: F.plum, fontWeight: 700, lineHeight: 1.45 }}>Adoption signal feeds the next <span style={{ color: "#A9760A" }}>Prioritise</span> — the loop never ends.</div>
           </div>

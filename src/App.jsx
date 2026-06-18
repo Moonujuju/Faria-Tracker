@@ -4081,6 +4081,7 @@ function FairUseExample({ monz, setMonz, deepRoute, setDeepRoute }) {
 function PrioritizationPage({ subRoute, setSubRoute }) {
   const VALID_PHASES = ["prioritise", "build", "adopt"];
   const open = VALID_PHASES.includes(subRoute) ? subRoute : null;
+  const isJourney = subRoute === "journey";
   const setOpen = (p) => setSubRoute(p || "");
   // Hovered-phase drives the dynamic info panel below the cycle (and the spoke highlight in the SVG).
   const [hover, setHover] = useState(null);
@@ -4381,6 +4382,7 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
         <div style={{ position: "relative", zIndex: 2 }}>
           <h1 style={{ fontSize: 32, fontWeight: 800, color: F.plum, margin: 0, lineHeight: 1.15, maxWidth: 720 }}>The AI-First Product Lifecycle</h1>
           <p style={{ fontSize: 15, fontWeight: 500, color: F.plum, opacity: 0.85, margin: "10px 0 0", maxWidth: 680 }}>A continuous loop from strategy to shipped value: leadership sets the revenue-driven direction, small AI-augmented pods build and release weekly, and what schools adopt feeds straight back into what we prioritise next.</p>
+          <button onClick={() => setSubRoute("journey")} style={{ marginTop: 16, display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 16px", borderRadius: 11, border: "none", background: F.plum, color: F.paper, fontSize: 13, fontWeight: 800, cursor: "pointer", fontFamily: "inherit", boxShadow: F.shadowSm }}>▶ See the end-to-end journey</button>
         </div>
       </div>
 
@@ -4892,6 +4894,104 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
     );
   };
 
+  // ── End-to-end journey: one high-level timeline across all three phases ──
+  const JourneyView = () => {
+    const PHASES = [
+      { id: "prioritise", name: "Prioritise", eyebrow: "Phase 01", tag: "Set the revenue-driven direction", accent: F.yellow, dark: "#A9760A" },
+      { id: "build", name: "Build", eyebrow: "Phase 02", tag: "Small pods, a release every Monday", accent: F.orange, dark: "#C9531E" },
+      { id: "adopt", name: "Adopt", eyebrow: "Phase 03", tag: "Land, expand & close the loop", accent: F.pink, dark: "#B0277F" },
+    ];
+    const STAGES = [
+      { ph: "prioritise", n: 1, ic: "📥", name: "Capture signal", event: "Every school touchpoint becomes signal — captured continuously across Salesforce, Pendo, Planhat, WhatsApp, the request board & surveys.", schools: "Schools feed it daily — user-group chats, surveys, support tickets, calls.", pod: "Product, Sales & Client Experience keep the pool flowing." },
+      { ph: "prioritise", n: 2, ic: "📊", name: "Synthesise & rank", event: "A monthly AI digest clusters the signal and ranks themes by revenue impact × adoption gap.", schools: "What schools ask for is what rises to the top.", pod: "Product leadership + RevOps read the evidence." },
+      { ph: "prioritise", n: 3, ic: "✅", name: "Decide & commit", event: "AI shortlist → product review → product day → schools sign-off → SLT/ExCo → QBR commits the quarter.", schools: "Schools sign off the plan before we build it.", pod: "Product, SLT/ExCo & Sales commit together." },
+      { ph: "build", n: 4, ic: "🎯", name: "Shape the slice", event: "The pod owner forms a hypothesis + success metric, grounded in usage data and school calls (Mon–Tue).", schools: "Shaped around a real school problem.", pod: "Pod owner leads; AI drafts the spec & prototype." },
+      { ph: "build", n: 5, ic: "📱", name: "Prototype to schools", event: "Wednesday: the same prototype goes to schools and internal teams — a full week ahead of dev.", schools: "Schools react to a real prototype, not a shipped feature.", pod: "Owner + Sales / Support / Implementation." },
+      { ph: "build", n: 6, ic: "🛠", name: "Build & QA", event: "Thu–Fri scope locks, then a one-week dev cycle with a full QA week running behind it.", schools: "Their feedback is folded in before the lock.", pod: "Pod devs ×2, QA, and a shock-absorber pod." },
+      { ph: "build", n: 7, ic: "🚢", name: "Ship every Monday", event: "A signed-off, sliced increment ships to production every Monday.", schools: "Schools see real progress in days, not months.", pod: "Pod dev + QA release together." },
+      { ph: "adopt", n: 8, ic: "📣", name: "Enable & launch", event: "Enablement auto-generates at release; marketing runs AAA campaigns and auto-built certifications.", schools: "Guided onboarding walks each school into the feature.", pod: "Marketing, Sales enablement & Support — ready day one." },
+      { ph: "adopt", n: 9, ic: "🔁", name: "Land, expand & learn", event: "Adoption & expansion signal (Pendo + Salesforce) flows back as the freshest input to the next Prioritise.", schools: "The most-engaged schools become references & expansion.", pod: "Customer success & Sales close the loop." },
+    ];
+    return (
+      <>
+        {/* nav row: back to cycle + jump into any phase */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18, flexWrap: "wrap" }}>
+          <button onClick={() => setOpen(null)} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "10px 15px", borderRadius: 11, border: `1px solid ${F.borderStrong}`, background: F.surface, color: F.plum, fontSize: 12.5, fontWeight: 800, cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap" }}>⊙ Full cycle</button>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+            {PHASES.map((p) => (
+              <button key={p.id} onClick={() => setOpen(p.id)} title={`Open ${p.name}`} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "9px 13px", borderRadius: 999, border: `1px solid ${F.borderStrong}`, background: F.surface, color: F.plum, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+                <span style={{ width: 9, height: 9, borderRadius: "50%", background: p.accent, flexShrink: 0 }} />{p.name}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* header band */}
+        <div style={{ background: F.gradient, borderRadius: 14, padding: "24px 26px 26px", position: "relative", overflow: "hidden", marginBottom: 18 }}>
+          <div style={{ position: "relative", zIndex: 2 }}>
+            <div style={{ fontSize: 10.5, fontWeight: 800, color: F.plum, opacity: 0.7, textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: 6 }}>The end-to-end journey</div>
+            <h1 style={{ fontSize: 28, fontWeight: 800, color: F.plum, margin: 0, lineHeight: 1.15, maxWidth: 720 }}>From the first signal to shipped value — and back again</h1>
+            <p style={{ fontSize: 14, fontWeight: 500, color: F.plum, opacity: 0.85, margin: "10px 0 0", maxWidth: 680 }}>One continuous loop across all three phases. Pods do the work at every stage; schools sit at the centre from start to finish.</p>
+          </div>
+        </div>
+
+        {/* the two threads that run through every stage */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 12, marginBottom: 18 }}>
+          <div style={{ background: "rgba(232,55,172,0.08)", border: `1px solid ${F.lightPink}`, borderLeft: `4px solid ${F.pink}`, borderRadius: 11, padding: "13px 16px" }}>
+            <div style={{ fontSize: 13, fontWeight: 800, color: F.plum, marginBottom: 3 }}>🏫 Customer-centric, end to end</div>
+            <div style={{ fontSize: 12, color: F.muted, lineHeight: 1.5 }}>Schools shape every stage — from the first signal, through sign-off and prototype, to the value they adopt and the signal that starts the next cycle.</div>
+          </div>
+          <div style={{ background: "rgba(55,2,60,0.05)", border: `1px solid ${F.border}`, borderLeft: `4px solid ${F.plum}`, borderRadius: 11, padding: "13px 16px" }}>
+            <div style={{ fontSize: 13, fontWeight: 800, color: F.plum, marginBottom: 3 }}>👥 Pods at every stage</div>
+            <div style={{ fontSize: 12, color: F.muted, lineHeight: 1.5 }}>Small, single-owner pods carry the work the whole way — backed by Product leadership, Sales, Client Experience, Marketing & Support.</div>
+          </div>
+        </div>
+
+        {/* vertical timeline, grouped by phase */}
+        <div style={card}>
+          {PHASES.map((P) => (
+            <div key={P.id}>
+              {/* phase band */}
+              <button onClick={() => setOpen(P.id)} style={{ width: "100%", textAlign: "left", display: "flex", alignItems: "center", gap: 12, background: P.accent, border: "none", borderRadius: 11, padding: "12px 16px", margin: "4px 0 14px", cursor: "pointer", fontFamily: "inherit" }}>
+                <span style={{ fontSize: 9.5, fontWeight: 800, color: F.plum, opacity: 0.7, textTransform: "uppercase", letterSpacing: "0.1em" }}>{P.eyebrow}</span>
+                <span style={{ fontSize: 16, fontWeight: 800, color: F.plum }}>{P.name}</span>
+                <span style={{ fontSize: 12, color: F.plum, opacity: 0.8 }}>· {P.tag}</span>
+                <span style={{ marginLeft: "auto", fontSize: 11, fontWeight: 800, color: F.plum }}>Open →</span>
+              </button>
+              {/* stage rows */}
+              {STAGES.filter((s) => s.ph === P.id).map((s, si, arr) => (
+                <div key={s.n} style={{ display: "flex", gap: 14, alignItems: "stretch" }}>
+                  {/* rail with connecting line + numbered node */}
+                  <div style={{ position: "relative", width: 40, flexShrink: 0, display: "flex", justifyContent: "center" }}>
+                    <div style={{ position: "absolute", top: 0, bottom: (P.id === "adopt" && si === arr.length - 1) ? "auto" : 0, height: (P.id === "adopt" && si === arr.length - 1) ? 18 : "100%", width: 3, background: P.accent, opacity: 0.45 }} />
+                    <div style={{ position: "relative", zIndex: 1, width: 30, height: 30, borderRadius: "50%", background: P.accent, color: F.plum, fontSize: 12, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", border: `2px solid ${F.surface}`, boxShadow: F.shadowSm }}>{s.n}</div>
+                  </div>
+                  {/* content card */}
+                  <div style={{ flex: 1, minWidth: 0, paddingBottom: 18 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                      <span style={{ fontSize: 17 }}>{s.ic}</span>
+                      <span style={{ fontSize: 14.5, fontWeight: 800, color: F.plum }}>{s.name}</span>
+                    </div>
+                    <p style={{ margin: "0 0 10px", fontSize: 12.5, color: F.muted, lineHeight: 1.5 }}>{s.event}</p>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 8 }} className="plc-lane">
+                      <div style={{ background: "rgba(232,55,172,0.08)", border: `1px solid ${F.lightPink}`, borderRadius: 8, padding: "7px 11px", fontSize: 11.5, color: F.plum, lineHeight: 1.45 }}><strong style={{ color: F.pink }}>🏫 Schools</strong> — {s.schools}</div>
+                      <div style={{ background: "rgba(55,2,60,0.05)", border: `1px solid ${F.border}`, borderRadius: 8, padding: "7px 11px", fontSize: 11.5, color: F.plum, lineHeight: 1.45 }}><strong style={{ color: F.plum }}>👥 Pod & team</strong> — {s.pod}</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ))}
+          {/* loop closes */}
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 4, marginLeft: 54, background: F.lightYellow + "66", border: `1px dashed ${F.yellow}`, borderRadius: 11, padding: "11px 15px" }}>
+            <span style={{ fontSize: 18 }}>↻</span>
+            <div style={{ fontSize: 12.5, color: F.plum, fontWeight: 700, lineHeight: 1.45 }}>Adoption signal feeds the next <span style={{ color: "#A9760A" }}>Prioritise</span> — the loop never ends, and every cycle starts from what schools actually adopted.</div>
+          </div>
+        </div>
+      </>
+    );
+  };
+
   return (
     <div ref={topRef}>
       {/* Gentle opacity-only crossfade — no motion/scale that would read as a page reload */}
@@ -4912,7 +5012,9 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
       `}</style>
       {/* Call as functions (not <PhaseView/>) so hovering doesn't remount the subtree and replay animations.
          The keyed wrapper still replays the soft-in once per phase switch. */}
-      {open
+      {isJourney
+        ? <div key="journey" style={{ animation: "plc-soft-in 0.22s ease both" }}>{JourneyView()}</div>
+        : open
         ? <div key={"phase-" + open} style={{ animation: "plc-soft-in 0.22s ease both" }}>{PhaseView({ phase: open })}</div>
         : <div key="overview" style={{ animation: "plc-soft-in 0.22s ease both" }}>{Overview()}</div>}
     </div>

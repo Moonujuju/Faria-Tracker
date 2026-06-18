@@ -5073,8 +5073,11 @@ function AiPodsPage({ subRoute, setSubRoute }) {
     .aip-podx-focus { font-size: 13px; font-weight: 500; color: ${F.plum}; opacity: 0.85; line-height: 1.45; margin: 0; }
     .aip-podx-roles { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 11px; }
     .aip-podx-role { font-size: 10.5px; font-weight: 700; background: ${F.paper}; padding: 3px 9px; border-radius: 20px; color: ${F.plum}; }
-    .aip-podx-pop { position: absolute; left: -1px; right: -1px; top: calc(100% + 6px); z-index: 30; background: #fff; border: 1px solid var(--pc, ${F.plum}); border-radius: 12px; padding: 14px 16px; box-shadow: ${F.shadowMd}; opacity: 0; visibility: hidden; transform: translateY(-4px); transition: opacity 0.16s ease, transform 0.16s ease, visibility 0.16s ease; }
+    .aip-podx-pop { position: absolute; left: -10px; right: -10px; top: -10px; z-index: 40; background: #fff; border: 1px solid var(--pc, ${F.plum}); border-top: 5px solid var(--pc, ${F.plum}); border-radius: 16px; padding: 16px 18px; box-shadow: 0 22px 48px rgba(55,2,60,0.24); opacity: 0; visibility: hidden; transform: translateY(10px) scale(0.97); transform-origin: top center; transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s ease; }
+    .aip-podx:hover { z-index: 50; }
     .aip-podx:hover .aip-podx-pop, .aip-podx:focus-within .aip-podx-pop { opacity: 1; visibility: visible; transform: none; }
+    .aip-podx-poptitle { font-size: 16px; font-weight: 800; color: ${F.plum}; margin: 0 0 1px; }
+    .aip-podx-poppair { font-size: 11.5px; font-weight: 700; color: ${F.muted2}; margin-bottom: 11px; }
     .aip-podx-pop h5 { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: ${F.muted2}; margin: 0 0 4px; }
     .aip-podx-pop p { font-size: 12.5px; line-height: 1.5; color: ${F.plum}; margin: 0 0 11px; font-weight: 500; }
     .aip-podx-eg { font-size: 12px; line-height: 1.45; color: ${F.plum}; padding-left: 11px; border-left: 2px solid var(--pc, ${F.plum}); margin-bottom: 7px; }
@@ -5369,6 +5372,8 @@ function AiPodsPage({ subRoute, setSubRoute }) {
                   <p className="aip-podx-focus">{pod.focus}</p>
                   <div className="aip-podx-roles">{pod.roles.map((r, i) => <span key={i} className="aip-podx-role">{r}</span>)}</div>
                   <div className="aip-podx-pop">
+                    <div className="aip-podx-poptitle">{pod.name}</div>
+                    <div className="aip-podx-poppair">{pod.pair}</div>
                     <h5>Best for</h5>
                     <p>{pod.best}</p>
                     <h5>Examples</h5>

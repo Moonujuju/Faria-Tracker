@@ -367,46 +367,53 @@ const DEFAULT_AI = [
 const MONZ_PRODUCTS = ["OpenApply", "ManageBac+", "Atlas", "SchoolsBuddy", "Vectare"];
 // Per-model price table feeding all cost math (Usage cost lab + Finance cost/school).
 // Prices are USD per 1M tokens — EDITABLE estimates; verify exact Bedrock rates with the engineer.
+// $/1M tokens (USD). Source: FAIF token_pricer.ex (@model_price, per-1K → ×1000 here).
+// Caveat from the price file: USD & CNY are not normalised — convert before comparing; the
+// us./eu. Bedrock cross-region rates run ~10% above global.
 const MODEL_COSTS_SEED = [
-  { id: "m-opus",     name: "Claude Opus 4.x",   tier: "frontier", provider: "Anthropic / Bedrock", inPer1M: 15,   outPer1M: 75,  region: "us · eu · ca", notes: "Top reasoning; licensing premium on Bedrock." },
-  { id: "m-sonnet",   name: "Claude Sonnet 4.x", tier: "frontier", provider: "Anthropic / Bedrock", inPer1M: 3,    outPer1M: 15,  region: "us · eu · ca", notes: "Strong default for Pro features." },
-  { id: "m-haiku",    name: "Claude Haiku 4.5",  tier: "mid",      provider: "Anthropic / Bedrock", inPer1M: 1,    outPer1M: 5,   region: "us · eu · ca", notes: "Fast & cheap for light tasks." },
-  { id: "m-gpt5",     name: "GPT-5",             tier: "frontier", provider: "OpenAI",              inPer1M: 1.25, outPer1M: 10,  region: "us", notes: "Moving to Bedrock as AWS rolls out OpenAI." },
-  { id: "m-gpt5mini", name: "GPT-5 mini",        tier: "mid",      provider: "OpenAI",              inPer1M: 0.25, outPer1M: 2,   region: "us", notes: "" },
-  { id: "m-qwen",     name: "Qwen (open)",       tier: "open",     provider: "Alibaba / Bedrock",   inPer1M: 0.20, outPer1M: 0.60, region: "in & out of China", notes: "No frontier licensing cost — good free-tier default." },
-  { id: "m-llama",    name: "Llama (open)",      tier: "open",     provider: "Meta / Bedrock",      inPer1M: 0.20, outPer1M: 0.60, region: "us · eu", notes: "Open-weight; ≈ last-year frontier." },
+  { id: "m-opus",     name: "Claude Opus 4.x",      tier: "frontier", provider: "Anthropic / Bedrock", inPer1M: 15,   outPer1M: 75,  region: "us · eu · ca", source: "token_pricer.ex", notes: "Top reasoning; licensing premium on Bedrock." },
+  { id: "m-sonnet",   name: "Claude Sonnet 4.x",    tier: "frontier", provider: "Anthropic / Bedrock", inPer1M: 3,    outPer1M: 15,  region: "us · eu · ca", source: "token_pricer.ex", notes: "Strong default for Pro features (global rate; us./eu. ≈ $3.30/$16.50)." },
+  { id: "m-haiku",    name: "Claude Haiku 4.5",     tier: "mid",      provider: "Anthropic / Bedrock", inPer1M: 1,    outPer1M: 5,   region: "us · eu · ca", source: "token_pricer.ex", notes: "Fast & cheap for light tasks." },
+  { id: "m-gpt41",    name: "GPT-4.1",              tier: "frontier", provider: "OpenAI",              inPer1M: 2,    outPer1M: 8,   region: "us", source: "token_pricer.ex", notes: "gpt-4.1-2025-04-14." },
+  { id: "m-qwen",     name: "Qwen2.5 72B (open)",   tier: "open",     provider: "Alibaba / Bedrock",   inPer1M: 0.20, outPer1M: 0.60, region: "in & out of China", source: "estimate", notes: "No frontier licensing — good free-tier default. token_pricer lists Alibaba-hosted at ¥4/¥12 per 1M (CNY); USD here is the Bedrock open-weight estimate." },
+  { id: "m-gpt5",     name: "GPT-5",                tier: "frontier", provider: "OpenAI",              inPer1M: 1.25, outPer1M: 10,  region: "us", source: "estimate", notes: "Moving to Bedrock as AWS rolls out OpenAI." },
+  { id: "m-gpt5mini", name: "GPT-5 mini",           tier: "mid",      provider: "OpenAI",              inPer1M: 0.25, outPer1M: 2,   region: "us", source: "estimate", notes: "" },
+  { id: "m-llama",    name: "Llama (open)",         tier: "open",     provider: "Meta / Bedrock",      inPer1M: 0.20, outPer1M: 0.60, region: "us · eu", source: "estimate", notes: "Open-weight; ≈ last-year frontier." },
 ];
-// One row per AI feature, per product — each prices independently (own tokens + free/pro model).
-// [product, feature, inputTokens, outputTokens, runsPerAction, proModelId]; free model defaults to Qwen.
+// One row per AI feature, per product — each prices independently.
+// Driver-based volume: runs/school/mo (Expected) = reach × adoption% × usesPer, then the
+// usage level (Low/Expected/Heavy) flexes the adoption band. cost/run = token cost × calls.
+// [product, feature, tier, status, modelId, inTok, outTok, calls, reach, reachLabel, adoptionPct, usesPer]
+// OpenApply rows are calibrated to the reference cost model (models + runs/mo from the deck).
 const COST_LAB_SEED = [
-  ["OpenApply", "AI Writing Assistant", 1200, 500, 1, "m-sonnet"],
-  ["OpenApply", "AI Applicant Insights", 4000, 500, 1, "m-sonnet"],
-  ["OpenApply", "AI 2nd Language Translations", 800, 800, 1, "m-haiku"],
-  ["OpenApply", "Agentic Nurture Workflows", 6000, 600, 4, "m-opus"],
-  ["OpenApply", "AI Admissions Assistant for Parents", 2000, 500, 2, "m-sonnet"],
-  ["OpenApply", "AI Lead Scoring", 3000, 200, 1, "m-sonnet"],
-  ["OpenApply", "AI Configuration Dashboard", 1500, 400, 1, "m-haiku"],
-  ["OpenApply", "AI Form Creation", 1500, 800, 1, "m-sonnet"],
-  ["OpenApply", "AI Custom Dashboard", 2500, 600, 1, "m-sonnet"],
-  ["OpenApply", "AI Document Verification", 9000, 400, 2, "m-opus"],
-  ["OpenApply", "MCP", 2000, 600, 3, "m-sonnet"],
-  ["OpenApply", "AI Analyst", 8000, 800, 3, "m-opus"],
-  ["ManageBac+", "AI Notification Summaries", 1500, 300, 1, "m-haiku"],
-  ["ManageBac+", "Image Generation for Unit Planner Covers", 200, 0, 1, "m-sonnet"],
-  ["ManageBac+", "MYP AI Assistant", 2500, 600, 2, "m-sonnet"],
-  ["ManageBac+", "Live Turkish Translations for Communications", 600, 600, 1, "m-haiku"],
-  ["ManageBac+", "Automated Tagging for Portfolio & Class Streams", 1200, 200, 1, "m-haiku"],
-  ["ManageBac+", "Quiz Generation", 2000, 900, 1, "m-sonnet"],
-  ["ManageBac+", "Task/Workload Scheduler", 2000, 400, 1, "m-sonnet"],
-  ["ManageBac+", "Ask AI Anything (Web)", 3000, 700, 2, "m-sonnet"],
-  ["ManageBac+", "eCoursework Assistant", 4000, 800, 2, "m-sonnet"],
-  ["ManageBac+", "AI Assistant for Portfolio & Class Stream Analytics", 4000, 700, 2, "m-sonnet"],
-  ["ManageBac+", "Unit/Lesson Design Assistant", 3000, 1200, 2, "m-opus"],
-  ["ManageBac+", "Ask Anything (Mobile)", 3000, 700, 2, "m-sonnet"],
-  ["Atlas", "Curriculum Insights Beta Testing", 7000, 800, 2, "m-opus"],
-  ["Atlas", "Curriculum Insights Release", 7000, 800, 2, "m-opus"],
-  ["Atlas", "Unit Planning Assistant", 3000, 1200, 2, "m-sonnet"],
-  ["Atlas", "Lesson Planning Assistant", 2500, 1000, 2, "m-sonnet"],
+  ["OpenApply", "AI Writing Assistant",                 "essential", "live",    "m-qwen",   1500, 500,  1, 10,  "staff seats",      100, 50],
+  ["OpenApply", "AI Applicant Insights",                "pro",       "live",    "m-sonnet", 4000, 500,  1, 200, "applications/mo",  75,  1],
+  ["OpenApply", "AI 2nd Language Translations",         "essential", "live",    "m-haiku",  800,  800,  1, 200, "applications/mo",  75,  2],
+  ["OpenApply", "Agentic Nurture Workflows",            "pro",       "roadmap", "m-sonnet", 6000, 600,  8, 200, "applications/mo",  30,  1],
+  ["OpenApply", "AI Admissions Assistant for Parents",  "pro",       "roadmap", "m-opus",   2000, 500,  1, 200, "applications/mo",  100, 2],
+  ["OpenApply", "AI Lead Scoring",                      "pro",       "roadmap", "m-haiku",  3000, 200,  1, 200, "leads/mo",         50,  1],
+  ["OpenApply", "AI Configuration Dashboard",           "essential", "roadmap", "m-haiku",  1500, 400,  1, 10,  "staff seats",      75,  2],
+  ["OpenApply", "AI Form Creation",                     "essential", "roadmap", "m-sonnet", 1500, 800,  1, 10,  "staff seats",      75,  2],
+  ["OpenApply", "AI Custom Dashboard",                  "essential", "roadmap", "m-sonnet", 2500, 600,  1, 10,  "staff seats",      100, 2],
+  ["OpenApply", "AI Document Verification",             "pro",       "roadmap", "m-opus",   9000, 400,  2, 200, "applications/mo",  50,  1],
+  ["OpenApply", "MCP",                                  "pro",       "roadmap", "m-sonnet", 2000, 600,  3, 10,  "staff seats",      50,  4],
+  ["OpenApply", "AI Analyst",                           "pro",       "roadmap", "m-opus",   8000, 800,  3, 10,  "staff seats",      40,  5],
+  ["ManageBac+", "AI Notification Summaries",                          "essential", "live",    "m-haiku",  1500, 300,  1, 100, "students",            50, 1],
+  ["ManageBac+", "Image Generation for Unit Planner Covers",          "essential", "roadmap", "m-sonnet", 200,  0,    1, 20,  "unit plans/mo",       50, 1],
+  ["ManageBac+", "MYP AI Assistant",                                  "pro",       "roadmap", "m-sonnet", 2500, 600,  2, 30,  "teacher seats",       60, 3],
+  ["ManageBac+", "Live Turkish Translations for Communications",      "essential", "roadmap", "m-haiku",  600,  600,  1, 100, "messages/mo",         50, 2],
+  ["ManageBac+", "Automated Tagging for Portfolio & Class Streams",   "essential", "roadmap", "m-haiku",  1200, 200,  1, 200, "portfolio items/mo",  50, 1],
+  ["ManageBac+", "Quiz Generation",                                   "pro",       "roadmap", "m-sonnet", 2000, 900,  1, 30,  "teacher seats",       60, 4],
+  ["ManageBac+", "Task/Workload Scheduler",                           "essential", "roadmap", "m-sonnet", 2000, 400,  1, 30,  "teacher seats",       40, 2],
+  ["ManageBac+", "Ask AI Anything (Web)",                             "pro",       "roadmap", "m-sonnet", 3000, 700,  2, 30,  "teacher seats",       70, 10],
+  ["ManageBac+", "eCoursework Assistant",                             "pro",       "roadmap", "m-sonnet", 4000, 800,  2, 50,  "students",            40, 3],
+  ["ManageBac+", "AI Assistant for Portfolio & Class Stream Analytics","pro",      "roadmap", "m-sonnet", 4000, 700,  2, 30,  "teacher seats",       40, 2],
+  ["ManageBac+", "Unit/Lesson Design Assistant",                      "pro",       "roadmap", "m-opus",   3000, 1200, 2, 30,  "teacher seats",       50, 3],
+  ["ManageBac+", "Ask Anything (Mobile)",                             "pro",       "roadmap", "m-sonnet", 3000, 700,  2, 30,  "teacher seats",       60, 8],
+  ["Atlas", "Curriculum Insights Beta Testing", "pro", "beta",    "m-opus",   7000, 800,  2, 20, "curriculum reviews/mo", 50, 2],
+  ["Atlas", "Curriculum Insights Release",      "pro", "roadmap", "m-opus",   7000, 800,  2, 20, "curriculum reviews/mo", 75, 2],
+  ["Atlas", "Unit Planning Assistant",          "pro", "roadmap", "m-sonnet", 3000, 1200, 2, 30, "teacher seats",         50, 3],
+  ["Atlas", "Lesson Planning Assistant",        "pro", "roadmap", "m-sonnet", 2500, 1000, 2, 30, "teacher seats",         50, 5],
 ];
 const DEFAULT_MONETIZATION = {
   products: {
@@ -436,7 +443,15 @@ const DEFAULT_MONETIZATION = {
     "Per-user cap (18 credits) prevents one power user from draining the pool.",
   ],
   modelCosts: MODEL_COSTS_SEED,
-  costLab: COST_LAB_SEED.map((r, i) => ({ id: "cl-" + i, product: r[0], feature: r[1], inputTokens: r[2], outputTokens: r[3], runsPerAction: r[4], freeModelId: "m-qwen", proModelId: r[5], notes: "" })),
+  // Low/Expected/Heavy adoption-band multipliers on each feature's Expected runs/mo.
+  usageLevels: { low: 0.4, expected: 1, heavy: 2 },
+  costLab: COST_LAB_SEED.map((r, i) => ({
+    id: "cl-" + i, product: r[0], feature: r[1],
+    tier: r[2], status: r[3], modelId: r[4],
+    inputTokens: r[5], outputTokens: r[6], runsPerAction: r[7],
+    reach: r[8], reachLabel: r[9], adoptionPct: r[10], usesPer: r[11],
+    freeModelId: "m-qwen", proModelId: r[4], notes: "",
+  })),
 };
 
 /* ── Defaults for the new monetization sub-pages ───────── */
@@ -1480,12 +1495,22 @@ function mergeMonz(saved) {
     bundleDiscounts: saved.bundleDiscounts || DEFAULT_MONETIZATION.bundleDiscounts,
     framework: { ...DEFAULT_MONETIZATION.framework, ...(saved.framework || {}) },
     leadingModelRationale: saved.leadingModelRationale || DEFAULT_MONETIZATION.leadingModelRationale,
-    modelCosts: saved.modelCosts || DEFAULT_MONETIZATION.modelCosts,
-    // id-merge cost lab: keep saved/edited rows, append any new default features by id.
+    // id-merge model pricing: forward-fill new fields (e.g. source) from defaults (saved edits win), then append new default models (e.g. GPT-4.1).
+    modelCosts: (() => {
+      if (!saved.modelCosts) return DEFAULT_MONETIZATION.modelCosts;
+      const defById = Object.fromEntries(DEFAULT_MONETIZATION.modelCosts.map(d => [d.id, d]));
+      const ids = new Set(saved.modelCosts.map(m => m.id));
+      const merged = saved.modelCosts.map(m => (defById[m.id] ? { ...defById[m.id], ...m } : m));
+      return [...merged, ...DEFAULT_MONETIZATION.modelCosts.filter(d => !ids.has(d.id))];
+    })(),
+    usageLevels: { ...DEFAULT_MONETIZATION.usageLevels, ...(saved.usageLevels || {}) },
+    // id-merge cost lab: forward-fill new fields from defaults (saved edits win), then append new default features.
     costLab: (() => {
       if (!saved.costLab) return DEFAULT_MONETIZATION.costLab;
+      const defById = Object.fromEntries(DEFAULT_MONETIZATION.costLab.map(d => [d.id, d]));
       const ids = new Set(saved.costLab.map(r => r.id));
-      return [...saved.costLab, ...DEFAULT_MONETIZATION.costLab.filter(d => !ids.has(d.id))];
+      const merged = saved.costLab.map(r => (defById[r.id] ? { ...defById[r.id], ...r } : r));
+      return [...merged, ...DEFAULT_MONETIZATION.costLab.filter(d => !ids.has(d.id))];
     })(),
   };
 }
@@ -2045,7 +2070,7 @@ function AiMonetizationPage({ subRoute, setSubRoute, deepRoute, setDeepRoute }) 
       {(() => {
         const titles = {
           plan:        { t: "Monetization Framework", s: "Working framework for AI Essential vs AI Pro across Faria products. Edit anything inline — this is a living document." },
-          usage:       { t: "Usage & cost", s: "Model cost table + cap strategy. Pick a product to price each AI feature across models (free vs Pro) and see what a free-tier allowance buys." },
+          usage:       { t: "Usage & cost", s: "AI cost model — FAIF model pricing in the Overview; pick a product to price each AI feature by scenario (schools × usage level) into $/school/mo and a fleet total." },
           competitive: { t: "Competitive Analysis", s: "Track how competitors are pricing and packaging AI. Use this to calibrate our Pro tier and bundle pricing." },
           market:      { t: "Market Validation", s: "Per-product school validation — pilots, willingness to pay, and which Pro outcomes schools have confirmed." },
           finance:     { t: "Finance", s: "Free-tier budget, SKUs & pricing, and per-product economics — net per school after AI cost (pulled from Usage) — plus uptake scenarios and a decision log." },
@@ -3791,8 +3816,23 @@ function FairUseExample({ monz, setMonz, deepRoute, setDeepRoute }) {
   const modelById = Object.fromEntries(models.map(m => [m.id, m]));
   const lab = monz.costLab || [];
 
-  const [selFeat, setSelFeat] = useState(null);    // costLab row id whose model comparison is shown
+  const [selFeat, setSelFeat] = useState(null);    // costLab row id whose detail panel is open
   const [allowance, setAllowance] = useState(0.85); // $/school/month free-tier allowance to test
+  const [numSchools, setNumSchools] = useState(500); // scenario: how many schools
+  const [level, setLevel] = useState("expected");   // scenario: Low | Expected | Heavy
+
+  const usageLevels = monz.usageLevels || { low: 0.4, expected: 1, heavy: 2 };
+  const LEVELS = [
+    { key: "low",      label: "Low",      color: F.green,  blurb: "conservative adoption" },
+    { key: "expected", label: "Expected", color: F.plum,   blurb: "our base case" },
+    { key: "heavy",    label: "Heavy",    color: F.orange, blurb: "power-user school" },
+  ];
+  const SCHOOL_PRESETS = [100, 250, 500, 1000];
+  const STATUS_META = {
+    live:    { label: "live",    color: F.green },
+    beta:    { label: "beta",    color: F.orange },
+    roadmap: { label: "roadmap", color: F.muted2 },
+  };
 
   const focusedProduct = SLUG_PRODUCT[deepRoute] || null; // null = Overview
   const setFocusedProduct = (prod) => { setSelFeat(null); setDeepRoute(prod ? (PRODUCT_SLUG[prod] || "") : ""); };
@@ -3803,6 +3843,19 @@ function FairUseExample({ monz, setMonz, deepRoute, setDeepRoute }) {
   };
   const fmtUSD = (n) => n >= 1 ? `$${n.toFixed(2)}` : n >= 0.01 ? `${(n * 100).toFixed(1)}¢` : `${(n * 100).toFixed(3)}¢`;
   const tierColor = (t) => t === "frontier" ? F.plum : t === "mid" ? F.orange : F.green;
+
+  // ── cost-model helpers (driver-based volume) ──
+  const modelOf = (r) => r.modelId || r.proModelId || r.freeModelId || "m-sonnet";
+  const calls = (r) => Math.max(1, r.runsPerAction || 1);
+  // cost per run = token cost on the chosen model × model calls per run (fan-out).
+  const runCostOf = (r) => costPerRun(r, modelOf(r)) * calls(r);
+  // Expected runs/school/mo, built from named school drivers: reach × adoption% × uses each.
+  const expectedRuns = (r) => Math.round((r.reach || 0) * ((r.adoptionPct || 0) / 100) * (r.usesPer || 0));
+  const runsAt = (r, lvl) => Math.round(expectedRuns(r) * (usageLevels[lvl] ?? 1));
+  const dollarsPerSchool = (r, lvl) => runCostOf(r) * runsAt(r, lvl);
+  const usd = (n) => `$${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const cents = (n) => `${(n * 100).toFixed(2)}¢`;
+  const setUsageLevel = (key, val) => setMonz(prev => ({ ...prev, usageLevels: { ...(prev.usageLevels || usageLevels), [key]: Math.max(0, +val) } }));
 
   const setModelCost = (id, patch) => setMonz(prev => ({ ...prev, modelCosts: (prev.modelCosts || []).map(m => m.id === id ? { ...m, ...patch } : m) }));
   const setLabRow = (id, patch) => setMonz(prev => ({ ...prev, costLab: (prev.costLab || []).map(r => r.id === id ? { ...r, ...patch } : r) }));
@@ -3821,103 +3874,214 @@ function FairUseExample({ monz, setMonz, deepRoute, setDeepRoute }) {
     <div style={{ display: "flex", gap: 6, marginBottom: 18, flexWrap: "wrap", alignItems: "center" }}>
       {chip("Overview", null, !focusedProduct)}
       {labProducts.map(p => chip(p, p, focusedProduct === p))}
-      <span style={{ fontSize: 11, color: F.muted2, marginLeft: 4 }}>· pick a product to price each AI feature across models</span>
+      <span style={{ fontSize: 11, color: F.muted2, marginLeft: 4 }}>· pick a product to model its AI feature costs by scenario</span>
     </div>
   );
 
-  // ── PER-PRODUCT: AI feature cost lab ──
+  // ── PER-PRODUCT: AI cost model ──
+  const pill = (active, color = F.plum) => ({ padding: "5px 13px", borderRadius: 999, fontSize: 12, fontWeight: 700, cursor: "pointer", background: active ? color : F.surface, color: active ? F.paper : F.plum, border: `1px solid ${active ? color : F.borderStrong}`, fontFamily: "inherit" });
+  const tierTag = (t) => { const pro = t === "pro"; return <span style={{ fontSize: 9.5, fontWeight: 800, padding: "2px 8px", borderRadius: 4, background: pro ? F.plum : F.lightYellow, color: pro ? F.paper : F.plum, textTransform: "uppercase", letterSpacing: "0.04em", whiteSpace: "nowrap" }}>{pro ? "Pro" : "Essential"}</span>; };
+  const statusTag = (s) => { const m = STATUS_META[s] || STATUS_META.roadmap; return <span style={{ fontSize: 9.5, fontWeight: 800, padding: "2px 8px", borderRadius: 999, background: F.bg, color: m.color, border: `1px solid ${F.border}`, textTransform: "uppercase", letterSpacing: "0.04em", whiteSpace: "nowrap" }}>{m.label}</span>; };
+  const f4 = (n) => `$${n.toFixed(4)}`;
+
   const renderProduct = () => {
     const rows = lab.filter(r => r.product === focusedProduct);
-    const withCost = rows.map(r => ({ r, free: costPerRun(r, r.freeModelId), pro: costPerRun(r, r.proModelId) }));
-    const sortedByPro = [...withCost].filter(x => x.pro > 0).sort((a, b) => b.pro - a.pro);
-    const priciest = sortedByPro[0];
-    const cheapest = sortedByPro[sortedByPro.length - 1];
+    const levelLabel = LEVELS.find(l => l.key === level)?.label || "Expected";
+    const withCost = rows.map(r => ({ r, run: runCostOf(r), runsMo: runsAt(r, level), perSchool: dollarsPerSchool(r, level) }));
+    const totalPerSchool = withCost.reduce((s, x) => s + x.perSchool, 0);
+    const sorted = [...withCost].sort((a, b) => b.perSchool - a.perSchool);
+    const top = sorted[0];
+    const maxBar = Math.max(0.0001, ...sorted.map(x => x.perSchool));
     const sel = rows.find(r => r.id === selFeat);
+    const levelTotals = LEVELS.map(L => { const tot = rows.reduce((s, r) => s + dollarsPerSchool(r, L.key), 0); return { ...L, perSchool: tot, fleet: tot * numSchools }; });
 
     return (
       <>
-        {/* header strip */}
+        {/* header + scenario */}
         <div style={{ ...card, borderLeft: `4px solid ${F.pink}` }}>
           <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap", marginBottom: 4 }}>
-            <span style={{ fontSize: 18, fontWeight: 800, color: F.plum }}>{focusedProduct}</span>
-            <span style={{ fontSize: 12, color: F.muted2 }}>AI feature cost lab · {rows.length} features</span>
+            <span style={{ fontSize: 18, fontWeight: 800, color: F.plum }}>{focusedProduct} — AI cost model</span>
+            <span style={{ fontSize: 12, color: F.muted2 }}>{rows.length} AI features · Pro &amp; Essential</span>
           </div>
-          <p style={{ margin: "0 0 12px", fontSize: 12.5, color: F.muted, lineHeight: 1.5, maxWidth: 820 }}>Each feature prices independently — set its token estimates and pick a <strong style={{ color: F.green }}>free</strong> (cheap/open) and <strong style={{ color: F.plum }}>Pro</strong> (frontier) model. Calibrate token counts from the FAIF playground; cost = in·$/M + out·$/M, per run.</p>
-          <div style={{ display: "flex", gap: 18, flexWrap: "wrap", alignItems: "center" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ ...lb, marginBottom: 0 }}>Free-tier allowance to test</span>
-              <span style={{ fontSize: 13, color: F.muted }}>$</span>
-              <input type="number" step="0.05" value={allowance} onChange={e => setAllowance(Math.max(0, +e.target.value))} style={{ ...numInp, width: 70 }} />
-              <span style={{ fontSize: 12, color: F.muted2 }}>/school/mo</span>
+          <p style={{ margin: "0 0 14px", fontSize: 12.5, color: F.muted, lineHeight: 1.5, maxWidth: 880 }}>Each feature is priced on the model it runs. Volume is built from school drivers — <strong style={{ color: F.plum }}>reach × adoption × uses</strong> — not a flat guess; the usage level flexes the adoption band. Set the scenario below, then read $/school/mo and the fleet total.</p>
+          <div style={{ display: "flex", gap: 28, flexWrap: "wrap" }}>
+            <div>
+              <div style={lb}>Number of schools</div>
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+                {SCHOOL_PRESETS.map(n => <button key={n} onClick={() => setNumSchools(n)} style={pill(numSchools === n)}>{n.toLocaleString()}</button>)}
+                <input type="number" min="1" value={numSchools} onChange={e => setNumSchools(Math.max(1, +e.target.value || 0))} style={{ ...numInp, width: 90 }} />
+              </div>
             </div>
-            <span style={{ fontSize: 11, color: F.muted2, fontStyle: "italic" }}>Set the real budget in Finance → free-tier calculator.</span>
+            <div>
+              <div style={lb}>Usage level</div>
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                {LEVELS.map(L => <button key={L.key} onClick={() => setLevel(L.key)} style={pill(level === L.key, L.color)}>{L.label}</button>)}
+              </div>
+            </div>
           </div>
-          {priciest && cheapest && (
-            <div style={{ marginTop: 12, display: "flex", gap: 10, flexWrap: "wrap" }}>
-              <span style={{ fontSize: 11.5, fontWeight: 700, color: F.plum, background: F.bg, border: `1px solid ${F.border}`, borderRadius: 8, padding: "5px 10px" }}>Priciest (Pro): {priciest.r.feature} · {fmtUSD(priciest.pro)}/run</span>
-              <span style={{ fontSize: 11.5, fontWeight: 700, color: F.plum, background: F.bg, border: `1px solid ${F.border}`, borderRadius: 8, padding: "5px 10px" }}>Cheapest (Pro): {cheapest.r.feature} · {fmtUSD(cheapest.pro)}/run</span>
-            </div>
-          )}
         </div>
 
-        {/* feature cost-lab table */}
+        {/* usage-level summary table */}
         <div style={card}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 10, flexWrap: "wrap" }}>
-            <div style={sectionTitle}>Cost per feature</div>
-            <span style={{ fontSize: 11, color: F.muted2, fontStyle: "italic" }}>Click a row to compare it across all models ↓</span>
-          </div>
+          <div style={sectionTitle}>Usage level · $/school/mo and fleet total</div>
           <div style={{ overflowX: "auto", border: `1px solid ${F.border}`, borderRadius: 8 }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 920 }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 520 }}>
               <thead><tr style={{ background: F.bg }}>
-                <th style={th}>Feature</th>
-                <th style={th}>In tok</th>
-                <th style={th}>Out tok</th>
-                <th style={th}>Runs/action</th>
-                <th style={th}>Free model</th>
-                <th style={th}>Pro model</th>
-                <th style={{ ...th, textAlign: "right" }}>Cost/run (free)</th>
-                <th style={{ ...th, textAlign: "right" }}>Cost/run (pro)</th>
-                <th style={{ ...th, textAlign: "right" }}>Cost/action (pro)</th>
-                <th style={{ ...th, textAlign: "right" }}>Runs/mo on free</th>
+                <th style={th}>Usage level</th>
+                <th style={{ ...th, textAlign: "right" }}>$/school/mo</th>
+                <th style={{ ...th, textAlign: "right" }}>Total @ {numSchools.toLocaleString()} schools</th>
               </tr></thead>
               <tbody>
-                {withCost.map(({ r, free, pro }) => {
-                  const active = selFeat === r.id;
-                  const runsMo = free > 0 ? Math.floor(allowance / free) : 0;
+                {levelTotals.map(L => {
+                  const on = level === L.key;
                   return (
-                    <tr key={r.id} onClick={() => setSelFeat(active ? null : r.id)} style={{ cursor: "pointer", background: active ? F.lightYellow + "55" : "transparent" }}>
-                      <td style={{ ...td, fontWeight: 700, whiteSpace: "nowrap" }}>{r.feature}</td>
-                      <td style={td}><input type="number" value={r.inputTokens} onClick={e => e.stopPropagation()} onChange={e => setLabRow(r.id, { inputTokens: +e.target.value })} style={numInp} /></td>
-                      <td style={td}><input type="number" value={r.outputTokens} onClick={e => e.stopPropagation()} onChange={e => setLabRow(r.id, { outputTokens: +e.target.value })} style={numInp} /></td>
-                      <td style={td}><input type="number" value={r.runsPerAction} onClick={e => e.stopPropagation()} onChange={e => setLabRow(r.id, { runsPerAction: Math.max(1, +e.target.value) })} style={{ ...numInp, width: 58 }} /></td>
-                      <td style={td}><select value={r.freeModelId} onClick={e => e.stopPropagation()} onChange={e => setLabRow(r.id, { freeModelId: e.target.value })} style={selInp}>{modelOptions}</select></td>
-                      <td style={td}><select value={r.proModelId} onClick={e => e.stopPropagation()} onChange={e => setLabRow(r.id, { proModelId: e.target.value })} style={selInp}>{modelOptions}</select></td>
-                      <td style={{ ...td, textAlign: "right", color: F.green, fontWeight: 700 }}>{fmtUSD(free)}</td>
-                      <td style={{ ...td, textAlign: "right", fontWeight: 700 }}>{fmtUSD(pro)}</td>
-                      <td style={{ ...td, textAlign: "right" }}>{fmtUSD(pro * (r.runsPerAction || 1))}</td>
-                      <td style={{ ...td, textAlign: "right", color: runsMo < 5 ? F.pink : F.muted }}>{runsMo.toLocaleString()}</td>
+                    <tr key={L.key} onClick={() => setLevel(L.key)} style={{ cursor: "pointer", background: on ? F.lightYellow + "55" : "transparent" }}>
+                      <td style={{ ...td, fontWeight: 700 }}>
+                        <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: 8, background: L.color, marginRight: 8 }} />
+                        {L.label}
+                        {on && <span style={{ fontSize: 9.5, fontWeight: 800, color: F.paper, background: F.plum, padding: "1px 7px", borderRadius: 999, marginLeft: 8 }}>SELECTED</span>}
+                        <span style={{ fontSize: 11, color: F.muted2, marginLeft: 8 }}>×{usageLevels[L.key] ?? 1} · {L.blurb}</span>
+                      </td>
+                      <td style={{ ...td, textAlign: "right", fontWeight: 700 }}>{usd(L.perSchool)}</td>
+                      <td style={{ ...td, textAlign: "right" }}>{usd(L.fleet)}</td>
                     </tr>
                   );
                 })}
               </tbody>
             </table>
           </div>
-          <div style={{ marginTop: 10, fontSize: 11.5, color: F.muted2, fontStyle: "italic" }}>"Runs/mo on free" = the ${allowance.toFixed(2)}/school/mo allowance ÷ the free-model cost/run. Features in <span style={{ color: F.pink }}>pink</span> burn the allowance fastest — gate those behind Pro.</div>
         </div>
 
-        {/* selected feature: per-model comparison */}
+        {/* $/school/mo by feature chart */}
+        <div style={card}>
+          <div style={sectionTitle}>$/school/mo by feature · {levelLabel}</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+            {sorted.filter(x => x.perSchool > 0).map((x, i) => (
+              <div key={x.r.id} style={{ display: "grid", gridTemplateColumns: "minmax(150px, 38%) 1fr auto", gap: 10, alignItems: "center" }}>
+                <div style={{ fontSize: 12, color: F.plum, fontWeight: i === 0 ? 800 : 600, lineHeight: 1.2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{x.r.feature}</div>
+                <div style={{ background: F.bg, borderRadius: 999, height: 15, overflow: "hidden", border: `1px solid ${F.border}` }}>
+                  <div style={{ width: `${Math.round(x.perSchool / maxBar * 100)}%`, height: "100%", borderRadius: 999, background: i === 0 ? F.gradient : F.lightPlum, transition: "width 0.4s ease" }} />
+                </div>
+                <div style={{ fontSize: 12, fontWeight: 800, color: i === 0 ? F.pink : F.plum, minWidth: 56, textAlign: "right" }}>{usd(x.perSchool)}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* per-feature breakdown */}
+        <div style={card}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 10, flexWrap: "wrap" }}>
+            <div style={sectionTitle}>Per-feature breakdown · @ {numSchools.toLocaleString()} schools, {levelLabel}</div>
+            <span style={{ fontSize: 11, color: F.muted2, fontStyle: "italic" }}>Click a row for the volume model &amp; cross-model cost ↓</span>
+          </div>
+          <div style={{ overflowX: "auto", border: `1px solid ${F.border}`, borderRadius: 8 }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 880 }}>
+              <thead><tr style={{ background: F.bg }}>
+                <th style={th}>Feature</th>
+                <th style={th}>Tier</th>
+                <th style={th}>Status</th>
+                <th style={th}>Model</th>
+                <th style={{ ...th, textAlign: "right" }}>¢/run</th>
+                <th style={{ ...th, textAlign: "right" }}>runs/mo</th>
+                <th style={{ ...th, textAlign: "right" }}>$/school/mo</th>
+                <th style={{ ...th, textAlign: "right" }}>share</th>
+              </tr></thead>
+              <tbody>
+                {sorted.map(({ r, run, runsMo, perSchool }) => {
+                  const active = selFeat === r.id;
+                  const share = totalPerSchool > 0 ? perSchool / totalPerSchool * 100 : 0;
+                  return (
+                    <tr key={r.id} onClick={() => setSelFeat(active ? null : r.id)} style={{ cursor: "pointer", background: active ? F.lightYellow + "55" : "transparent" }}>
+                      <td style={{ ...td, fontWeight: 700, whiteSpace: "nowrap" }}>{r.feature}</td>
+                      <td style={td}>{tierTag(r.tier)}</td>
+                      <td style={td}>{statusTag(r.status)}</td>
+                      <td style={td}><select value={modelOf(r)} onClick={e => e.stopPropagation()} onChange={e => setLabRow(r.id, { modelId: e.target.value })} style={selInp}>{modelOptions}</select></td>
+                      <td style={{ ...td, textAlign: "right" }}>{cents(run)}</td>
+                      <td style={{ ...td, textAlign: "right" }}>{runsMo.toLocaleString()}</td>
+                      <td style={{ ...td, textAlign: "right", fontWeight: 700 }}>{share > 12 && <span style={{ display: "inline-block", width: 6, height: 6, borderRadius: 6, background: F.pink, marginRight: 6, verticalAlign: "middle" }} />}{usd(perSchool)}</td>
+                      <td style={{ ...td, textAlign: "right", color: F.muted }}>{share.toFixed(0)}%</td>
+                    </tr>
+                  );
+                })}
+                <tr style={{ background: F.bg }}>
+                  <td style={{ ...td, fontWeight: 800 }} colSpan={6}>Total / school / mo</td>
+                  <td style={{ ...td, textAlign: "right", fontWeight: 800 }}>{usd(totalPerSchool)}</td>
+                  <td style={{ ...td, textAlign: "right", fontWeight: 800 }}>100%</td>
+                </tr>
+                <tr style={{ background: F.bg }}>
+                  <td style={{ ...td, fontWeight: 800 }} colSpan={6}>Total @ {numSchools.toLocaleString()} schools</td>
+                  <td style={{ ...td, textAlign: "right", fontWeight: 800 }} colSpan={2}>{usd(totalPerSchool * numSchools)}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* selected feature: volume model + tuning + cross-model cost */}
         {sel && (
-          <div style={card}>
-            <div style={sectionTitle}>{sel.feature} — cost per run across all models</div>
+          <div style={{ ...card, borderLeft: `4px solid ${F.plum}` }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: 8 }}>
+              <div style={sectionTitle}>{sel.feature} — volume model &amp; tuning</div>
+              <button onClick={() => setSelFeat(null)} style={{ padding: "3px 11px", borderRadius: 7, border: `1px solid ${F.borderStrong}`, background: "transparent", color: F.plum, fontSize: 11.5, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>Close ×</button>
+            </div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.05em", margin: "4px 0 8px" }}>Volume drivers — the answer to "more than guessing"</div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 12, marginBottom: 12 }}>
+              <div><div style={lb}>Reach (units/school/mo)</div><input type="number" min="0" value={sel.reach ?? 0} onChange={e => setLabRow(sel.id, { reach: Math.max(0, +e.target.value) })} style={{ ...numInp, width: "100%" }} /></div>
+              <div><div style={lb}>What the reach is</div><input value={sel.reachLabel ?? ""} onChange={e => setLabRow(sel.id, { reachLabel: e.target.value })} placeholder="applications/mo" style={{ ...inp, width: "100%", padding: "5px 7px", fontSize: 12 }} /></div>
+              <div><div style={lb}>Adoption % (Expected)</div><input type="number" min="0" max="100" value={sel.adoptionPct ?? 0} onChange={e => setLabRow(sel.id, { adoptionPct: Math.max(0, +e.target.value) })} style={{ ...numInp, width: "100%" }} /></div>
+              <div><div style={lb}>Uses each / mo</div><input type="number" min="0" value={sel.usesPer ?? 0} onChange={e => setLabRow(sel.id, { usesPer: Math.max(0, +e.target.value) })} style={{ ...numInp, width: "100%" }} /></div>
+            </div>
+            <div style={{ background: F.bg, border: `1px solid ${F.border}`, borderRadius: 8, padding: "10px 14px", fontSize: 12.5, color: F.plum, lineHeight: 1.6, marginBottom: 14 }}>
+              <strong>{(sel.reach ?? 0).toLocaleString()}</strong> {sel.reachLabel || "units"} × <strong>{sel.adoptionPct ?? 0}%</strong> adoption × <strong>{sel.usesPer ?? 0}</strong> uses = <strong style={{ color: F.green }}>{expectedRuns(sel).toLocaleString()}</strong> runs/school/mo (Expected) &nbsp;→&nbsp; {levelLabel} ×{usageLevels[level] ?? 1} = <strong style={{ color: F.pink }}>{runsAt(sel, level).toLocaleString()}</strong> runs/mo
+            </div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>Model, tokens &amp; tier</div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 12, marginBottom: 16 }}>
+              <div><div style={lb}>Model</div><select value={modelOf(sel)} onChange={e => setLabRow(sel.id, { modelId: e.target.value })} style={{ ...selInp, width: "100%", maxWidth: "none" }}>{modelOptions}</select></div>
+              <div><div style={lb}>Input tokens</div><input type="number" min="0" value={sel.inputTokens} onChange={e => setLabRow(sel.id, { inputTokens: +e.target.value })} style={{ ...numInp, width: "100%" }} /></div>
+              <div><div style={lb}>Output tokens</div><input type="number" min="0" value={sel.outputTokens} onChange={e => setLabRow(sel.id, { outputTokens: +e.target.value })} style={{ ...numInp, width: "100%" }} /></div>
+              <div><div style={lb}>Model calls / run</div><input type="number" min="1" value={sel.runsPerAction} onChange={e => setLabRow(sel.id, { runsPerAction: Math.max(1, +e.target.value) })} style={{ ...numInp, width: "100%" }} /></div>
+              <div><div style={lb}>Tier</div><select value={sel.tier} onChange={e => setLabRow(sel.id, { tier: e.target.value })} style={{ ...selInp, width: "100%", maxWidth: "none" }}><option value="pro">Pro</option><option value="essential">Essential</option></select></div>
+              <div><div style={lb}>Status</div><select value={sel.status} onChange={e => setLabRow(sel.id, { status: e.target.value })} style={{ ...selInp, width: "100%", maxWidth: "none" }}><option value="live">live</option><option value="beta">beta</option><option value="roadmap">roadmap</option></select></div>
+            </div>
+            <div style={sectionTitle}>Cost per run across all models (¢)</div>
             <VizBars
-              data={[...models].map(m => ({ label: m.name, value: +(costPerRun(sel, m.id) * 100).toFixed(2) })).sort((a, b) => b.value - a.value)}
+              data={[...models].map(m => ({ label: m.name, value: +(costPerRun(sel, m.id) * calls(sel) * 100).toFixed(2) })).sort((a, b) => b.value - a.value)}
               accent={F.lightPlum}
               highlightTop
               valueSuffix="¢"
             />
-            <div style={{ marginTop: 10, fontSize: 11.5, color: F.muted, lineHeight: 1.5 }}>Same prompt ({sel.inputTokens.toLocaleString()} in / {sel.outputTokens.toLocaleString()} out tokens), {models.length} models. The frontier ↔ open-source gap is the lever: run it free on the cheapest model, reserve the frontier model for Pro.</div>
+            <div style={{ marginTop: 10, fontSize: 11.5, color: F.muted, lineHeight: 1.5 }}>Same prompt ({sel.inputTokens.toLocaleString()} in / {sel.outputTokens.toLocaleString()} out tokens × {calls(sel)} call{calls(sel) > 1 ? "s" : ""}), {models.length} models. The frontier ↔ open-source gap is the lever — keep light work on a cheap model, reserve the frontier model for the Pro-grade features.</div>
           </div>
         )}
+
+        {/* how it's calculated */}
+        <div style={{ ...card, background: "#F7F3F8" }}>
+          <div style={sectionTitle}>How it's calculated</div>
+          <div style={{ fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace", fontSize: 12, color: F.plum, background: F.surface, border: `1px solid ${F.border}`, borderRadius: 8, padding: "12px 14px", whiteSpace: "pre-wrap", lineHeight: 1.7 }}>
+{`cost_per_run    = (in_tok/1M × $in + out_tok/1M × $out) × calls_per_run
+runs_per_month  = reach × adoption% × uses_each × level_multiplier
+cost_per_school = Σ over features ( cost_per_run × runs_per_month )
+fleet_total     = cost_per_school × number_of_schools`}
+          </div>
+          <p style={{ margin: "12px 0 0", fontSize: 12, color: F.muted, lineHeight: 1.55 }}><strong style={{ color: F.plum }}>runs_per_month</strong> is built from named school drivers, then the usage level flexes the adoption band — Low ×{usageLevels.low ?? 0.4}, Expected ×{usageLevels.expected ?? 1}, Heavy ×{usageLevels.heavy ?? 2}. That keeps Low/Expected/Heavy honest: change one band, not nine separate guesses. Calibrate the drivers from OpenApply/CRM counts and real pilots as data lands.</p>
+          {top && (() => {
+            const r = top.r; const m = modelById[modelOf(r)]; if (!m) return null;
+            const inC = (r.inputTokens || 0) / 1e6 * m.inPer1M, outC = (r.outputTokens || 0) / 1e6 * m.outPer1M;
+            const run = top.run, E = expectedRuns(r), M = usageLevels[level] ?? 1, R = top.runsMo, P = top.perSchool;
+            return (
+              <div style={{ marginTop: 14 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>Worked example — {r.feature} on {m.name} ({levelLabel}, {numSchools.toLocaleString()} schools)</div>
+                <div style={{ fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace", fontSize: 12, color: F.plum, background: F.surface, border: `1px solid ${F.border}`, borderRadius: 8, padding: "12px 14px", whiteSpace: "pre-wrap", lineHeight: 1.7 }}>
+{`cost_per_run = (${(r.inputTokens || 0).toLocaleString()}/1M × $${m.inPer1M} + ${(r.outputTokens || 0).toLocaleString()}/1M × $${m.outPer1M}) × ${calls(r)} call${calls(r) > 1 ? "s" : ""}
+            = (${f4(inC)} + ${f4(outC)}) × ${calls(r)} = ${f4(run)}  (${cents(run)}/run)
+runs/mo     = ${(r.reach || 0).toLocaleString()} ${r.reachLabel || "units"} × ${r.adoptionPct || 0}% × ${r.usesPer || 0} = ${E.toLocaleString()} (Expected) × ${M} = ${R.toLocaleString()}
+$/school/mo = ${f4(run)} × ${R.toLocaleString()} = ${usd(P)}
+fleet total = ${usd(P)} × ${numSchools.toLocaleString()} schools = ${usd(P * numSchools)}`}
+                </div>
+              </div>
+            );
+          })()}
+        </div>
       </>
     );
   };
@@ -3957,19 +4121,20 @@ function FairUseExample({ monz, setMonz, deepRoute, setDeepRoute }) {
 
   const renderOverview = () => (
     <>
-      {/* model cost table */}
+      {/* model pricing table */}
       <div style={card}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 10, flexWrap: "wrap" }}>
-          <div style={sectionTitle}>Model cost table</div>
-          <span style={{ fontSize: 11, color: F.muted2, fontStyle: "italic" }}>USD per 1M tokens · editable estimates — verify exact Bedrock rates with the engineer</span>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 4, flexWrap: "wrap" }}>
+          <div style={sectionTitle}>Model pricing</div>
+          <span style={{ fontSize: 11, color: F.muted2, fontStyle: "italic" }}>USD per 1M tokens · editable</span>
         </div>
+        <p style={{ margin: "0 0 12px", fontSize: 12, color: F.muted, lineHeight: 1.5, maxWidth: 860 }}>Source: FAIF <code style={{ fontFamily: "ui-monospace, Menlo, monospace", fontSize: 11.5, background: F.bg, padding: "1px 5px", borderRadius: 4 }}>token_pricer.ex</code> (native per-1K → ×1000 here). Caveat from the price file: USD &amp; CNY aren't normalised — convert before comparing; <code style={{ fontFamily: "ui-monospace, Menlo, monospace", fontSize: 11.5, background: F.bg, padding: "1px 5px", borderRadius: 4 }}>us.</code>/<code style={{ fontFamily: "ui-monospace, Menlo, monospace", fontSize: 11.5, background: F.bg, padding: "1px 5px", borderRadius: 4 }}>eu.</code> Bedrock cross-region rates run ~10% above <code style={{ fontFamily: "ui-monospace, Menlo, monospace", fontSize: 11.5, background: F.bg, padding: "1px 5px", borderRadius: 4 }}>global.</code></p>
         <div style={{ overflowX: "auto", border: `1px solid ${F.border}`, borderRadius: 8 }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 760 }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 820 }}>
             <thead><tr style={{ background: F.bg }}>
               <th style={th}>Model</th><th style={th}>Tier</th>
               <th style={{ ...th, textAlign: "right" }}>$/M in</th>
               <th style={{ ...th, textAlign: "right" }}>$/M out</th>
-              <th style={th}>Region</th><th style={th}>Notes</th>
+              <th style={th}>Region</th><th style={th}>Source</th><th style={th}>Notes</th>
             </tr></thead>
             <tbody>
               {models.map(m => (
@@ -3983,11 +4148,31 @@ function FairUseExample({ monz, setMonz, deepRoute, setDeepRoute }) {
                   <td style={{ ...td, textAlign: "right" }}><input type="number" step="0.05" value={m.inPer1M} onChange={e => setModelCost(m.id, { inPer1M: +e.target.value })} style={{ ...numInp, width: 64, textAlign: "right" }} /></td>
                   <td style={{ ...td, textAlign: "right" }}><input type="number" step="0.05" value={m.outPer1M} onChange={e => setModelCost(m.id, { outPer1M: +e.target.value })} style={{ ...numInp, width: 64, textAlign: "right" }} /></td>
                   <td style={{ ...td, color: F.muted, whiteSpace: "nowrap" }}>{m.region}</td>
+                  <td style={{ ...td, whiteSpace: "nowrap" }}><span style={{ fontSize: 10, fontWeight: 700, color: m.source === "token_pricer.ex" ? F.green : F.muted2, background: F.bg, border: `1px solid ${F.border}`, borderRadius: 4, padding: "2px 7px" }}>{m.source === "token_pricer.ex" ? "FAIF" : "estimate"}</span></td>
                   <td style={{ ...td, color: F.muted }}><input value={m.notes} onChange={e => setModelCost(m.id, { notes: e.target.value })} placeholder="—" style={{ ...inp, width: "100%", minWidth: 160, padding: "5px 7px", fontSize: 12 }} /></td>
                 </tr>
               ))}
             </tbody>
           </table>
+        </div>
+      </div>
+
+      {/* usage-level multipliers */}
+      <div style={card}>
+        <div style={sectionTitle}>Usage levels · adoption bands</div>
+        <p style={{ margin: "-2px 0 12px", fontSize: 12.5, color: F.muted, lineHeight: 1.5, maxWidth: 860 }}>Every feature's runs/mo is built bottom-up from <strong style={{ color: F.plum }}>reach × adoption × uses</strong> on each product page. These three bands then flex the whole book at once — so Low/Expected/Heavy stays defensible without re-guessing each feature. Expected is our base case; recalibrate against real pilot usage as it lands.</p>
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+          {LEVELS.map(L => (
+            <div key={L.key} style={{ background: F.bg, border: `1px solid ${F.border}`, borderTop: `3px solid ${L.color}`, borderRadius: 10, padding: "12px 16px", minWidth: 150 }}>
+              <div style={{ fontSize: 13, fontWeight: 800, color: F.plum }}>{L.label}</div>
+              <div style={{ fontSize: 10.5, color: F.muted2, marginBottom: 8 }}>{L.blurb}</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ fontSize: 13, color: F.muted }}>×</span>
+                <input type="number" step="0.1" min="0" value={usageLevels[L.key] ?? 1} onChange={e => setUsageLevel(L.key, e.target.value)} style={{ ...numInp, width: 70 }} />
+                <span style={{ fontSize: 11, color: F.muted2 }}>Expected runs</span>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -4062,7 +4247,7 @@ function FairUseExample({ monz, setMonz, deepRoute, setDeepRoute }) {
   return (
     <>
       <div style={{ ...card, borderLeft: `4px solid ${F.plum}` }}>
-        <p style={{ margin: 0, fontSize: 13, color: F.muted, lineHeight: 1.55 }}>Price our AI features against real model costs so the free tier and Pro caps are grounded in numbers, not guesses. The model table below is the reference; pick a product to price each feature, and read the engineer-handoff checklist for the live usage-tracking system.</p>
+        <p style={{ margin: 0, fontSize: 13, color: F.muted, lineHeight: 1.55 }}>Model what AI actually costs per school so the free tier and Pro pricing are grounded in numbers, not guesses. <strong style={{ color: F.plum }}>Overview</strong> holds the FAIF model pricing, usage bands, and the engineer-handoff checklist; pick a <strong style={{ color: F.plum }}>product</strong> to price each AI feature across a scenario (schools × usage level).</p>
       </div>
       {chipNav}
       {focusedProduct ? renderProduct() : renderOverview()}

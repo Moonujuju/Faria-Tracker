@@ -1177,10 +1177,17 @@ const DEFAULT_FINANCE = {
   },
   usageInputs: Object.fromEntries(MONZ_PRODUCTS.map(p => [p, { essActionsPerSchoolMonth: 0, proActionsPerSchoolMonth: 0, tokensPerAction: 0, freeModelId: "m-qwen", proModelId: "m-sonnet" }])),
   freeTierBudget: { annualSpendUSD: 10000, schools: 1000 },
+  // Per-product AI Pro pricing model: candidate prices to compare + target margin + fleet size.
+  proPricing: Object.fromEntries(MONZ_PRODUCTS.map(p => [p, {
+    targetMarginPct: 70,
+    schoolsOnPro: 500,
+    candidates: ["Lower", "Target", "Premium"].map((l, i) => ({ id: "pc-" + p.replace(/[^a-z0-9]/gi, "") + "-" + i, label: l, price: 0 })),
+  }])),
   uptakeScenarios: [],
   decisions: [],
   notes: "",
 };
+const PRO_CANDIDATE = (label) => ({ id: "pc-" + Date.now().toString(36) + Math.floor(Math.random() * 1e4).toString(36), label: label || "", price: 0 });
 const SCENARIO_TEMPLATE = () => ({
   id: Date.now() + Math.floor(Math.random() * 1000),
   label: "",
@@ -1203,6 +1210,11 @@ function mergeFinance(saved) {
     // Per-product deep-merge so existing saved products gain freeModelId/proModelId.
     usageInputs: Object.fromEntries(MONZ_PRODUCTS.map(p => [p, { ...DEFAULT_FINANCE.usageInputs[p], ...((saved.usageInputs || {})[p] || {}) }])),
     freeTierBudget: { ...DEFAULT_FINANCE.freeTierBudget, ...(saved.freeTierBudget || {}) },
+    proPricing: Object.fromEntries(MONZ_PRODUCTS.map(p => {
+      const d = DEFAULT_FINANCE.proPricing[p];
+      const s = (saved.proPricing || {})[p] || {};
+      return [p, { ...d, ...s, candidates: Array.isArray(s.candidates) ? s.candidates : d.candidates }];
+    })),
     uptakeScenarios: saved.uptakeScenarios || [],
     decisions: saved.decisions || [],
   };
@@ -2076,7 +2088,7 @@ function AiMonetizationPage({ subRoute, setSubRoute, deepRoute, setDeepRoute }) 
           usage:       { t: "Usage & cost", s: "AI cost model — FAIF model pricing in the Overview; pick a product to price each AI feature by scenario (schools × usage level) into $/school/mo and a fleet total." },
           competitive: { t: "Competitive Analysis", s: "Track how competitors are pricing and packaging AI. Use this to calibrate our Pro tier and bundle pricing." },
           market:      { t: "Market Validation", s: "Per-product school validation — pilots, willingness to pay, and which Pro outcomes schools have confirmed." },
-          finance:     { t: "Finance", s: "Free-tier budget, SKUs & pricing, and per-product economics — net per school after AI cost (pulled from Usage) — plus uptake scenarios and a decision log." },
+          finance:     { t: "Finance", s: "AI Pro economics — Overview rolls up Essential vs Pro AI cost (from Usage) and SKUs/pricing; pick a product to model AI Pro price points, margin and break-even." },
         };
         const cur = titles[view] || titles.plan;
         return (
@@ -2114,7 +2126,7 @@ function AiMonetizationPage({ subRoute, setSubRoute, deepRoute, setDeepRoute }) 
       {view === "usage"       && <FairUseExample monz={mz} setMonz={setMz} deepRoute={deepRoute} setDeepRoute={setDeepRoute} />}
       {view === "competitive" && <MonzCompetitivePage />}
       {view === "market"      && <MonzMarketPage />}
-      {view === "finance"     && <MonzFinancePage monz={mz} setMonz={setMz} />}
+      {view === "finance"     && <MonzFinancePage monz={mz} setMonz={setMz} deepRoute={deepRoute} setDeepRoute={setDeepRoute} />}
 
       {view === "plan" && (<>
       {/* Framework card — Essential vs Pro two-up, demarcation criteria as a full-width band below */}
@@ -3484,10 +3496,11 @@ function MonzMarketPage() {
 }
 
 /* ── Finance sub-page ───────────────────────────────────── */
-function MonzFinancePage({ monz, setMonz }) {
+function MonzFinancePage({ monz, setMonz, deepRoute, setDeepRoute }) {
   const [fin, setFin] = useState(DEFAULT_FINANCE);
   const [readyFin, setReadyFin] = useState(false);
   const [bundlePick, setBundlePick] = useState(new Set(MONZ_PRODUCTS));
+  const [level, setLevel] = useState("expected"); // Low | Expected | Heavy — usage basis for AI cost
   const saveTimer = useRef(null);
 
   useEffect(() => { (async () => {
@@ -3497,23 +3510,22 @@ function MonzFinancePage({ monz, setMonz }) {
   })(); }, []);
   useEffect(() => { if (!readyFin) return; clearTimeout(saveTimer.current); saveTimer.current = setTimeout(() => saveState("faria-monz-finance-v1", fin), 1000); return () => clearTimeout(saveTimer.current); }, [fin, readyFin]);
 
-  const setCost = (k, v) => setFin(prev => ({ ...prev, costInputs: { ...prev.costInputs, [k]: v === "" ? 0 : (parseFloat(v) || 0) } }));
-  const setUsage = (p, k, v) => setFin(prev => ({ ...prev, usageInputs: { ...prev.usageInputs, [p]: { ...prev.usageInputs[p], [k]: v === "" ? 0 : (parseFloat(v) || 0) } } }));
-  const setUsageModel = (p, k, v) => setFin(prev => ({ ...prev, usageInputs: { ...prev.usageInputs, [p]: { ...prev.usageInputs[p], [k]: v } } }));
+  const focusedProduct = SLUG_PRODUCT[deepRoute] || null;
+  const setFocusedProduct = (prod) => setDeepRoute(prod ? (PRODUCT_SLUG[prod] || "") : "");
+
+  // free-tier + AI-Pro pricing-model mutators
   const setFTB = (k, v) => setFin(prev => ({ ...prev, freeTierBudget: { ...prev.freeTierBudget, [k]: v === "" ? 0 : (parseFloat(v) || 0) } }));
-  const addScenario = () => setFin(prev => ({ ...prev, uptakeScenarios: [...prev.uptakeScenarios, SCENARIO_TEMPLATE()] }));
-  const updScenario = (id, patch) => setFin(prev => ({ ...prev, uptakeScenarios: prev.uptakeScenarios.map(s => s.id === id ? { ...s, ...patch } : s) }));
-  const delScenario = (id) => setFin(prev => ({ ...prev, uptakeScenarios: prev.uptakeScenarios.filter(s => s.id !== id) }));
-  const addDecision = () => setFin(prev => ({ ...prev, decisions: [DECISION_TEMPLATE(), ...prev.decisions] }));
-  const updDecision = (id, patch) => setFin(prev => ({ ...prev, decisions: prev.decisions.map(d => d.id === id ? { ...d, ...patch } : d) }));
-  const delDecision = (id) => setFin(prev => ({ ...prev, decisions: prev.decisions.filter(d => d.id !== id) }));
+  const setPP = (prod, patch) => setFin(prev => ({ ...prev, proPricing: { ...prev.proPricing, [prod]: { ...prev.proPricing[prod], ...patch } } }));
+  const setCand = (prod, id, patch) => setFin(prev => ({ ...prev, proPricing: { ...prev.proPricing, [prod]: { ...prev.proPricing[prod], candidates: (prev.proPricing[prod]?.candidates || []).map(c => c.id === id ? { ...c, ...patch } : c) } } }));
+  const addCand = (prod) => setFin(prev => ({ ...prev, proPricing: { ...prev.proPricing, [prod]: { ...prev.proPricing[prod], candidates: [...(prev.proPricing[prod]?.candidates || []), PRO_CANDIDATE("")] } } }));
+  const delCand = (prod, id) => setFin(prev => ({ ...prev, proPricing: { ...prev.proPricing, [prod]: { ...prev.proPricing[prod], candidates: (prev.proPricing[prod]?.candidates || []).filter(c => c.id !== id) } } }));
 
   // SKU / pricing / bundle mutators (operate on the parent-owned monz)
   const setProductField = (prod, patch) => setMonz(prev => ({ ...prev, products: { ...prev.products, [prod]: { ...prev.products[prod], ...patch } } }));
   const setDiscount = (idx, patch) => setMonz(prev => ({ ...prev, bundleDiscounts: prev.bundleDiscounts.map((d, i) => i === idx ? { ...d, ...patch } : d) }));
   const toggleBundle = (p) => setBundlePick(prev => { const n = new Set(prev); if (n.has(p)) n.delete(p); else n.add(p); return n; });
 
-  // Bundle calc (for the worked example)
+  // Bundle calc (for the SKUs worked example)
   const bundleArr = [...bundlePick];
   const bundleSubtotal = bundleArr.reduce((s, p) => s + (Number(monz.products[p]?.price) || 0), 0);
   const bundleRule = monz.bundleDiscounts.find(d => d.products === bundleArr.length);
@@ -3523,280 +3535,381 @@ function MonzFinancePage({ monz, setMonz }) {
   const card = { background: F.surface, border: `1px solid ${F.border}`, borderRadius: 12, padding: "18px 22px", marginBottom: 18, boxShadow: F.shadowSm };
   const sectionTitle = { fontSize: 11, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 };
   const numInp = { ...inp, width: "100%", textAlign: "right" };
+  const th = { textAlign: "left", padding: "8px 10px", fontSize: 10, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.05em", borderBottom: `1px solid ${F.border}`, whiteSpace: "nowrap" };
+  const td = { padding: "7px 10px", fontSize: 12.5, color: F.plum, verticalAlign: "middle", borderBottom: `1px solid ${F.border}` };
 
-  // ── AI cost pulled from the Usage cost lab (monz.costLab + monz.modelCosts) ──
+  const LEVELS = [
+    { key: "low", label: "Low", color: F.green },
+    { key: "expected", label: "Expected", color: F.plum },
+    { key: "heavy", label: "Heavy", color: F.orange },
+  ];
+  const levelLabel = LEVELS.find(l => l.key === level)?.label || "Expected";
+
+  // ── AI cost pulled live from the Usage cost model (monz.costLab + modelCosts + usageLevels) ──
   const fModelById = Object.fromEntries((monz.modelCosts || []).map(m => [m.id, m]));
-  const runCost = (row, modelId) => { const m = fModelById[modelId]; if (!m || !row) return 0; return (row.inputTokens || 0) / 1e6 * m.inPer1M + (row.outputTokens || 0) / 1e6 * m.outPer1M; };
+  const usageLevels = monz.usageLevels || { low: 0.4, expected: 1, heavy: 2 };
   const labRows = (prod) => (monz.costLab || []).filter(r => r.product === prod);
-  // Avg cost per action across a product's features (run cost × runs/action), free or pro model.
-  const avgCostPerAction = (prod, tier) => {
-    const rows = labRows(prod); if (!rows.length) return 0;
-    const sum = rows.reduce((s, r) => s + runCost(r, tier === "pro" ? r.proModelId : r.freeModelId) * (r.runsPerAction || 1), 0);
-    return sum / rows.length;
-  };
-  // Shared infra/support spread per school per month (infra split across products; support /12).
-  const overheadPerSchoolMo = (fin.costInputs.monthlyInfraCost / MONZ_PRODUCTS.length) + ((fin.costInputs.supportCostPerCustomer || 0) / 12);
-  const aiCostPerSchool = (prod, tier) => ((fin.usageInputs[prod] || {})[tier === "pro" ? "proActionsPerSchoolMonth" : "essActionsPerSchoolMonth"] || 0) * avgCostPerAction(prod, tier === "pro" ? "pro" : "free");
-  // Full monthly cost per school (AI + shared overhead) — used by uptake scenarios.
-  const costPerSchool = (prod, tier) => aiCostPerSchool(prod, tier) + overheadPerSchoolMo;
-  const fmtMoney = (n) => isFinite(n) ? `$${n.toFixed(2)}` : "—";
-  const fmtPct = (n) => isFinite(n) ? `${n.toFixed(0)}%` : "—";
-  // Free-tier budget → per-school/month allowance (engineer's "comfortable spend ÷ schools" method).
+  const modelOf = (r) => r.modelId || r.proModelId || r.freeModelId || "m-sonnet";
+  const tokenCost = (r, id) => { const m = fModelById[id]; if (!m || !r) return 0; return (r.inputTokens || 0) / 1e6 * m.inPer1M + (r.outputTokens || 0) / 1e6 * m.outPer1M; };
+  const runCostOf = (r) => tokenCost(r, modelOf(r)) * Math.max(1, r.runsPerAction || 1);
+  const baseOf = (r) => (typeof r.baseRuns === "number" ? r.baseRuns : Math.round((r.reach || 0) * ((r.adoptionPct || 0) / 100) * (r.usesPer || 0)));
+  const runsAt = (r, lvl) => Math.round(baseOf(r) * (usageLevels[lvl] ?? 1));
+  const featPerSchool = (r, lvl) => runCostOf(r) * runsAt(r, lvl);
+  const enabledRows = (prod) => labRows(prod).filter(r => r.enabled !== false);
+  // scope: "essential" | "pro" | "all". Returns $/school/mo at a usage level.
+  const aiCostMo = (prod, scope, lvl) => enabledRows(prod).filter(r => scope === "all" ? true : r.tier === scope).reduce((s, r) => s + featPerSchool(r, lvl), 0);
+  const essentialMo = (prod, lvl) => aiCostMo(prod, "essential", lvl);
+  const proServeMo = (prod, lvl) => aiCostMo(prod, "all", lvl);  // total AI a Pro school uses — the margin basis
+  const proOnlyMo = (prod, lvl) => aiCostMo(prod, "pro", lvl);   // incremental pro-only features
+  const featCount = (prod) => ({ ess: enabledRows(prod).filter(r => r.tier === "essential").length, pro: enabledRows(prod).filter(r => r.tier === "pro").length });
+
+  const usd = (n) => isFinite(n) ? `$${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "—";
+  const usd0 = (n) => isFinite(n) ? `$${Math.round(n).toLocaleString()}` : "—";
+  const pctf = (n) => isFinite(n) ? `${n.toFixed(0)}%` : "—";
+  const skuPriceOf = (prod) => Number(monz.products[prod]?.price) || 0;
+
+  // Free-tier budget → per-school/month allowance.
   const ftb = fin.freeTierBudget || { annualSpendUSD: 0, schools: 0 };
   const ftbMonthlyPot = (ftb.annualSpendUSD || 0) / 12;
   const ftbPerSchoolMo = ftb.schools > 0 ? ftbMonthlyPot / ftb.schools : 0;
   const ftbPerSchoolYr = ftb.schools > 0 ? (ftb.annualSpendUSD || 0) / ftb.schools : 0;
 
-  return (
-    <>
-      {/* Free-tier budget calculator — comfortable annual spend ÷ schools → per-school/month allowance */}
-      <div style={{ ...card, borderLeft: `4px solid ${F.yellow}` }}>
-        <div style={sectionTitle}>Free-tier budget · what we're comfortable giving away</div>
-        <p style={{ margin: "-2px 0 14px", fontSize: 12.5, color: F.muted, lineHeight: 1.5, maxWidth: 820 }}>Start from a number that wouldn't bother finance, then divide by schools to get the per-school allowance. Run it as a <strong>shared pot</strong> — power users draw more, light users less — so the per-school figure is an average, not a hard cap.</p>
-        <div style={{ display: "flex", gap: 22, flexWrap: "wrap", alignItems: "flex-end" }}>
-          <div>
-            <div style={lb}>Comfortable annual spend (USD)</div>
-            <input type="number" min="0" value={ftb.annualSpendUSD || ""} placeholder="10000" onChange={e => setFTB("annualSpendUSD", e.target.value)} style={{ ...inp, width: 140 }} />
-          </div>
-          <div>
-            <div style={lb}>Schools on free tier</div>
-            <input type="number" min="0" value={ftb.schools || ""} placeholder="1000" onChange={e => setFTB("schools", e.target.value)} style={{ ...inp, width: 120 }} />
-          </div>
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-            {[
-              { l: "Monthly pot", v: fmtMoney(ftbMonthlyPot), c: F.plum },
-              { l: "Per school / yr", v: fmtMoney(ftbPerSchoolYr), c: F.plum },
-              { l: "Per school / mo", v: fmtMoney(ftbPerSchoolMo), c: F.green },
-            ].map((s, i) => (
-              <div key={i} style={{ background: F.bg, border: `1px solid ${F.border}`, borderTop: `3px solid ${s.c}`, borderRadius: 10, padding: "10px 14px", minWidth: 110 }}>
-                <div style={{ fontSize: 20, fontWeight: 800, color: F.plum, lineHeight: 1 }}>{s.v}</div>
-                <div style={{ fontSize: 10.5, color: F.muted, marginTop: 4, fontWeight: 600 }}>{s.l}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-        <p style={{ margin: "12px 0 0", fontSize: 11.5, color: F.muted2, fontStyle: "italic" }}>Size this against the <strong style={{ color: F.pink }}>Usage → cost lab</strong>: at the per-school/mo allowance, how many runs of each feature does the free model buy?</p>
-      </div>
+  // chip nav + usage-level pills
+  const chip = (label, prod, active) => (
+    <button key={label} onClick={() => setFocusedProduct(prod)} style={{ padding: "5px 13px", borderRadius: 999, fontSize: 12, fontWeight: 700, cursor: "pointer", background: active ? F.plum : F.surface, color: active ? F.paper : F.plum, border: `1px solid ${active ? F.plum : F.borderStrong}`, fontFamily: "inherit" }}>{label}</button>
+  );
+  const chipNav = (
+    <div style={{ display: "flex", gap: 6, marginBottom: 18, flexWrap: "wrap", alignItems: "center" }}>
+      {chip("Overview", null, !focusedProduct)}
+      {MONZ_PRODUCTS.map(p => chip(p, p, focusedProduct === p))}
+      <span style={{ fontSize: 11, color: F.muted2, marginLeft: 4 }}>· pick a product to model AI Pro pricing &amp; margin</span>
+    </div>
+  );
+  const levelPills = (
+    <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+      <span style={{ ...lb, marginBottom: 0, marginRight: 2 }}>Usage basis</span>
+      {LEVELS.map(L => <button key={L.key} onClick={() => setLevel(L.key)} style={{ padding: "4px 11px", borderRadius: 999, fontSize: 11.5, fontWeight: 700, cursor: "pointer", background: level === L.key ? L.color : F.surface, color: level === L.key ? F.paper : F.plum, border: `1px solid ${level === L.key ? L.color : F.borderStrong}`, fontFamily: "inherit" }}>{L.label}</button>)}
+    </div>
+  );
 
-      {/* SKUs & pricing — moved from the Framework view; the source of truth for breakeven and uptake-scenario revenue */}
-      <div style={card}>
-        <div style={sectionTitle}>SKUs &amp; pricing</div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12 }}>
-          {MONZ_PRODUCTS.map(p => {
-            const pd = monz.products[p] || { sku: "", unit: "", price: 0 };
-            return (
-              <div key={p} style={{ background: F.bg, border: `1px solid ${F.border}`, borderRadius: 10, padding: "14px 16px" }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em" }}>{p}</div>
-                <input value={pd.sku} onChange={e => setProductField(p, { sku: e.target.value })} style={{ ...inp, width: "100%", marginTop: 6, fontWeight: 700 }} />
-                <div style={{ display: "flex", gap: 4, marginTop: 10, alignItems: "center", minWidth: 0 }}>
-                  <span style={{ fontSize: 15, fontWeight: 700, color: F.plum }}>$</span>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={pd.price ? pd.price : ""}
-                    placeholder="0"
-                    onChange={e => {
-                      const v = e.target.value;
-                      setProductField(p, { price: v === "" ? null : (parseFloat(v) || 0) });
-                    }}
-                    style={{ ...inp, flex: 1, minWidth: 0, width: "100%", fontWeight: 700, fontSize: 15, padding: "7px 9px" }}
-                  />
+  // ── OVERVIEW: portfolio Essential vs Pro cost + free-tier give-away + SKUs/pricing ──
+  const renderOverview = () => {
+    const prows = MONZ_PRODUCTS.map(p => {
+      const ess = essentialMo(p, level), proServe = proServeMo(p, level), price = skuPriceOf(p);
+      const marginMo = price > 0 ? price / 12 - proServe : NaN;
+      const marginPct = price > 0 ? (marginMo / (price / 12)) * 100 : NaN;
+      return { p, ess, proServe, price, marginMo, marginPct, fc: featCount(p) };
+    });
+    const totEss = prows.reduce((s, r) => s + r.ess, 0);
+    const totProServe = prows.reduce((s, r) => s + r.proServe, 0);
+    return (
+      <>
+        {/* portfolio cost vs price */}
+        <div style={{ ...card, borderLeft: `4px solid ${F.plum}` }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap", marginBottom: 4 }}>
+            <div style={sectionTitle}>Portfolio · Essential vs Pro AI cost, and margin at the current price</div>
+            {levelPills}
+          </div>
+          <p style={{ margin: "0 0 12px", fontSize: 12.5, color: F.muted, lineHeight: 1.5, maxWidth: 900 }}>Costs pulled live from <strong style={{ color: F.pink }}>Usage</strong> at <strong>{levelLabel}</strong> usage. <strong style={{ color: F.green }}>Essential</strong> = AI in the free/base tier (the give-away). <strong style={{ color: F.plum }}>Pro (to serve)</strong> = every AI feature a Pro school uses (Essential + Pro) — what the AI Pro price must cover. Margin uses each product's current AI Pro price from SKUs below.</p>
+          <div style={{ overflowX: "auto", border: `1px solid ${F.border}`, borderRadius: 8 }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 760 }}>
+              <thead><tr style={{ background: F.bg }}>
+                <th style={th}>Product</th>
+                <th style={{ ...th, textAlign: "right" }}>Essential $/sch/mo</th>
+                <th style={{ ...th, textAlign: "right" }}>Pro (to serve) $/sch/mo</th>
+                <th style={{ ...th, textAlign: "right" }}>AI Pro price / yr</th>
+                <th style={{ ...th, textAlign: "right" }}>Margin / sch / mo</th>
+                <th style={{ ...th, textAlign: "right" }}>Margin %</th>
+                <th style={{ ...th, textAlign: "center" }}>Open</th>
+              </tr></thead>
+              <tbody>
+                {prows.map(r => (
+                  <tr key={r.p} onClick={() => setFocusedProduct(r.p)} style={{ cursor: "pointer", borderBottom: `1px solid ${F.border}` }}>
+                    <td style={{ ...td, fontWeight: 700 }}>{r.p}<span style={{ fontSize: 10.5, color: F.muted2, fontWeight: 500 }}> · {r.fc.ess} ess · {r.fc.pro} pro</span></td>
+                    <td style={{ ...td, textAlign: "right", color: F.green, fontWeight: 700 }}>{usd(r.ess)}</td>
+                    <td style={{ ...td, textAlign: "right", fontWeight: 700 }}>{usd(r.proServe)}</td>
+                    <td style={{ ...td, textAlign: "right", color: r.price > 0 ? F.plum : F.muted2 }}>{r.price > 0 ? usd0(r.price) : "— set in SKUs"}</td>
+                    <td style={{ ...td, textAlign: "right", fontWeight: 800, color: !isFinite(r.marginMo) ? F.muted2 : r.marginMo >= 0 ? F.green : F.pink }}>{isFinite(r.marginMo) ? usd(r.marginMo) : "—"}</td>
+                    <td style={{ ...td, textAlign: "right", fontWeight: 800, color: !isFinite(r.marginPct) ? F.muted2 : r.marginPct >= 0 ? F.green : F.pink }}>{pctf(r.marginPct)}</td>
+                    <td style={{ ...td, textAlign: "center", color: F.muted2 }}>→</td>
+                  </tr>
+                ))}
+                <tr style={{ background: F.bg }}>
+                  <td style={{ ...td, fontWeight: 800 }}>Portfolio · per school / mo</td>
+                  <td style={{ ...td, textAlign: "right", fontWeight: 800, color: F.green }}>{usd(totEss)}</td>
+                  <td style={{ ...td, textAlign: "right", fontWeight: 800 }}>{usd(totProServe)}</td>
+                  <td style={{ ...td }} colSpan={3}></td>
+                  <td style={{ ...td }}></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p style={{ margin: "10px 0 0", fontSize: 11.5, color: F.muted2, fontStyle: "italic" }}>Click a product for its full AI Pro pricing &amp; break-even model. <span style={{ color: F.green }}>Green</span> = profit, <span style={{ color: F.pink }}>pink</span> = loss at the current price.</p>
+        </div>
+
+        {/* Essential tier — free-tier give-away budget */}
+        <div style={{ ...card, borderLeft: `4px solid ${F.yellow}` }}>
+          <div style={sectionTitle}>Essential tier · free-tier give-away</div>
+          <p style={{ margin: "-2px 0 14px", fontSize: 12.5, color: F.muted, lineHeight: 1.5, maxWidth: 900 }}>The Essential AI we include for free. Start from a comfortable annual spend, divide by schools for a per-school allowance, then check each product's Essential cost (from Usage) against it. Run it as a <strong>shared pot</strong> — the per-school figure is an average, not a hard cap.</p>
+          <div style={{ display: "flex", gap: 22, flexWrap: "wrap", alignItems: "flex-end" }}>
+            <div>
+              <div style={lb}>Comfortable annual spend (USD)</div>
+              <input type="number" min="0" value={ftb.annualSpendUSD || ""} placeholder="10000" onChange={e => setFTB("annualSpendUSD", e.target.value)} style={{ ...inp, width: 140 }} />
+            </div>
+            <div>
+              <div style={lb}>Schools on free tier</div>
+              <input type="number" min="0" value={ftb.schools || ""} placeholder="1000" onChange={e => setFTB("schools", e.target.value)} style={{ ...inp, width: 120 }} />
+            </div>
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              {[
+                { l: "Monthly pot", v: usd(ftbMonthlyPot), c: F.plum },
+                { l: "Per school / yr", v: usd(ftbPerSchoolYr), c: F.plum },
+                { l: "Allowance / school / mo", v: usd(ftbPerSchoolMo), c: F.green },
+              ].map((s, i) => (
+                <div key={i} style={{ background: F.bg, border: `1px solid ${F.border}`, borderTop: `3px solid ${s.c}`, borderRadius: 10, padding: "10px 14px", minWidth: 120 }}>
+                  <div style={{ fontSize: 19, fontWeight: 800, color: F.plum, lineHeight: 1 }}>{s.v}</div>
+                  <div style={{ fontSize: 10.5, color: F.muted, marginTop: 4, fontWeight: 600 }}>{s.l}</div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
-
-        <div style={{ marginTop: 18 }}>
-          <div style={{ ...sectionTitle, marginBottom: 8 }}>Bundle discounts (stacked)</div>
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 14 }}>
-            {monz.bundleDiscounts.map((d, i) => (
-              <div key={i} style={{ background: F.bg, border: `1px solid ${F.border}`, borderRadius: 8, padding: "8px 12px", display: "flex", alignItems: "center", gap: 8 }}>
-                <input type="number" min="2" max="10" value={d.products} onChange={e => setDiscount(i, { products: parseInt(e.target.value) || 2 })} style={{ ...inp, width: 52, padding: "4px 8px", textAlign: "center" }} />
-                <span style={{ fontSize: 12, color: F.muted, fontWeight: 600 }}>products →</span>
-                <input type="number" min="0" max="100" value={d.pct} onChange={e => setDiscount(i, { pct: parseFloat(e.target.value) || 0 })} style={{ ...inp, width: 60, padding: "4px 8px", textAlign: "center" }} />
-                <span style={{ fontSize: 12, color: F.muted, fontWeight: 600 }}>% off</span>
-              </div>
-            ))}
-          </div>
-
-          <div style={{ background: F.bg, border: `1px solid ${F.border}`, borderRadius: 8, padding: "12px 14px" }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>Worked example</div>
-            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 10 }}>
-              {MONZ_PRODUCTS.map(p => (
-                <label key={p} style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", fontSize: 13, color: F.plum }}>
-                  <input type="checkbox" checked={bundlePick.has(p)} onChange={() => toggleBundle(p)} style={{ cursor: "pointer" }} />
-                  {p}
-                </label>
               ))}
             </div>
-            <div style={{ display: "flex", gap: 18, flexWrap: "wrap", fontSize: 13, alignItems: "baseline" }}>
-              <div><span style={{ color: F.muted, fontWeight: 600 }}>Subtotal</span> <strong style={{ color: F.plum }}>${bundleSubtotal.toFixed(2)}</strong></div>
-              <div><span style={{ color: F.muted, fontWeight: 600 }}>Bundle disc.</span> <strong style={{ color: F.pink }}>-${bundleDisc.toFixed(2)}</strong>{bundleRule && <span style={{ fontSize: 11, color: F.muted, marginLeft: 4 }}>({bundleRule.pct}% off, {bundleRule.products} products)</span>}</div>
-              <div style={{ marginLeft: "auto", fontSize: 16 }}><span style={{ color: F.muted, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", fontSize: 11 }}>Total</span> <strong style={{ color: F.plum, fontSize: 18 }}>${bundleTotal.toFixed(2)}</strong></div>
-            </div>
           </div>
-        </div>
-      </div>
-
-      <div style={card}>
-        <div style={sectionTitle}>Shared costs · spread per school</div>
-        <p style={{ margin: "-2px 0 12px", fontSize: 11.5, color: F.muted, fontStyle: "italic" }}>Non-AI overheads. Per-model AI cost is set on the <strong style={{ color: F.pink }}>Usage</strong> page now — this is just infra + support.</p>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 14 }}>
-          <div>
-            <div style={lb}>Monthly infra cost (USD)</div>
-            <input type="number" min="0" step="1" value={fin.costInputs.monthlyInfraCost || ""} placeholder="0" onChange={e => setCost("monthlyInfraCost", e.target.value)} style={numInp} />
-          </div>
-          <div>
-            <div style={lb}>Support · per customer / year (USD)</div>
-            <input type="number" min="0" step="1" value={fin.costInputs.supportCostPerCustomer || ""} placeholder="0" onChange={e => setCost("supportCostPerCustomer", e.target.value)} style={numInp} />
-          </div>
-          <div style={{ alignSelf: "end" }}>
-            <div style={lb}>= Shared cost / school / mo</div>
-            <div style={{ fontSize: 18, fontWeight: 800, color: F.plum }}>{fmtMoney(overheadPerSchoolMo)}</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Per-product economics — the headline P&L: revenue vs AI cost (pulled from Usage) */}
-      <div style={{ ...card, borderLeft: `4px solid ${F.green}` }}>
-        <div style={sectionTitle}>Per-product economics · net per school after AI cost</div>
-        <p style={{ margin: "-2px 0 12px", fontSize: 12.5, color: F.muted, lineHeight: 1.5, maxWidth: 860 }}>What we net (or lose) per school at the current Pro price. <strong>AI cost is pulled live from Usage → cost lab</strong> — the avg cost/action across each product's features. Edit feature tokens & models on the Usage page; set the price in SKUs above; set expected actions/school/mo here.</p>
-        <div style={{ overflowX: "auto", border: `1px solid ${F.border}`, borderRadius: 8 }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12.5, minWidth: 820 }}>
-            <thead>
-              <tr style={{ background: F.bg }}>
-                {[["Product", "left"], ["Revenue / school / mo", "right"], ["Pro actions / school / mo", "right"], ["Cost / action (Usage)", "right"], ["AI cost / school / mo", "right"], ["Net / school / mo", "right"], ["Margin %", "right"]].map(([h, a]) => (
-                  <th key={h} style={{ textAlign: a, padding: "8px 10px", fontSize: 10, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.05em", borderBottom: `1px solid ${F.border}`, whiteSpace: "nowrap" }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {MONZ_PRODUCTS.map(p => {
-                const u = fin.usageInputs[p] || {};
-                const hasFeatures = labRows(p).length > 0;
-                const price = monz.products[p]?.price || 0;
-                const rev = price / 12;
-                const cpa = avgCostPerAction(p, "pro");
-                const aiCost = aiCostPerSchool(p, "pro");
-                const net = rev - aiCost - overheadPerSchoolMo;
-                const marginPct = rev > 0 ? (net / rev) * 100 : NaN;
-                return (
-                  <tr key={p} style={{ borderBottom: `1px solid ${F.border}` }}>
-                    <td style={{ padding: "7px 10px", color: F.plum, fontWeight: 700, whiteSpace: "nowrap" }}>{p}{!hasFeatures && <span style={{ fontSize: 10, color: F.muted2, fontWeight: 500 }}> · no features</span>}</td>
-                    <td style={{ padding: "7px 10px", textAlign: "right", color: F.muted }}>{fmtMoney(rev)}</td>
-                    <td style={{ padding: "5px 10px", textAlign: "right" }}><input type="number" min="0" value={u.proActionsPerSchoolMonth || ""} placeholder="0" onChange={e => setUsage(p, "proActionsPerSchoolMonth", e.target.value)} style={{ ...inp, width: 80, textAlign: "right", padding: "5px 7px", fontSize: 12 }} /></td>
-                    <td style={{ padding: "7px 10px", textAlign: "right", color: F.muted }}>{hasFeatures ? fmtMoney(cpa) : "—"}</td>
-                    <td style={{ padding: "7px 10px", textAlign: "right", color: F.plum, fontWeight: 700 }}>{fmtMoney(aiCost)}</td>
-                    <td style={{ padding: "7px 10px", textAlign: "right", color: net >= 0 ? F.green : F.pink, fontWeight: 800 }}>{fmtMoney(net)}</td>
-                    <td style={{ padding: "7px 10px", textAlign: "right", color: marginPct >= 0 ? F.green : F.pink, fontWeight: 800 }}>{isFinite(marginPct) ? fmtPct(marginPct) : "—"}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-        <p style={{ margin: "10px 0 0", fontSize: 11.5, color: F.muted2, fontStyle: "italic" }}>Net also subtracts the shared cost of {fmtMoney(overheadPerSchoolMo)}/school/mo (above). Green = profit, pink = loss at this price.</p>
-
-        {/* Free-tier giveaway cost */}
-        <div style={{ marginTop: 16, background: F.bg, border: `1px solid ${F.border}`, borderRadius: 10, padding: "13px 15px" }}>
-          <div style={{ ...sectionTitle, marginBottom: 8 }}>Free-tier giveaway · AI cost / school / mo</div>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            {MONZ_PRODUCTS.filter(p => labRows(p).length > 0).map(p => {
-              const u = fin.usageInputs[p] || {};
-              const freeCost = aiCostPerSchool(p, "free");
-              const over = freeCost > ftbPerSchoolMo && ftbPerSchoolMo > 0;
+          <div style={{ marginTop: 14, display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {MONZ_PRODUCTS.filter(p => enabledRows(p).some(r => r.tier === "essential")).map(p => {
+              const ess = essentialMo(p, level);
+              const over = ess > ftbPerSchoolMo && ftbPerSchoolMo > 0;
               return (
                 <div key={p} style={{ background: F.surface, border: `1px solid ${over ? F.pink : F.border}`, borderRadius: 9, padding: "9px 12px", minWidth: 150 }}>
                   <div style={{ fontSize: 11, fontWeight: 700, color: F.plum, marginBottom: 4 }}>{p}</div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <input type="number" min="0" value={u.essActionsPerSchoolMonth || ""} placeholder="0" onChange={e => setUsage(p, "essActionsPerSchoolMonth", e.target.value)} style={{ ...inp, width: 56, textAlign: "right", padding: "4px 6px", fontSize: 12 }} />
-                    <span style={{ fontSize: 10.5, color: F.muted2 }}>free acts/mo</span>
-                  </div>
-                  <div style={{ fontSize: 15, fontWeight: 800, color: over ? F.pink : F.green, marginTop: 5 }}>{fmtMoney(freeCost)}<span style={{ fontSize: 10, color: F.muted2, fontWeight: 600 }}> /school/mo</span></div>
+                  <div style={{ fontSize: 16, fontWeight: 800, color: over ? F.pink : F.green }}>{usd(ess)}<span style={{ fontSize: 10, color: F.muted2, fontWeight: 600 }}> /school/mo</span></div>
                 </div>
               );
             })}
           </div>
-          <p style={{ margin: "10px 0 0", fontSize: 11.5, color: F.muted2, fontStyle: "italic" }}>Compare against the free-tier allowance of {fmtMoney(ftbPerSchoolMo)}/school/mo (top). <span style={{ color: F.pink }}>Pink</span> = the giveaway exceeds the allowance — push those features to cheaper models or smaller caps.</p>
+          <p style={{ margin: "10px 0 0", fontSize: 11.5, color: F.muted2, fontStyle: "italic" }}>Essential cost at {levelLabel} usage vs the {usd(ftbPerSchoolMo)}/school/mo allowance. <span style={{ color: F.pink }}>Pink</span> = give-away exceeds the allowance — move those features to cheaper models or smaller caps on Usage.</p>
         </div>
-      </div>
 
-      <div style={card}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-          <div style={sectionTitle}>Uptake scenarios</div>
-          <button onClick={addScenario} style={bt("primary")}>+ Add scenario</button>
-        </div>
-        {fin.uptakeScenarios.length === 0 && (
-          <p style={{ margin: 0, fontSize: 12.5, color: F.muted, fontStyle: "italic", textAlign: "center", padding: "12px 0" }}>No scenarios yet. Add one to model revenue at a given Pro-uptake assumption.</p>
-        )}
-        {fin.uptakeScenarios.map(s => {
-          const totalSchools = parseFloat(s.totalSchools) || 0;
-          let revenue = 0, cost = 0;
-          MONZ_PRODUCTS.forEach(p => {
-            const pct = parseFloat(s[productPctKey(p)]) || 0;
-            const proSchools = (totalSchools * pct) / 100;
-            const price = (monz.products[p]?.price || 0);
-            revenue += proSchools * price;
-            cost += proSchools * costPerSchool(p, "pro") * 12;
-          });
-          const profit = revenue - cost;
-          return (
-            <div key={s.id} style={{ marginTop: 12, padding: 12, background: F.bg, border: `1px solid ${F.border}`, borderRadius: 8 }}>
-              <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 32px", gap: 8, alignItems: "center", marginBottom: 8 }}>
-                <div>
-                  <div style={lb}>Scenario</div>
-                  <input value={s.label} onChange={e => updScenario(s.id, { label: e.target.value })} placeholder="e.g. Q3 2026" style={{ ...inp, width: "100%" }} />
-                </div>
-                <div>
-                  <div style={lb}>Total schools</div>
-                  <input type="number" min="0" value={s.totalSchools || ""} placeholder="0" onChange={e => updScenario(s.id, { totalSchools: e.target.value })} style={numInp} />
-                </div>
-                {MONZ_PRODUCTS.map(p => (
-                  <div key={p}>
-                    <div style={lb}>{p.slice(0, 8)} %</div>
-                    <input type="number" min="0" max="100" value={s[productPctKey(p)] || ""} placeholder="0" onChange={e => updScenario(s.id, { [productPctKey(p)]: e.target.value })} style={numInp} />
+        {/* SKUs & pricing — the pricing source of truth */}
+        <div style={card}>
+          <div style={sectionTitle}>SKUs &amp; pricing</div>
+          <p style={{ margin: "-2px 0 12px", fontSize: 12, color: F.muted2, fontStyle: "italic" }}>The AI Pro price per product feeds the margin analysis above and on each product page.</p>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12 }}>
+            {MONZ_PRODUCTS.map(p => {
+              const pd = monz.products[p] || { sku: "", unit: "", price: 0 };
+              return (
+                <div key={p} style={{ background: F.bg, border: `1px solid ${F.border}`, borderRadius: 10, padding: "14px 16px" }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em" }}>{p}</div>
+                  <input value={pd.sku} onChange={e => setProductField(p, { sku: e.target.value })} style={{ ...inp, width: "100%", marginTop: 6, fontWeight: 700 }} />
+                  <div style={{ display: "flex", gap: 4, marginTop: 10, alignItems: "center", minWidth: 0 }}>
+                    <span style={{ fontSize: 15, fontWeight: 700, color: F.plum }}>$</span>
+                    <input type="number" min="0" step="0.01" value={pd.price ? pd.price : ""} placeholder="0" onChange={e => { const v = e.target.value; setProductField(p, { price: v === "" ? null : (parseFloat(v) || 0) }); }} style={{ ...inp, flex: 1, minWidth: 0, width: "100%", fontWeight: 700, fontSize: 15, padding: "7px 9px" }} />
+                    <span style={{ fontSize: 10.5, color: F.muted2, whiteSpace: "nowrap" }}>/ yr</span>
                   </div>
-                ))}
-                <div style={{ display: "flex", alignItems: "flex-end", height: "100%" }}>
-                  <button onClick={() => delScenario(s.id)} title="Remove" style={{ ...bt("ghost"), padding: "6px 8px", color: F.muted2 }}>×</button>
                 </div>
-              </div>
-              <div style={{ display: "flex", gap: 18, flexWrap: "wrap", fontSize: 12.5, paddingTop: 8, borderTop: `1px solid ${F.border}` }}>
-                <div><span style={{ color: F.muted, fontWeight: 600 }}>Revenue / yr</span> <strong style={{ color: F.plum }}>{fmtMoney(revenue)}</strong></div>
-                <div><span style={{ color: F.muted, fontWeight: 600 }}>Cost / yr</span> <strong style={{ color: F.pink }}>{fmtMoney(cost)}</strong></div>
-                <div><span style={{ color: F.muted, fontWeight: 600 }}>Gross profit / yr</span> <strong style={{ color: profit >= 0 ? F.green : F.pink }}>{fmtMoney(profit)}</strong></div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      <div style={card}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-          <div style={sectionTitle}>Decisions log</div>
-          <button onClick={addDecision} style={bt("primary")}>+ Log decision</button>
-        </div>
-        {fin.decisions.length === 0 && (
-          <p style={{ margin: 0, fontSize: 12.5, color: F.muted, fontStyle: "italic", textAlign: "center", padding: "12px 0" }}>No decisions logged yet.</p>
-        )}
-        {fin.decisions.map(d => (
-          <div key={d.id} style={{ marginTop: 10, padding: 12, background: F.bg, border: `1px solid ${F.border}`, borderRadius: 8 }}>
-            <div style={{ display: "grid", gridTemplateColumns: "140px 1fr 30px", gap: 10, marginBottom: 8 }}>
-              <input type="date" value={d.date} onChange={e => updDecision(d.id, { date: e.target.value })} style={{ ...inp }} />
-              <input value={d.decidedBy} onChange={e => updDecision(d.id, { decidedBy: e.target.value })} placeholder="Decided by (name / team)" style={{ ...inp }} />
-              <button onClick={() => delDecision(d.id)} title="Remove" style={{ ...bt("ghost"), padding: "6px 8px", color: F.muted2 }}>×</button>
-            </div>
-            <textarea value={d.summary} onChange={e => updDecision(d.id, { summary: e.target.value })} rows={2} placeholder="Decision summary…" style={{ ...inp, width: "100%", resize: "vertical" }} />
+              );
+            })}
           </div>
-        ))}
-      </div>
+          <div style={{ marginTop: 18 }}>
+            <div style={{ ...sectionTitle, marginBottom: 8 }}>Bundle discounts (stacked)</div>
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 14 }}>
+              {monz.bundleDiscounts.map((d, i) => (
+                <div key={i} style={{ background: F.bg, border: `1px solid ${F.border}`, borderRadius: 8, padding: "8px 12px", display: "flex", alignItems: "center", gap: 8 }}>
+                  <input type="number" min="2" max="10" value={d.products} onChange={e => setDiscount(i, { products: parseInt(e.target.value) || 2 })} style={{ ...inp, width: 52, padding: "4px 8px", textAlign: "center" }} />
+                  <span style={{ fontSize: 12, color: F.muted, fontWeight: 600 }}>products →</span>
+                  <input type="number" min="0" max="100" value={d.pct} onChange={e => setDiscount(i, { pct: parseFloat(e.target.value) || 0 })} style={{ ...inp, width: 60, padding: "4px 8px", textAlign: "center" }} />
+                  <span style={{ fontSize: 12, color: F.muted, fontWeight: 600 }}>% off</span>
+                </div>
+              ))}
+            </div>
+            <div style={{ background: F.bg, border: `1px solid ${F.border}`, borderRadius: 8, padding: "12px 14px" }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>Worked example</div>
+              <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 10 }}>
+                {MONZ_PRODUCTS.map(p => (
+                  <label key={p} style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", fontSize: 13, color: F.plum }}>
+                    <input type="checkbox" checked={bundlePick.has(p)} onChange={() => toggleBundle(p)} style={{ cursor: "pointer" }} />
+                    {p}
+                  </label>
+                ))}
+              </div>
+              <div style={{ display: "flex", gap: 18, flexWrap: "wrap", fontSize: 13, alignItems: "baseline" }}>
+                <div><span style={{ color: F.muted, fontWeight: 600 }}>Subtotal</span> <strong style={{ color: F.plum }}>${bundleSubtotal.toFixed(2)}</strong></div>
+                <div><span style={{ color: F.muted, fontWeight: 600 }}>Bundle disc.</span> <strong style={{ color: F.pink }}>-${bundleDisc.toFixed(2)}</strong>{bundleRule && <span style={{ fontSize: 11, color: F.muted, marginLeft: 4 }}>({bundleRule.pct}% off, {bundleRule.products} products)</span>}</div>
+                <div style={{ marginLeft: "auto", fontSize: 16 }}><span style={{ color: F.muted, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", fontSize: 11 }}>Total</span> <strong style={{ color: F.plum, fontSize: 18 }}>${bundleTotal.toFixed(2)}</strong></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  };
 
-      <div style={card}>
-        <div style={sectionTitle}>General notes</div>
-        <textarea value={fin.notes} onChange={e => setFin(prev => ({ ...prev, notes: e.target.value }))} rows={4} placeholder="Open questions, assumptions, caveats…" style={{ ...inp, width: "100%", resize: "vertical" }} />
-      </div>
+  // ── PER-PRODUCT: AI Pro economics — cost (from Usage) vs price, break-even, sensitivity, fleet ──
+  const renderProduct = () => {
+    const p = focusedProduct;
+    const pp = fin.proPricing[p] || { targetMarginPct: 70, schoolsOnPro: 500, candidates: [] };
+    const ess = essentialMo(p, level), proServe = proServeMo(p, level), proOnly = proOnlyMo(p, level);
+    const fc = featCount(p);
+    const skuPrice = skuPriceOf(p);
+    const costYr = proServe * 12;
+    const target = Math.min(99, Math.max(0, pp.targetMarginPct ?? 70));
+    const floorYr = target < 100 ? costYr / (1 - target / 100) : Infinity;
+    const calc = (price) => {
+      const priceMo = price / 12, marginMo = priceMo - proServe;
+      return { priceMo, marginMo, marginPct: priceMo > 0 ? marginMo / priceMo * 100 : NaN, markup: proServe > 0 ? priceMo / proServe : Infinity, costShare: priceMo > 0 ? proServe / priceMo * 100 : NaN };
+    };
+    const skuC = calc(skuPrice);
+    const fleetProfitYr = (skuPrice - costYr) * (pp.schoolsOnPro || 0);
+    const candRows = [{ id: "sku", label: monz.products[p]?.sku || "Current SKU", price: skuPrice, isSku: true }, ...(pp.candidates || [])];
+    const fmtMul = (n) => isFinite(n) ? `${n.toFixed(1)}×` : "—";
+
+    return (
+      <>
+        {/* header + level */}
+        <div style={{ ...card, borderLeft: `4px solid ${F.pink}` }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap" }}>
+            <div>
+              <span style={{ fontSize: 18, fontWeight: 800, color: F.plum }}>{p} — AI Pro economics</span>
+              <p style={{ margin: "4px 0 0", fontSize: 12.5, color: F.muted, lineHeight: 1.5, maxWidth: 760 }}>AI cost is pulled live from <strong style={{ color: F.pink }}>Usage</strong> ({fc.ess} Essential + {fc.pro} Pro features enabled). Margin compares the AI Pro price against the <strong>total AI a Pro school uses</strong>.</p>
+            </div>
+            {levelPills}
+          </div>
+        </div>
+
+        {/* AI cost to serve */}
+        <div style={card}>
+          <div style={sectionTitle}>AI cost to serve · {levelLabel} usage</div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))", gap: 12 }}>
+            {[
+              { l: "Essential (free give-away)", mo: ess, c: F.green, sub: `${fc.ess} feature${fc.ess === 1 ? "" : "s"} · included for everyone` },
+              { l: "Pro — total to serve a Pro school", mo: proServe, c: F.plum, sub: "Essential + Pro · the margin basis", strong: true },
+              { l: "Pro-only (incremental)", mo: proOnly, c: F.orange, sub: `${fc.pro} premium feature${fc.pro === 1 ? "" : "s"} AI Pro unlocks` },
+            ].map((s, i) => (
+              <div key={i} style={{ background: F.bg, border: `1px solid ${s.strong ? F.plum : F.border}`, borderTop: `3px solid ${s.c}`, borderRadius: 10, padding: "13px 15px" }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: F.muted2, marginBottom: 6, minHeight: 28 }}>{s.l}</div>
+                <div style={{ fontSize: 22, fontWeight: 800, color: F.plum, lineHeight: 1 }}>{usd(s.mo)}<span style={{ fontSize: 11, color: F.muted2, fontWeight: 600 }}> /mo</span></div>
+                <div style={{ fontSize: 12.5, fontWeight: 700, color: s.c, marginTop: 3 }}>{usd(s.mo * 12)}<span style={{ fontSize: 10.5, color: F.muted2, fontWeight: 600 }}> /yr</span></div>
+                <div style={{ fontSize: 10.5, color: F.muted2, marginTop: 6, lineHeight: 1.4 }}>{s.sub}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* AI Pro price → margin */}
+        <div style={card}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: 8, marginBottom: 10 }}>
+            <div style={sectionTitle}>AI Pro price points → margin</div>
+            <button onClick={() => addCand(p)} style={{ padding: "5px 12px", borderRadius: 7, border: `1px dashed ${F.borderStrong}`, background: "transparent", color: F.plum, fontSize: 11.5, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>+ Add price point</button>
+          </div>
+          <div style={{ overflowX: "auto", border: `1px solid ${F.border}`, borderRadius: 8 }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 820 }}>
+              <thead><tr style={{ background: F.bg }}>
+                <th style={th}>Price point</th>
+                <th style={{ ...th, textAlign: "right" }}>Price / yr</th>
+                <th style={{ ...th, textAlign: "right" }}>Price / mo</th>
+                <th style={{ ...th, textAlign: "right" }}>AI cost / mo</th>
+                <th style={{ ...th, textAlign: "right" }}>Margin / mo</th>
+                <th style={{ ...th, textAlign: "right" }}>Margin %</th>
+                <th style={{ ...th, textAlign: "right" }}>Markup</th>
+                <th style={{ ...th, textAlign: "right" }}>AI cost % of price</th>
+                <th style={th}></th>
+              </tr></thead>
+              <tbody>
+                {candRows.map(c => {
+                  const cc = calc(c.price || 0);
+                  const has = (c.price || 0) > 0;
+                  return (
+                    <tr key={c.id} style={{ borderBottom: `1px solid ${F.border}`, background: c.isSku ? F.lightYellow + "33" : "transparent" }}>
+                      <td style={{ ...td, fontWeight: 700, whiteSpace: "nowrap" }}>
+                        {c.isSku
+                          ? <span>{c.label || "Current SKU"} <span style={{ fontSize: 9.5, fontWeight: 800, color: F.paper, background: F.plum, padding: "1px 6px", borderRadius: 999 }}>CURRENT</span></span>
+                          : <input value={c.label} onChange={e => setCand(p, c.id, { label: e.target.value })} placeholder="Label" style={{ ...inp, width: 130, padding: "4px 7px", fontSize: 12, fontWeight: 700 }} />}
+                      </td>
+                      <td style={{ ...td, textAlign: "right" }}>
+                        {c.isSku
+                          ? <input type="number" min="0" value={skuPrice || ""} placeholder="0" onChange={e => setProductField(p, { price: e.target.value === "" ? null : (parseFloat(e.target.value) || 0) })} style={{ ...inp, width: 90, textAlign: "right", padding: "4px 7px", fontSize: 12 }} />
+                          : <input type="number" min="0" value={c.price || ""} placeholder="0" onChange={e => setCand(p, c.id, { price: parseFloat(e.target.value) || 0 })} style={{ ...inp, width: 90, textAlign: "right", padding: "4px 7px", fontSize: 12 }} />}
+                      </td>
+                      <td style={{ ...td, textAlign: "right", color: F.muted }}>{has ? usd(cc.priceMo) : "—"}</td>
+                      <td style={{ ...td, textAlign: "right", color: F.plum, fontWeight: 700 }}>{usd(proServe)}</td>
+                      <td style={{ ...td, textAlign: "right", fontWeight: 800, color: !has ? F.muted2 : cc.marginMo >= 0 ? F.green : F.pink }}>{has ? usd(cc.marginMo) : "—"}</td>
+                      <td style={{ ...td, textAlign: "right", fontWeight: 800, color: !has ? F.muted2 : cc.marginPct >= 0 ? F.green : F.pink }}>{has ? pctf(cc.marginPct) : "—"}</td>
+                      <td style={{ ...td, textAlign: "right", color: F.muted }}>{has ? fmtMul(cc.markup) : "—"}</td>
+                      <td style={{ ...td, textAlign: "right", color: has && cc.costShare > 50 ? F.pink : F.muted }}>{has ? pctf(cc.costShare) : "—"}</td>
+                      <td style={{ ...td, textAlign: "center" }}>{!c.isSku && <button onClick={() => delCand(p, c.id)} title="Remove" style={{ width: 20, height: 20, borderRadius: 10, border: "none", background: "transparent", color: F.muted2, cursor: "pointer", fontSize: 14, fontFamily: "inherit" }}>×</button>}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* break-even + price floor + fleet */}
+          <div style={{ marginTop: 14, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
+            <div style={{ background: F.bg, border: `1px solid ${F.border}`, borderTop: `3px solid ${F.pink}`, borderRadius: 10, padding: "12px 15px" }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: F.muted2, marginBottom: 6 }}>Break-even price (margin = 0)</div>
+              <div style={{ fontSize: 20, fontWeight: 800, color: F.plum }}>{usd0(costYr)}<span style={{ fontSize: 11, color: F.muted2, fontWeight: 600 }}> /yr</span></div>
+              <div style={{ fontSize: 10.5, color: F.muted2, marginTop: 4 }}>= AI cost to serve × 12. Any price above this profits.</div>
+            </div>
+            <div style={{ background: F.bg, border: `1px solid ${F.border}`, borderTop: `3px solid ${F.green}`, borderRadius: 10, padding: "12px 15px" }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: F.muted2, marginBottom: 6 }}>Price floor for target margin</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+                <span style={{ fontSize: 12, color: F.muted }}>target</span>
+                <input type="number" min="0" max="99" value={pp.targetMarginPct ?? 70} onChange={e => setPP(p, { targetMarginPct: Math.max(0, Math.min(99, parseFloat(e.target.value) || 0)) })} style={{ ...inp, width: 60, textAlign: "right", padding: "4px 7px", fontSize: 12 }} />
+                <span style={{ fontSize: 12, color: F.muted }}>% →</span>
+              </div>
+              <div style={{ fontSize: 20, fontWeight: 800, color: F.green }}>{usd0(floorYr)}<span style={{ fontSize: 11, color: F.muted2, fontWeight: 600 }}> /yr</span></div>
+              <div style={{ fontSize: 10.5, color: F.muted2, marginTop: 4 }}>Minimum AI Pro price to hit {target}% margin.</div>
+            </div>
+            <div style={{ background: F.bg, border: `1px solid ${F.border}`, borderTop: `3px solid ${F.plum}`, borderRadius: 10, padding: "12px 15px" }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: F.muted2, marginBottom: 6 }}>Fleet gross profit · at current price</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+                <input type="number" min="0" value={pp.schoolsOnPro || ""} placeholder="0" onChange={e => setPP(p, { schoolsOnPro: Math.max(0, parseInt(e.target.value) || 0) })} style={{ ...inp, width: 80, textAlign: "right", padding: "4px 7px", fontSize: 12 }} />
+                <span style={{ fontSize: 12, color: F.muted }}>schools on Pro</span>
+              </div>
+              <div style={{ fontSize: 20, fontWeight: 800, color: skuPrice > 0 && fleetProfitYr >= 0 ? F.green : skuPrice > 0 ? F.pink : F.muted2 }}>{skuPrice > 0 ? usd0(fleetProfitYr) : "—"}<span style={{ fontSize: 11, color: F.muted2, fontWeight: 600 }}> /yr</span></div>
+              <div style={{ fontSize: 10.5, color: F.muted2, marginTop: 4 }}>{skuPrice > 0 ? `(${usd0(skuPrice)} − ${usd0(costYr)}) × ${(pp.schoolsOnPro || 0).toLocaleString()}` : "Set a current price in SKUs"}</div>
+            </div>
+          </div>
+        </div>
+
+        {/* usage sensitivity at the current price */}
+        <div style={card}>
+          <div style={sectionTitle}>Usage sensitivity · margin at the current price ({skuPrice > 0 ? usd0(skuPrice) + "/yr" : "no price set"})</div>
+          {skuPrice > 0 ? (
+            <div style={{ overflowX: "auto", border: `1px solid ${F.border}`, borderRadius: 8 }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 520 }}>
+                <thead><tr style={{ background: F.bg }}>
+                  <th style={th}>Usage level</th>
+                  <th style={{ ...th, textAlign: "right" }}>AI cost / sch / mo</th>
+                  <th style={{ ...th, textAlign: "right" }}>Margin / sch / mo</th>
+                  <th style={{ ...th, textAlign: "right" }}>Margin %</th>
+                </tr></thead>
+                <tbody>
+                  {LEVELS.map(L => {
+                    const cost = proServeMo(p, L.key), priceMo = skuPrice / 12, marginMo = priceMo - cost;
+                    const on = L.key === level;
+                    return (
+                      <tr key={L.key} onClick={() => setLevel(L.key)} style={{ cursor: "pointer", background: on ? F.lightYellow + "55" : "transparent", borderBottom: `1px solid ${F.border}` }}>
+                        <td style={{ ...td, fontWeight: 700 }}><span style={{ display: "inline-block", width: 8, height: 8, borderRadius: 8, background: L.color, marginRight: 8 }} />{L.label}{on && <span style={{ fontSize: 9.5, fontWeight: 800, color: F.paper, background: F.plum, padding: "1px 7px", borderRadius: 999, marginLeft: 8 }}>SELECTED</span>}</td>
+                        <td style={{ ...td, textAlign: "right", color: F.plum, fontWeight: 700 }}>{usd(cost)}</td>
+                        <td style={{ ...td, textAlign: "right", fontWeight: 800, color: marginMo >= 0 ? F.green : F.pink }}>{usd(marginMo)}</td>
+                        <td style={{ ...td, textAlign: "right", fontWeight: 800, color: marginMo >= 0 ? F.green : F.pink }}>{pctf(priceMo > 0 ? marginMo / priceMo * 100 : NaN)}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          ) : <p style={{ margin: 0, fontSize: 12.5, color: F.muted, fontStyle: "italic" }}>Set a current AI Pro price in SKUs (Overview) to see how margin holds up if usage runs Low → Heavy.</p>}
+          <p style={{ margin: "10px 0 0", fontSize: 11.5, color: F.muted2, fontStyle: "italic" }}>Does AI Pro still profit if schools use it harder than expected? Heavy multiplies every feature's runs by ×{usageLevels.heavy ?? 2}.</p>
+        </div>
+      </>
+    );
+  };
+
+  return (
+    <>
+      {chipNav}
+      {focusedProduct ? renderProduct() : renderOverview()}
     </>
   );
 }

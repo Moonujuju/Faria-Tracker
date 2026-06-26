@@ -445,6 +445,9 @@ const DEFAULT_MONETIZATION = {
   modelCosts: MODEL_COSTS_SEED,
   // Low/Expected/Heavy adoption-band multipliers on each feature's Expected runs/mo.
   usageLevels: { low: 0.4, expected: 1, heavy: 2 },
+  // Per-product monthly AI cap for Essential-tier schools ($/school/mo). null = no cap.
+  // When a school hits the cap it throttles for the rest of the month; resets on the 1st.
+  essentialCaps: Object.fromEntries(MONZ_PRODUCTS.map(p => [p, null])),
   costLab: COST_LAB_SEED.map((r, i) => ({
     id: "cl-" + i, product: r[0], feature: r[1],
     tier: r[2], status: r[3], modelId: r[4],
@@ -1519,6 +1522,7 @@ function mergeMonz(saved) {
       return [...merged, ...DEFAULT_MONETIZATION.modelCosts.filter(d => !ids.has(d.id))];
     })(),
     usageLevels: { ...DEFAULT_MONETIZATION.usageLevels, ...(saved.usageLevels || {}) },
+    essentialCaps: { ...DEFAULT_MONETIZATION.essentialCaps, ...(saved.essentialCaps || {}) },
     // id-merge cost lab: forward-fill new fields from defaults (saved edits win), then append new default features.
     costLab: (() => {
       if (!saved.costLab) return DEFAULT_MONETIZATION.costLab;
@@ -3559,6 +3563,7 @@ function MonzFinancePage({ monz, setMonz, deepRoute, setDeepRoute }) {
   // scope: "essential" | "pro" | "all". Returns $/school/mo at a usage level.
   const aiCostMo = (prod, scope, lvl) => enabledRows(prod).filter(r => scope === "all" ? true : r.tier === scope).reduce((s, r) => s + featPerSchool(r, lvl), 0);
   const essentialMo = (prod, lvl) => aiCostMo(prod, "essential", lvl);
+  const cappedEssMo = (prod, lvl) => { const raw = essentialMo(prod, lvl); const ecap = monz.essentialCaps?.[prod] ?? null; return ecap !== null ? Math.min(raw, ecap) : raw; };
   const proServeMo = (prod, lvl) => aiCostMo(prod, "all", lvl);  // total AI a Pro school uses — the margin basis
   const proOnlyMo = (prod, lvl) => aiCostMo(prod, "pro", lvl);   // incremental pro-only features
   const featCount = (prod) => ({ ess: enabledRows(prod).filter(r => r.tier === "essential").length, pro: enabledRows(prod).filter(r => r.tier === "pro").length });
@@ -3595,10 +3600,11 @@ function MonzFinancePage({ monz, setMonz, deepRoute, setDeepRoute }) {
   // ── OVERVIEW: portfolio Essential vs Pro cost + free-tier give-away + SKUs/pricing ──
   const renderOverview = () => {
     const prows = MONZ_PRODUCTS.map(p => {
-      const ess = essentialMo(p, level), proServe = proServeMo(p, level), price = skuPriceOf(p);
+      const ess = cappedEssMo(p, level), rawEss = essentialMo(p, level), proServe = proServeMo(p, level), price = skuPriceOf(p);
+      const capped = (monz.essentialCaps?.[p] ?? null) !== null && rawEss > (monz.essentialCaps?.[p] ?? Infinity);
       const marginMo = price > 0 ? price / 12 - proServe : NaN;
       const marginPct = price > 0 ? (marginMo / (price / 12)) * 100 : NaN;
-      return { p, ess, proServe, price, marginMo, marginPct, fc: featCount(p) };
+      return { p, ess, rawEss, capped, proServe, price, marginMo, marginPct, fc: featCount(p) };
     });
     const totEss = prows.reduce((s, r) => s + r.ess, 0);
     const totProServe = prows.reduce((s, r) => s + r.proServe, 0);
@@ -3626,7 +3632,7 @@ function MonzFinancePage({ monz, setMonz, deepRoute, setDeepRoute }) {
                 {prows.map(r => (
                   <tr key={r.p} onClick={() => setFocusedProduct(r.p)} style={{ cursor: "pointer", borderBottom: `1px solid ${F.border}` }}>
                     <td style={{ ...td, fontWeight: 700 }}>{r.p}<span style={{ fontSize: 10.5, color: F.muted2, fontWeight: 500 }}> · {r.fc.ess} ess · {r.fc.pro} pro</span></td>
-                    <td style={{ ...td, textAlign: "right", color: F.green, fontWeight: 700 }}>{usd(r.ess)}</td>
+                    <td style={{ ...td, textAlign: "right", color: F.green, fontWeight: 700 }}>{usd(r.ess)}{r.capped && <span title={`Uncapped: ${usd(r.rawEss)} — cap applied`} style={{ fontSize: 9.5, fontWeight: 800, color: F.paper, background: F.yellow, padding: "1px 5px", borderRadius: 999, marginLeft: 5 }}>CAP</span>}</td>
                     <td style={{ ...td, textAlign: "right", fontWeight: 700 }}>{usd(r.proServe)}</td>
                     <td style={{ ...td, textAlign: "right", color: r.price > 0 ? F.plum : F.muted2 }}>{r.price > 0 ? usd0(r.price) : "— set in SKUs"}</td>
                     <td style={{ ...td, textAlign: "right", fontWeight: 800, color: !isFinite(r.marginMo) ? F.muted2 : r.marginMo >= 0 ? F.green : F.pink }}>{isFinite(r.marginMo) ? usd(r.marginMo) : "—"}</td>
@@ -3675,17 +3681,21 @@ function MonzFinancePage({ monz, setMonz, deepRoute, setDeepRoute }) {
           </div>
           <div style={{ marginTop: 14, display: "flex", gap: 8, flexWrap: "wrap" }}>
             {MONZ_PRODUCTS.filter(p => enabledRows(p).some(r => r.tier === "essential")).map(p => {
-              const ess = essentialMo(p, level);
+              const rawEss = essentialMo(p, level);
+              const ess = cappedEssMo(p, level);
+              const ecap = monz.essentialCaps?.[p] ?? null;
+              const isCapped = ecap !== null && rawEss > ecap;
               const over = ess > ftbPerSchoolMo && ftbPerSchoolMo > 0;
               return (
                 <div key={p} style={{ background: F.surface, border: `1px solid ${over ? F.pink : F.border}`, borderRadius: 9, padding: "9px 12px", minWidth: 150 }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: F.plum, marginBottom: 4 }}>{p}</div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: F.plum, marginBottom: 4 }}>{p}{isCapped && <span style={{ fontSize: 9, fontWeight: 800, color: F.paper, background: F.yellow, padding: "1px 5px", borderRadius: 999, marginLeft: 5 }}>CAP</span>}</div>
                   <div style={{ fontSize: 16, fontWeight: 800, color: over ? F.pink : F.green }}>{usd(ess)}<span style={{ fontSize: 10, color: F.muted2, fontWeight: 600 }}> /school/mo</span></div>
+                  {isCapped && <div style={{ fontSize: 10, color: F.muted2 }}>uncapped: {usd(rawEss)}</div>}
                 </div>
               );
             })}
           </div>
-          <p style={{ margin: "10px 0 0", fontSize: 11.5, color: F.muted2, fontStyle: "italic" }}>Essential cost at {levelLabel} usage vs the {usd(ftbPerSchoolMo)}/school/mo allowance. <span style={{ color: F.pink }}>Pink</span> = give-away exceeds the allowance — move those features to cheaper models or smaller caps on Usage.</p>
+          <p style={{ margin: "10px 0 0", fontSize: 11.5, color: F.muted2, fontStyle: "italic" }}>Essential cost at {levelLabel} usage vs the {usd(ftbPerSchoolMo)}/school/mo allowance. Costs shown are effective (after cap). <span style={{ color: F.pink }}>Pink</span> = give-away exceeds the allowance. Set per-product caps on the Usage page.</p>
         </div>
 
         {/* SKUs & pricing — the pricing source of truth */}
@@ -3746,7 +3756,10 @@ function MonzFinancePage({ monz, setMonz, deepRoute, setDeepRoute }) {
   const renderProduct = () => {
     const p = focusedProduct;
     const pp = fin.proPricing[p] || { targetMarginPct: 70, schoolsOnPro: 500, candidates: [] };
-    const ess = essentialMo(p, level), proServe = proServeMo(p, level), proOnly = proOnlyMo(p, level);
+    const rawEss = essentialMo(p, level), ess = cappedEssMo(p, level);
+    const ecap = monz.essentialCaps?.[p] ?? null;
+    const essIsCapped = ecap !== null && rawEss > ecap;
+    const proServe = proServeMo(p, level), proOnly = proOnlyMo(p, level);
     const fc = featCount(p);
     const skuPrice = skuPriceOf(p);
     const costYr = proServe * 12;
@@ -3779,7 +3792,7 @@ function MonzFinancePage({ monz, setMonz, deepRoute, setDeepRoute }) {
           <div style={sectionTitle}>AI cost to serve · {levelLabel} usage</div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))", gap: 12 }}>
             {[
-              { l: "Essential (free give-away)", mo: ess, c: F.green, sub: `${fc.ess} feature${fc.ess === 1 ? "" : "s"} · included for everyone` },
+              { l: "Essential (free give-away)", mo: ess, c: F.green, sub: essIsCapped ? `capped at ${usd(ecap)}/mo · uncapped ${usd(rawEss)} · ${fc.ess} features` : `${fc.ess} feature${fc.ess === 1 ? "" : "s"} · included for everyone` },
               { l: "Pro — total to serve a Pro school", mo: proServe, c: F.plum, sub: "Essential + Pro · the margin basis", strong: true },
               { l: "Pro-only (incremental)", mo: proOnly, c: F.orange, sub: `${fc.pro} premium feature${fc.pro === 1 ? "" : "s"} AI Pro unlocks` },
             ].map((s, i) => (
@@ -3974,6 +3987,7 @@ function FairUseExample({ monz, setMonz, deepRoute, setDeepRoute }) {
   const usd = (n) => `$${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   const cents = (n) => `${(n * 100).toFixed(2)}¢`;
   const setUsageLevel = (key, val) => setMonz(prev => ({ ...prev, usageLevels: { ...(prev.usageLevels || usageLevels), [key]: Math.max(0, +val) } }));
+  const setEssentialCap = (prod, val) => setMonz(prev => ({ ...prev, essentialCaps: { ...(prev.essentialCaps || {}), [prod]: (val === "" || val === null) ? null : Math.max(0, +val) } }));
 
   const setModelCost = (id, patch) => setMonz(prev => ({ ...prev, modelCosts: (prev.modelCosts || []).map(m => m.id === id ? { ...m, ...patch } : m) }));
   const setLabRow = (id, patch) => setMonz(prev => ({ ...prev, costLab: (prev.costLab || []).map(r => r.id === id ? { ...r, ...patch } : r) }));
@@ -4016,6 +4030,11 @@ function FairUseExample({ monz, setMonz, deepRoute, setDeepRoute }) {
     const sel = rows.find(r => r.id === selFeat);
     const levelTotals = LEVELS.map(L => { const tot = enabledRows.reduce((s, x) => s + dollarsPerSchool(x.r, L.key), 0); return { ...L, perSchool: tot, fleet: tot * numSchools }; });
 
+    // Essential-only cost (for cap tracking)
+    const cap = monz.essentialCaps?.[focusedProduct] ?? null;
+    const essEnabled = enabledRows.filter(x => x.r.tier === "essential");
+    const essLevels = LEVELS.map(L => essEnabled.reduce((s, x) => s + dollarsPerSchool(x.r, L.key), 0));
+
     return (
       <>
         {/* header + scenario */}
@@ -4039,6 +4058,46 @@ function FairUseExample({ monz, setMonz, deepRoute, setDeepRoute }) {
                 {LEVELS.map(L => <button key={L.key} onClick={() => setLevel(L.key)} style={pill(level === L.key, L.color)}>{L.label}</button>)}
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Essential AI cap */}
+        <div style={{ ...card, borderLeft: `4px solid ${F.yellow}` }}>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 6, flexWrap: "wrap" }}>
+            <div style={sectionTitle}>Essential AI cap</div>
+            <span style={{ fontSize: 11, color: F.muted2 }}>monthly hard limit per school · resets on the 1st · throttles if exceeded</span>
+          </div>
+          <div style={{ display: "flex", gap: 18, flexWrap: "wrap", alignItems: "flex-end" }}>
+            <div>
+              <div style={lb}>Cap $/school/mo</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ fontSize: 14, fontWeight: 700, color: F.plum }}>$</span>
+                <input type="number" min="0" step="0.01" value={cap ?? ""} placeholder="none" onChange={e => setEssentialCap(focusedProduct, e.target.value === "" ? null : e.target.value)} style={{ ...numInp, width: 90 }} />
+                <span style={{ fontSize: 11, color: F.muted2 }}>/mo</span>
+                {cap !== null && <button onClick={() => setEssentialCap(focusedProduct, null)} style={{ fontSize: 11, color: F.muted2, background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", padding: "2px 4px" }}>✕ clear</button>}
+              </div>
+            </div>
+            {cap !== null ? (
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                {LEVELS.map((L, i) => {
+                  const cost = essLevels[i];
+                  const over = cost > cap;
+                  const pct = cap > 0 ? Math.min(100, cost / cap * 100) : 0;
+                  return (
+                    <div key={L.key} style={{ minWidth: 158, background: F.bg, border: `1px solid ${over ? F.pink : F.border}`, borderRadius: 9, padding: "9px 12px" }}>
+                      <div style={{ fontSize: 10.5, fontWeight: 700, color: F.muted2, marginBottom: 5 }}>{L.label} usage</div>
+                      <div style={{ height: 7, background: F.border, borderRadius: 999, overflow: "hidden", marginBottom: 6 }}>
+                        <div style={{ width: `${pct}%`, height: "100%", background: over ? F.pink : F.green, borderRadius: 999, transition: "width 0.3s" }} />
+                      </div>
+                      <div style={{ fontSize: 13, fontWeight: 800, color: over ? F.pink : F.green }}>{usd(cost)}<span style={{ fontSize: 10, color: F.muted2, fontWeight: 500 }}> / {usd(cap)}</span></div>
+                      {over && <div style={{ fontSize: 10, color: F.pink, marginTop: 3 }}>⚠ throttles mid-month</div>}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <p style={{ margin: 0, fontSize: 11.5, color: F.muted2, fontStyle: "italic" }}>No cap set — Essential features run uncapped. Enter a $ amount to bound your Essential AI spend; schools that hit the cap throttle for the rest of the month.</p>
+            )}
           </div>
         </div>
 

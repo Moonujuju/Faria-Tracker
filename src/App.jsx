@@ -450,6 +450,9 @@ const DEFAULT_MONETIZATION = {
     tier: r[2], status: r[3], modelId: r[4],
     inputTokens: r[5], outputTokens: r[6], runsPerAction: r[7],
     reach: r[8], reachLabel: r[9], adoptionPct: r[10], usesPer: r[11],
+    // baseRuns = Expected runs/school/mo (the editable base case); seeded from the drivers.
+    baseRuns: Math.round((r[8] || 0) * ((r[10] || 0) / 100) * (r[11] || 0)),
+    enabled: true, // counts toward the totals/chart/share when true
     freeModelId: "m-qwen", proModelId: r[4], notes: "",
   })),
 };
@@ -3849,9 +3852,11 @@ function FairUseExample({ monz, setMonz, deepRoute, setDeepRoute }) {
   const calls = (r) => Math.max(1, r.runsPerAction || 1);
   // cost per run = token cost on the chosen model × model calls per run (fan-out).
   const runCostOf = (r) => costPerRun(r, modelOf(r)) * calls(r);
-  // Expected runs/school/mo, built from named school drivers: reach × adoption% × uses each.
-  const expectedRuns = (r) => Math.round((r.reach || 0) * ((r.adoptionPct || 0) / 100) * (r.usesPer || 0));
-  const runsAt = (r, lvl) => Math.round(expectedRuns(r) * (usageLevels[lvl] ?? 1));
+  // Driver estimate — reach × adoption% × uses each (the optional grounding helper).
+  const driverEstimate = (r) => Math.round((r.reach || 0) * ((r.adoptionPct || 0) / 100) * (r.usesPer || 0));
+  // Base case = the editable Expected runs/school/mo; falls back to the driver estimate if unset.
+  const baseOf = (r) => (typeof r.baseRuns === "number" ? r.baseRuns : driverEstimate(r));
+  const runsAt = (r, lvl) => Math.round(baseOf(r) * (usageLevels[lvl] ?? 1));
   const dollarsPerSchool = (r, lvl) => runCostOf(r) * runsAt(r, lvl);
   const usd = (n) => `$${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   const cents = (n) => `${(n * 100).toFixed(2)}¢`;
@@ -3880,20 +3885,23 @@ function FairUseExample({ monz, setMonz, deepRoute, setDeepRoute }) {
 
   // ── PER-PRODUCT: AI cost model ──
   const pill = (active, color = F.plum) => ({ padding: "5px 13px", borderRadius: 999, fontSize: 12, fontWeight: 700, cursor: "pointer", background: active ? color : F.surface, color: active ? F.paper : F.plum, border: `1px solid ${active ? color : F.borderStrong}`, fontFamily: "inherit" });
-  const tierTag = (t) => { const pro = t === "pro"; return <span style={{ fontSize: 9.5, fontWeight: 800, padding: "2px 8px", borderRadius: 4, background: pro ? F.plum : F.lightYellow, color: pro ? F.paper : F.plum, textTransform: "uppercase", letterSpacing: "0.04em", whiteSpace: "nowrap" }}>{pro ? "Pro" : "Essential"}</span>; };
   const statusTag = (s) => { const m = STATUS_META[s] || STATUS_META.roadmap; return <span style={{ fontSize: 9.5, fontWeight: 800, padding: "2px 8px", borderRadius: 999, background: F.bg, color: m.color, border: `1px solid ${F.border}`, textTransform: "uppercase", letterSpacing: "0.04em", whiteSpace: "nowrap" }}>{m.label}</span>; };
   const f4 = (n) => `$${n.toFixed(4)}`;
 
   const renderProduct = () => {
     const rows = lab.filter(r => r.product === focusedProduct);
     const levelLabel = LEVELS.find(l => l.key === level)?.label || "Expected";
-    const withCost = rows.map(r => ({ r, run: runCostOf(r), runsMo: runsAt(r, level), perSchool: dollarsPerSchool(r, level) }));
-    const totalPerSchool = withCost.reduce((s, x) => s + x.perSchool, 0);
-    const sorted = [...withCost].sort((a, b) => b.perSchool - a.perSchool);
-    const top = sorted[0];
-    const maxBar = Math.max(0.0001, ...sorted.map(x => x.perSchool));
+    const isExpected = level === "expected";
+    const withCost = rows.map(r => ({ r, on: r.enabled !== false, run: runCostOf(r), runsMo: runsAt(r, level), perSchool: dollarsPerSchool(r, level) }));
+    const enabledRows = withCost.filter(x => x.on);
+    const onCount = enabledRows.length;
+    const totalPerSchool = enabledRows.reduce((s, x) => s + x.perSchool, 0);
+    // enabled first (by cost desc), then disabled (by cost desc)
+    const sorted = [...withCost].sort((a, b) => (b.on - a.on) || (b.perSchool - a.perSchool));
+    const top = [...enabledRows].sort((a, b) => b.perSchool - a.perSchool)[0];
+    const maxBar = Math.max(0.0001, ...enabledRows.map(x => x.perSchool));
     const sel = rows.find(r => r.id === selFeat);
-    const levelTotals = LEVELS.map(L => { const tot = rows.reduce((s, r) => s + dollarsPerSchool(r, L.key), 0); return { ...L, perSchool: tot, fleet: tot * numSchools }; });
+    const levelTotals = LEVELS.map(L => { const tot = enabledRows.reduce((s, x) => s + dollarsPerSchool(x.r, L.key), 0); return { ...L, perSchool: tot, fleet: tot * numSchools }; });
 
     return (
       <>
@@ -3954,9 +3962,9 @@ function FairUseExample({ monz, setMonz, deepRoute, setDeepRoute }) {
 
         {/* $/school/mo by feature chart */}
         <div style={card}>
-          <div style={sectionTitle}>$/school/mo by feature · {levelLabel}</div>
+          <div style={sectionTitle}>$/school/mo by feature · {levelLabel} · {onCount} of {rows.length} enabled</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-            {sorted.filter(x => x.perSchool > 0).map((x, i) => (
+            {[...enabledRows].sort((a, b) => b.perSchool - a.perSchool).filter(x => x.perSchool > 0).map((x, i) => (
               <div key={x.r.id} style={{ display: "grid", gridTemplateColumns: "minmax(150px, 38%) 1fr auto", gap: 10, alignItems: "center" }}>
                 <div style={{ fontSize: 12, color: F.plum, fontWeight: i === 0 ? 800 : 600, lineHeight: 1.2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{x.r.feature}</div>
                 <div style={{ background: F.bg, borderRadius: 999, height: 15, overflow: "hidden", border: `1px solid ${F.border}` }}>
@@ -3972,39 +3980,43 @@ function FairUseExample({ monz, setMonz, deepRoute, setDeepRoute }) {
         <div style={card}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 10, flexWrap: "wrap" }}>
             <div style={sectionTitle}>Per-feature breakdown · @ {numSchools.toLocaleString()} schools, {levelLabel}</div>
-            <span style={{ fontSize: 11, color: F.muted2, fontStyle: "italic" }}>Click a row for the volume model &amp; cross-model cost ↓</span>
+            <span style={{ fontSize: 11, color: F.muted2, fontStyle: "italic" }}>Toggle to include · {isExpected ? "edit Expected runs/mo inline" : "switch to Expected to edit the base case"} · click a row for the driver helper ↓</span>
           </div>
           <div style={{ overflowX: "auto", border: `1px solid ${F.border}`, borderRadius: 8 }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 880 }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 860 }}>
               <thead><tr style={{ background: F.bg }}>
+                <th style={{ ...th, textAlign: "center" }}>On</th>
                 <th style={th}>Feature</th>
-                <th style={th}>Tier</th>
                 <th style={th}>Status</th>
                 <th style={th}>Model</th>
                 <th style={{ ...th, textAlign: "right" }}>¢/run</th>
-                <th style={{ ...th, textAlign: "right" }}>runs/mo</th>
+                <th style={{ ...th, textAlign: "right" }}>{isExpected ? "Expected runs/mo" : "runs/mo"}</th>
                 <th style={{ ...th, textAlign: "right" }}>$/school/mo</th>
                 <th style={{ ...th, textAlign: "right" }}>share</th>
               </tr></thead>
               <tbody>
-                {sorted.map(({ r, run, runsMo, perSchool }) => {
+                {sorted.map(({ r, on, run, runsMo, perSchool }) => {
                   const active = selFeat === r.id;
-                  const share = totalPerSchool > 0 ? perSchool / totalPerSchool * 100 : 0;
+                  const share = on && totalPerSchool > 0 ? perSchool / totalPerSchool * 100 : 0;
                   return (
-                    <tr key={r.id} onClick={() => setSelFeat(active ? null : r.id)} style={{ cursor: "pointer", background: active ? F.lightYellow + "55" : "transparent" }}>
-                      <td style={{ ...td, fontWeight: 700, whiteSpace: "nowrap" }}>{r.feature}</td>
-                      <td style={td}>{tierTag(r.tier)}</td>
+                    <tr key={r.id} onClick={() => setSelFeat(active ? null : r.id)} style={{ cursor: "pointer", background: active ? F.lightYellow + "55" : "transparent", opacity: on ? 1 : 0.42 }}>
+                      <td style={{ ...td, textAlign: "center" }} onClick={e => e.stopPropagation()}><input type="checkbox" checked={on} onChange={e => setLabRow(r.id, { enabled: e.target.checked })} style={{ cursor: "pointer", width: 15, height: 15, accentColor: F.plum }} /></td>
+                      <td style={{ ...td, fontWeight: 700, whiteSpace: "nowrap", textDecoration: on ? "none" : "line-through" }}>{r.feature}</td>
                       <td style={td}>{statusTag(r.status)}</td>
                       <td style={td}><select value={modelOf(r)} onClick={e => e.stopPropagation()} onChange={e => setLabRow(r.id, { modelId: e.target.value })} style={selInp}>{modelOptions}</select></td>
                       <td style={{ ...td, textAlign: "right" }}>{cents(run)}</td>
-                      <td style={{ ...td, textAlign: "right" }}>{runsMo.toLocaleString()}</td>
-                      <td style={{ ...td, textAlign: "right", fontWeight: 700 }}>{share > 12 && <span style={{ display: "inline-block", width: 6, height: 6, borderRadius: 6, background: F.pink, marginRight: 6, verticalAlign: "middle" }} />}{usd(perSchool)}</td>
-                      <td style={{ ...td, textAlign: "right", color: F.muted }}>{share.toFixed(0)}%</td>
+                      <td style={{ ...td, textAlign: "right" }}>
+                        {isExpected
+                          ? <input type="number" min="0" value={baseOf(r)} onClick={e => e.stopPropagation()} onChange={e => setLabRow(r.id, { baseRuns: Math.max(0, Math.round(+e.target.value || 0)) })} style={{ ...numInp, width: 78, textAlign: "right" }} />
+                          : <span title={`Expected ${baseOf(r).toLocaleString()} × ${usageLevels[level] ?? 1}`}>{runsMo.toLocaleString()}</span>}
+                      </td>
+                      <td style={{ ...td, textAlign: "right", fontWeight: 700 }}>{on ? <>{share > 12 && <span style={{ display: "inline-block", width: 6, height: 6, borderRadius: 6, background: F.pink, marginRight: 6, verticalAlign: "middle" }} />}{usd(perSchool)}</> : <span style={{ color: F.muted2 }}>—</span>}</td>
+                      <td style={{ ...td, textAlign: "right", color: F.muted }}>{on ? `${share.toFixed(0)}%` : "—"}</td>
                     </tr>
                   );
                 })}
                 <tr style={{ background: F.bg }}>
-                  <td style={{ ...td, fontWeight: 800 }} colSpan={6}>Total / school / mo</td>
+                  <td style={{ ...td, fontWeight: 800 }} colSpan={6}>Total / school / mo · {onCount} feature{onCount === 1 ? "" : "s"}</td>
                   <td style={{ ...td, textAlign: "right", fontWeight: 800 }}>{usd(totalPerSchool)}</td>
                   <td style={{ ...td, textAlign: "right", fontWeight: 800 }}>100%</td>
                 </tr>
@@ -4024,15 +4036,28 @@ function FairUseExample({ monz, setMonz, deepRoute, setDeepRoute }) {
               <div style={sectionTitle}>{sel.feature} — volume model &amp; tuning</div>
               <button onClick={() => setSelFeat(null)} style={{ padding: "3px 11px", borderRadius: 7, border: `1px solid ${F.borderStrong}`, background: "transparent", color: F.plum, fontSize: 11.5, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>Close ×</button>
             </div>
-            <div style={{ fontSize: 11, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.05em", margin: "4px 0 8px" }}>Volume drivers — the answer to "more than guessing"</div>
+            {/* base case — the editable Expected runs/mo */}
+            <div style={{ fontSize: 11, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.05em", margin: "4px 0 8px" }}>Base case — Expected runs/school/mo</div>
+            <div style={{ display: "flex", gap: 14, alignItems: "center", flexWrap: "wrap", background: F.bg, border: `1px solid ${F.border}`, borderRadius: 8, padding: "12px 14px", marginBottom: 14 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ ...lb, marginBottom: 0 }}>Expected</span>
+                <input type="number" min="0" value={baseOf(sel)} onChange={e => setLabRow(sel.id, { baseRuns: Math.max(0, Math.round(+e.target.value || 0)) })} style={{ ...numInp, width: 90, fontWeight: 700 }} />
+                <span style={{ fontSize: 12, color: F.muted2 }}>runs/mo</span>
+              </div>
+              <span style={{ fontSize: 12.5, color: F.muted, lineHeight: 1.5 }}>→ the usage level multiplies this: Low ×{usageLevels.low ?? 0.4} = <strong style={{ color: F.plum }}>{runsAt(sel, "low").toLocaleString()}</strong> · Expected ×{usageLevels.expected ?? 1} = <strong style={{ color: F.plum }}>{runsAt(sel, "expected").toLocaleString()}</strong> · Heavy ×{usageLevels.heavy ?? 2} = <strong style={{ color: F.plum }}>{runsAt(sel, "heavy").toLocaleString()}</strong></span>
+            </div>
+            {/* optional driver helper — estimate the base case from school metrics */}
+            <div style={{ fontSize: 11, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>Optional helper — estimate Expected from school drivers</div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 12, marginBottom: 12 }}>
               <div><div style={lb}>Reach (units/school/mo)</div><input type="number" min="0" value={sel.reach ?? 0} onChange={e => setLabRow(sel.id, { reach: Math.max(0, +e.target.value) })} style={{ ...numInp, width: "100%" }} /></div>
               <div><div style={lb}>What the reach is</div><input value={sel.reachLabel ?? ""} onChange={e => setLabRow(sel.id, { reachLabel: e.target.value })} placeholder="applications/mo" style={{ ...inp, width: "100%", padding: "5px 7px", fontSize: 12 }} /></div>
-              <div><div style={lb}>Adoption % (Expected)</div><input type="number" min="0" max="100" value={sel.adoptionPct ?? 0} onChange={e => setLabRow(sel.id, { adoptionPct: Math.max(0, +e.target.value) })} style={{ ...numInp, width: "100%" }} /></div>
+              <div><div style={lb}>Adoption %</div><input type="number" min="0" max="100" value={sel.adoptionPct ?? 0} onChange={e => setLabRow(sel.id, { adoptionPct: Math.max(0, +e.target.value) })} style={{ ...numInp, width: "100%" }} /></div>
               <div><div style={lb}>Uses each / mo</div><input type="number" min="0" value={sel.usesPer ?? 0} onChange={e => setLabRow(sel.id, { usesPer: Math.max(0, +e.target.value) })} style={{ ...numInp, width: "100%" }} /></div>
             </div>
-            <div style={{ background: F.bg, border: `1px solid ${F.border}`, borderRadius: 8, padding: "10px 14px", fontSize: 12.5, color: F.plum, lineHeight: 1.6, marginBottom: 14 }}>
-              <strong>{(sel.reach ?? 0).toLocaleString()}</strong> {sel.reachLabel || "units"} × <strong>{sel.adoptionPct ?? 0}%</strong> adoption × <strong>{sel.usesPer ?? 0}</strong> uses = <strong style={{ color: F.green }}>{expectedRuns(sel).toLocaleString()}</strong> runs/school/mo (Expected) &nbsp;→&nbsp; {levelLabel} ×{usageLevels[level] ?? 1} = <strong style={{ color: F.pink }}>{runsAt(sel, level).toLocaleString()}</strong> runs/mo
+            <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", background: F.bg, border: `1px solid ${F.border}`, borderRadius: 8, padding: "10px 14px", marginBottom: 16 }}>
+              <span style={{ fontSize: 12.5, color: F.plum, lineHeight: 1.5 }}><strong>{(sel.reach ?? 0).toLocaleString()}</strong> {sel.reachLabel || "units"} × <strong>{sel.adoptionPct ?? 0}%</strong> × <strong>{sel.usesPer ?? 0}</strong> uses = <strong style={{ color: F.green }}>{driverEstimate(sel).toLocaleString()}</strong> runs/mo</span>
+              <button onClick={() => setLabRow(sel.id, { baseRuns: driverEstimate(sel) })} disabled={baseOf(sel) === driverEstimate(sel)} style={{ padding: "5px 12px", borderRadius: 7, border: `1px solid ${F.plum}`, background: baseOf(sel) === driverEstimate(sel) ? F.bg : F.plum, color: baseOf(sel) === driverEstimate(sel) ? F.muted2 : F.paper, fontSize: 11.5, fontWeight: 700, cursor: baseOf(sel) === driverEstimate(sel) ? "default" : "pointer", fontFamily: "inherit" }}>Apply to Expected →</button>
+              {baseOf(sel) !== driverEstimate(sel) && <span style={{ fontSize: 11, color: F.orange, fontWeight: 600 }}>Expected ({baseOf(sel).toLocaleString()}) currently differs from this estimate</span>}
             </div>
             <div style={{ fontSize: 11, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>Model, tokens &amp; tier</div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 12, marginBottom: 16 }}>
@@ -4059,22 +4084,22 @@ function FairUseExample({ monz, setMonz, deepRoute, setDeepRoute }) {
           <div style={sectionTitle}>How it's calculated</div>
           <div style={{ fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace", fontSize: 12, color: F.plum, background: F.surface, border: `1px solid ${F.border}`, borderRadius: 8, padding: "12px 14px", whiteSpace: "pre-wrap", lineHeight: 1.7 }}>
 {`cost_per_run    = (in_tok/1M × $in + out_tok/1M × $out) × calls_per_run
-runs_per_month  = reach × adoption% × uses_each × level_multiplier
-cost_per_school = Σ over features ( cost_per_run × runs_per_month )
+runs_per_month  = expected_runs × level_multiplier
+cost_per_school = Σ enabled features ( cost_per_run × runs_per_month )
 fleet_total     = cost_per_school × number_of_schools`}
           </div>
-          <p style={{ margin: "12px 0 0", fontSize: 12, color: F.muted, lineHeight: 1.55 }}><strong style={{ color: F.plum }}>runs_per_month</strong> is built from named school drivers, then the usage level flexes the adoption band — Low ×{usageLevels.low ?? 0.4}, Expected ×{usageLevels.expected ?? 1}, Heavy ×{usageLevels.heavy ?? 2}. That keeps Low/Expected/Heavy honest: change one band, not nine separate guesses. Calibrate the drivers from OpenApply/CRM counts and real pilots as data lands.</p>
+          <p style={{ margin: "12px 0 0", fontSize: 12, color: F.muted, lineHeight: 1.55 }}><strong style={{ color: F.plum }}>expected_runs</strong> is the base case you set per feature — type it directly in the table (on Expected), or open a row and use the <strong style={{ color: F.plum }}>reach × adoption% × uses</strong> helper to derive a grounded number, then "Apply to Expected". The usage level then flexes it — Low ×{usageLevels.low ?? 0.4}, Expected ×{usageLevels.expected ?? 1}, Heavy ×{usageLevels.heavy ?? 2}. Only <strong style={{ color: F.plum }}>enabled</strong> features count toward the totals. Recalibrate against real pilot usage as data lands.</p>
           {top && (() => {
             const r = top.r; const m = modelById[modelOf(r)]; if (!m) return null;
             const inC = (r.inputTokens || 0) / 1e6 * m.inPer1M, outC = (r.outputTokens || 0) / 1e6 * m.outPer1M;
-            const run = top.run, E = expectedRuns(r), M = usageLevels[level] ?? 1, R = top.runsMo, P = top.perSchool;
+            const run = top.run, E = baseOf(r), M = usageLevels[level] ?? 1, R = top.runsMo, P = top.perSchool;
             return (
               <div style={{ marginTop: 14 }}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>Worked example — {r.feature} on {m.name} ({levelLabel}, {numSchools.toLocaleString()} schools)</div>
                 <div style={{ fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace", fontSize: 12, color: F.plum, background: F.surface, border: `1px solid ${F.border}`, borderRadius: 8, padding: "12px 14px", whiteSpace: "pre-wrap", lineHeight: 1.7 }}>
 {`cost_per_run = (${(r.inputTokens || 0).toLocaleString()}/1M × $${m.inPer1M} + ${(r.outputTokens || 0).toLocaleString()}/1M × $${m.outPer1M}) × ${calls(r)} call${calls(r) > 1 ? "s" : ""}
             = (${f4(inC)} + ${f4(outC)}) × ${calls(r)} = ${f4(run)}  (${cents(run)}/run)
-runs/mo     = ${(r.reach || 0).toLocaleString()} ${r.reachLabel || "units"} × ${r.adoptionPct || 0}% × ${r.usesPer || 0} = ${E.toLocaleString()} (Expected) × ${M} = ${R.toLocaleString()}
+runs/mo     = ${E.toLocaleString()} expected × ${M} (${levelLabel}) = ${R.toLocaleString()}
 $/school/mo = ${f4(run)} × ${R.toLocaleString()} = ${usd(P)}
 fleet total = ${usd(P)} × ${numSchools.toLocaleString()} schools = ${usd(P * numSchools)}`}
                 </div>

@@ -458,6 +458,38 @@ const DEFAULT_MONETIZATION = {
     enabled: true, // counts toward the totals/chart/share when true
     freeModelId: "m-qwen", proModelId: r[4], notes: "",
   })),
+  // Pricing-packages presentation model (Exec / SLT / CAB facing). Free preview → paid AI SKU → Pro bundle.
+  packages: {
+    // The free, limited AI baked into the core product — the "prove it" tier before any upsell.
+    free: {
+      name: "AI Preview",
+      price: "Free",
+      tagline: "Built into every core product",
+      blurb: "A taste of AI inside the pages schools already use — enough to prove the value before they buy.",
+      bullets: ["Limited monthly usage", "Core-page AI only", "On by default — no setup or sales"],
+    },
+    // The base product plans AI attaches to (NOT AI tiers — these are the product subscription tiers).
+    plans: ["Essential", "Standard", "Pro"],
+    plansNote: "AI is an add-on on Essential & Standard, and included in Pro.",
+    // Per product: the à-la-carte paid AI SKU, and the all-inclusive Pro bundle (AI is one module of many).
+    products: Object.fromEntries(MONZ_PRODUCTS.map(p => {
+      const brand = { "OpenApply": "OpenApply", "ManageBac+": "ManageBac", "Atlas": "Atlas", "SchoolsBuddy": "SchoolsBuddy", "Vectare": "Vectare" }[p];
+      const modulesSeed = {
+        "OpenApply": ["AI", "CRM", "Advancement", "Enrollment Contract", "WhatsApp"],
+        "ManageBac+": ["AI"], "Atlas": ["AI"], "SchoolsBuddy": ["AI"], "Vectare": ["AI"],
+      }[p] || ["AI"];
+      return [p, {
+        aiName: `${brand} AI`,
+        aiTagline: "The full AI module, à la carte",
+        aiBullets: ["Every AI feature, unthrottled", "Add-on to your current plan", "One product"],
+        availableOn: ["Essential", "Standard"],
+        proName: `${brand} Pro`,
+        proPrice: 0,
+        proTagline: "Everything — all modules, AI included",
+        modules: modulesSeed,
+      }];
+    })),
+  },
 };
 
 /* ── Defaults for the new monetization sub-pages ───────── */
@@ -1531,6 +1563,16 @@ function mergeMonz(saved) {
       const merged = saved.costLab.map(r => (defById[r.id] ? { ...defById[r.id], ...r } : r));
       return [...merged, ...DEFAULT_MONETIZATION.costLab.filter(d => !ids.has(d.id))];
     })(),
+    // forward-fill packages: deep-merge free + per-product over defaults so new fields backfill, saved edits win.
+    packages: (() => {
+      const dp = DEFAULT_MONETIZATION.packages, sp = saved.packages || {};
+      return {
+        ...dp, ...sp,
+        free: { ...dp.free, ...(sp.free || {}) },
+        plans: sp.plans || dp.plans,
+        products: Object.fromEntries(MONZ_PRODUCTS.map(p => [p, { ...dp.products[p], ...((sp.products || {})[p] || {}) }])),
+      };
+    })(),
   };
 }
 
@@ -2012,7 +2054,7 @@ const SLUG_PRODUCT = Object.fromEntries(Object.entries(PRODUCT_SLUG).map(([k, v]
 function AiMonetizationPage({ subRoute, setSubRoute, deepRoute, setDeepRoute }) {
   // view derived from URL sub-route. Valid: "plan" | "usage" | "competitive" | "market" | "finance".
   // Empty / unknown subRoute → default "plan".
-  const VALID_VIEWS = ["plan", "usage", "competitive", "market", "finance"];
+  const VALID_VIEWS = ["plan", "usage", "competitive", "market", "finance", "packages"];
   const view = VALID_VIEWS.includes(subRoute) ? subRoute : "plan";
   const setView = (v) => setSubRoute(v);
   // For the Framework view, the third URL segment selects a single product.
@@ -2093,6 +2135,7 @@ function AiMonetizationPage({ subRoute, setSubRoute, deepRoute, setDeepRoute }) 
           competitive: { t: "Competitive Analysis", s: "Track how competitors are pricing and packaging AI. Use this to calibrate our Pro tier and bundle pricing." },
           market:      { t: "Market Validation", s: "Per-product school validation — pilots, willingness to pay, and which Pro outcomes schools have confirmed." },
           finance:     { t: "Finance", s: "AI Pro economics — Overview rolls up Essential vs Pro AI cost (from Usage) and SKUs/pricing; pick a product to model AI Pro price points, margin and break-even." },
+          packages:    { t: "Pricing Packages", s: "How we package and sell AI — a free preview to prove the value, a paid AI module per product, and a Pro bundle that includes AI alongside every other module." },
         };
         const cur = titles[view] || titles.plan;
         return (
@@ -2111,6 +2154,7 @@ function AiMonetizationPage({ subRoute, setSubRoute, deepRoute, setDeepRoute }) 
           { id: "competitive", label: "Competitive Analysis" },
           { id: "market",      label: "Market Validation" },
           { id: "finance",     label: "Finance" },
+          { id: "packages",    label: "Pricing Packages" },
         ].map(t => {
           const active = view === t.id;
           return (
@@ -2131,6 +2175,7 @@ function AiMonetizationPage({ subRoute, setSubRoute, deepRoute, setDeepRoute }) 
       {view === "competitive" && <MonzCompetitivePage />}
       {view === "market"      && <MonzMarketPage />}
       {view === "finance"     && <MonzFinancePage monz={mz} setMonz={setMz} deepRoute={deepRoute} setDeepRoute={setDeepRoute} />}
+      {view === "packages"    && <MonzPackagesPage monz={mz} setMonz={setMz} deepRoute={deepRoute} setDeepRoute={setDeepRoute} />}
 
       {view === "plan" && (<>
       {/* Framework card — Essential vs Pro two-up, demarcation criteria as a full-width band below */}
@@ -3914,6 +3959,290 @@ function MonzFinancePage({ monz, setMonz, deepRoute, setDeepRoute }) {
             </div>
           ) : <p style={{ margin: 0, fontSize: 12.5, color: F.muted, fontStyle: "italic" }}>Set a current AI Pro price in SKUs (Overview) to see how margin holds up if usage runs Low → Heavy.</p>}
           <p style={{ margin: "10px 0 0", fontSize: 11.5, color: F.muted2, fontStyle: "italic" }}>Does AI Pro still profit if schools use it harder than expected? Heavy multiplies every feature's runs by ×{usageLevels.heavy ?? 2}.</p>
+        </div>
+      </>
+    );
+  };
+
+  return (
+    <>
+      {chipNav}
+      {focusedProduct ? renderProduct() : renderOverview()}
+    </>
+  );
+}
+
+/* ── Pricing Packages (sub-page of AI Monetization) ───────
+   Exec / SLT / CAB-facing presentation of how we package AI:
+   Free preview → paid à-la-carte AI SKU per product → Pro bundle
+   that includes AI alongside every module. Overview is read-only
+   presentation; per-product pages are the editable working surface. */
+function MonzPackagesPage({ monz, setMonz, deepRoute, setDeepRoute }) {
+  const pkg = monz.packages;
+  const focusedProduct = SLUG_PRODUCT[deepRoute] || null; // null = Overview
+  const setFocusedProduct = (prod) => setDeepRoute(prod ? (PRODUCT_SLUG[prod] || "") : "");
+
+  // mutators
+  const setFree = (patch) => setMonz(prev => ({ ...prev, packages: { ...prev.packages, free: { ...prev.packages.free, ...patch } } }));
+  const setProd = (prod, patch) => setMonz(prev => ({ ...prev, packages: { ...prev.packages, products: { ...prev.packages.products, [prod]: { ...prev.packages.products[prod], ...patch } } } }));
+  // The paid-AI SKU price is the single source of truth shared with Finance/SKUs: monz.products[prod].price.
+  const aiPriceOf = (prod) => Number(monz.products[prod]?.price) || 0;
+  const setAiPrice = (prod, v) => setMonz(prev => ({ ...prev, products: { ...prev.products, [prod]: { ...prev.products[prod], price: v === "" ? null : (parseFloat(v) || 0) } } }));
+  // modules
+  const modsOf = (prod) => pkg.products[prod]?.modules || [];
+  const setModule = (prod, i, val) => { const m = [...modsOf(prod)]; m[i] = val; setProd(prod, { modules: m }); };
+  const addModule = (prod) => setProd(prod, { modules: [...modsOf(prod), ""] });
+  const delModule = (prod, i) => setProd(prod, { modules: modsOf(prod).filter((_, ix) => ix !== i) });
+
+  const usd0 = (n) => isFinite(n) && n > 0 ? `$${Math.round(n).toLocaleString()}` : null;
+  const card = { background: F.surface, border: `1px solid ${F.border}`, borderRadius: 12, padding: "20px 24px", marginBottom: 18, boxShadow: F.shadowSm };
+  const sectionTitle = { fontSize: 11, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 };
+  const th = { textAlign: "left", padding: "8px 10px", fontSize: 10, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.05em", borderBottom: `1px solid ${F.border}`, whiteSpace: "nowrap" };
+  const td = { padding: "7px 10px", fontSize: 12.5, color: F.plum, verticalAlign: "middle", borderBottom: `1px solid ${F.border}` };
+  const eInp = { ...inp, border: `1px dashed ${F.border}`, background: "transparent", padding: "3px 6px" };
+
+  // chip nav
+  const chip = (label, prod, active) => (
+    <button key={label} onClick={() => setFocusedProduct(prod)} style={{ padding: "5px 13px", borderRadius: 999, fontSize: 12, fontWeight: 700, cursor: "pointer", background: active ? F.plum : F.surface, color: active ? F.paper : F.plum, border: `1px solid ${active ? F.plum : F.borderStrong}`, fontFamily: "inherit" }}>{label}</button>
+  );
+  const chipNav = (
+    <div style={{ display: "flex", gap: 6, marginBottom: 18, flexWrap: "wrap", alignItems: "center" }}>
+      {chip("Overview", null, !focusedProduct)}
+      {MONZ_PRODUCTS.map(p => chip(p, p, focusedProduct === p))}
+      <span style={{ fontSize: 11, color: F.muted2, marginLeft: 4 }}>· Overview tells the story · pick a product to set its prices &amp; modules</span>
+    </div>
+  );
+
+  // small building blocks
+  const numBadge = (n, bg, fg) => <div style={{ width: 26, height: 26, borderRadius: 999, background: bg, color: fg, fontSize: 13, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{n}</div>;
+  const planChip = (label, mode) => {
+    // mode: "addon" (AI is an add-on here) | "included" (AI baked in)
+    const inc = mode === "included";
+    return (
+      <div key={label} style={{ flex: 1, minWidth: 120, background: inc ? F.plum : F.surface, border: `1px solid ${inc ? F.plum : F.borderStrong}`, borderRadius: 10, padding: "12px 14px" }}>
+        <div style={{ fontSize: 14, fontWeight: 800, color: inc ? F.paper : F.plum }}>{label}</div>
+        <div style={{ fontSize: 11, fontWeight: 700, marginTop: 4, color: inc ? F.lightYellow : F.muted2 }}>{inc ? "✓ AI included" : "+ AI add-on"}</div>
+      </div>
+    );
+  };
+
+  // ── OVERVIEW ──
+  const renderOverview = () => {
+    const arrow = <div style={{ flex: "0 0 auto", alignSelf: "center", color: F.muted2, fontSize: 22, fontWeight: 700, padding: "0 2px" }}>→</div>;
+    const heroStep = (n, label, name, sub, accent, highlight) => (
+      <div style={{ flex: 1, minWidth: 190, background: highlight ? F.plum : F.surface, border: `1px solid ${highlight ? F.plum : F.border}`, borderTop: `4px solid ${accent}`, borderRadius: 14, padding: "18px 18px 20px", boxShadow: highlight ? F.shadowLg : F.shadowSm }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+          {numBadge(n, highlight ? F.paper : F.plum, highlight ? F.plum : F.paper)}
+          <span style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: "0.07em", color: highlight ? F.lightYellow : F.muted2 }}>{label}</span>
+        </div>
+        <div style={{ fontSize: 19, fontWeight: 800, color: highlight ? F.paper : F.plum, lineHeight: 1.1 }}>{name}</div>
+        <div style={{ fontSize: 12.5, color: highlight ? F.lightPink : F.muted, marginTop: 6, lineHeight: 1.45 }}>{sub}</div>
+      </div>
+    );
+    return (
+      <>
+        {/* HERO — the model */}
+        <div style={{ ...card, padding: 0, overflow: "hidden", border: "none", boxShadow: F.shadowMd }}>
+          <div style={{ background: F.gradient, padding: "5px 0" }} />
+          <div style={{ padding: "24px 26px 26px", background: F.surface, border: `1px solid ${F.border}`, borderTop: "none", borderRadius: "0 0 12px 12px" }}>
+            <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.1em", color: F.pink, textTransform: "uppercase", marginBottom: 6 }}>The packaging model</div>
+            <h2 style={{ margin: "0 0 6px", fontSize: 23, fontWeight: 800, color: F.plum, lineHeight: 1.15 }}>Three steps from free trial to full bundle</h2>
+            <p style={{ margin: "0 0 20px", fontSize: 13.5, color: F.muted, lineHeight: 1.5, maxWidth: 760 }}>Schools meet AI for free inside the product, prove it's worth it, then buy — either the AI module on its own, or the all-in Pro bundle that includes it.</p>
+            <div style={{ display: "flex", gap: 4, flexWrap: "wrap", alignItems: "stretch" }}>
+              {heroStep("1", "STEP 1 · FREE", pkg.free.name, "Prove the value at zero cost — limited AI in the core product.", F.yellow, false)}
+              {arrow}
+              {heroStep("2", "STEP 2 · PAID", "Product AI", "Buy the AI module à la carte, on top of your current plan.", F.orange, false)}
+              {arrow}
+              {heroStep("3", "STEP 3 · BUNDLE", "Product Pro", "Or go all-in — the top plan, with AI alongside every module.", F.pink, true)}
+            </div>
+          </div>
+        </div>
+
+        {/* TWO PATHS */}
+        <div style={card}>
+          <div style={sectionTitle}>Two paths to paid AI</div>
+          <p style={{ margin: "-2px 0 16px", fontSize: 12.5, color: F.muted, lineHeight: 1.5, maxWidth: 820 }}>Once a school wants AI for real, there are two ways to buy it — and both start from the plan they're already on.</p>
+          {/* base node */}
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: 6 }}>
+            <div style={{ background: F.bg, border: `1px solid ${F.borderStrong}`, borderRadius: 999, padding: "8px 18px", fontSize: 13, fontWeight: 700, color: F.plum }}>A school on an <span style={{ color: F.pink }}>Essential</span> or <span style={{ color: F.pink }}>Standard</span> plan</div>
+          </div>
+          <div style={{ textAlign: "center", color: F.muted2, fontSize: 18, lineHeight: 1, marginBottom: 6 }}>↓</div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 14 }}>
+            <div style={{ background: F.surface, border: `1px solid ${F.border}`, borderLeft: `4px solid ${F.orange}`, borderRadius: 12, padding: "16px 18px" }}>
+              <div style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: "0.07em", color: F.orange, marginBottom: 6 }}>PATH A · À LA CARTE</div>
+              <div style={{ fontSize: 16, fontWeight: 800, color: F.plum }}>Add the AI module</div>
+              <p style={{ margin: "6px 0 0", fontSize: 12.5, color: F.muted, lineHeight: 1.5 }}>Keep the current plan and bolt on <strong style={{ color: F.plum }}>[Product] AI</strong> for that one product. Fastest yes — a single line item.</p>
+            </div>
+            <div style={{ background: F.plum, border: `1px solid ${F.plum}`, borderLeft: `4px solid ${F.pink}`, borderRadius: 12, padding: "16px 18px", boxShadow: F.shadowMd }}>
+              <div style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: "0.07em", color: F.lightYellow, marginBottom: 6 }}>PATH B · BUNDLE</div>
+              <div style={{ fontSize: 16, fontWeight: 800, color: F.paper }}>Upgrade to Pro</div>
+              <p style={{ margin: "6px 0 0", fontSize: 12.5, color: F.lightPink, lineHeight: 1.5 }}>Move up to the top plan — <strong style={{ color: F.paper }}>[Product] Pro</strong> includes AI alongside every other module. Highest value, highest ACV.</p>
+            </div>
+          </div>
+          {/* product plans strip */}
+          <div style={{ marginTop: 18 }}>
+            <div style={{ ...sectionTitle, marginBottom: 8 }}>Product plans — where AI sits</div>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {(pkg.plans || ["Essential", "Standard", "Pro"]).map(pl => planChip(pl, pl === "Pro" ? "included" : "addon"))}
+            </div>
+            <p style={{ margin: "8px 0 0", fontSize: 11.5, color: F.muted2, fontStyle: "italic" }}>{pkg.plansNote || "AI is an add-on on Essential & Standard, and included in Pro."}</p>
+          </div>
+        </div>
+
+        {/* ALL PRODUCTS MATRIX */}
+        <div style={card}>
+          <div style={sectionTitle}>Every product at a glance</div>
+          <div style={{ overflowX: "auto", border: `1px solid ${F.border}`, borderRadius: 8 }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 720 }}>
+              <thead><tr style={{ background: F.bg }}>
+                <th style={th}>Product</th>
+                <th style={{ ...th, textAlign: "center" }}>Free preview</th>
+                <th style={th}>Paid AI module</th>
+                <th style={{ ...th, textAlign: "right" }}>AI · price / yr</th>
+                <th style={th}>Pro bundle</th>
+                <th style={{ ...th, textAlign: "right" }}>Pro · price / yr</th>
+                <th style={{ ...th, textAlign: "center" }}>Open</th>
+              </tr></thead>
+              <tbody>
+                {MONZ_PRODUCTS.map(p => {
+                  const pd = pkg.products[p];
+                  const aip = usd0(aiPriceOf(p)), prop = usd0(pd.proPrice);
+                  return (
+                    <tr key={p} onClick={() => setFocusedProduct(p)} style={{ cursor: "pointer", borderBottom: `1px solid ${F.border}` }}>
+                      <td style={{ ...td, fontWeight: 700 }}>{p}</td>
+                      <td style={{ ...td, textAlign: "center", color: F.green, fontWeight: 700 }}>✓ Free</td>
+                      <td style={{ ...td, fontWeight: 600, color: F.plum }}>{pd.aiName}</td>
+                      <td style={{ ...td, textAlign: "right", color: aip ? F.plum : F.muted2, fontWeight: 700 }}>{aip || "TBD"}</td>
+                      <td style={{ ...td, fontWeight: 600, color: F.plum }}>{pd.proName}<span style={{ fontSize: 10.5, color: F.muted2, fontWeight: 500 }}> · {(pd.modules || []).length} modules</span></td>
+                      <td style={{ ...td, textAlign: "right", color: prop ? F.plum : F.muted2, fontWeight: 700 }}>{prop || "TBD"}</td>
+                      <td style={{ ...td, textAlign: "center", color: F.muted2 }}>→</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          <p style={{ margin: "10px 0 0", fontSize: 11.5, color: F.muted2, fontStyle: "italic" }}>The AI module price is shared with Finance &amp; SKUs. Click a product to set prices and the Pro module list.</p>
+        </div>
+      </>
+    );
+  };
+
+  // ── PER-PRODUCT ──
+  const renderProduct = () => {
+    const p = focusedProduct;
+    const pd = pkg.products[p];
+    const aip = aiPriceOf(p);
+    const mods = modsOf(p);
+    const moneyInp = { ...inp, width: 120, fontSize: 18, fontWeight: 800, padding: "6px 10px", textAlign: "right" };
+
+    return (
+      <>
+        {/* header */}
+        <div style={{ ...card, borderLeft: `4px solid ${F.pink}` }}>
+          <span style={{ fontSize: 18, fontWeight: 800, color: F.plum }}>{p} — packaging</span>
+          <p style={{ margin: "4px 0 0", fontSize: 12.5, color: F.muted, lineHeight: 1.5, maxWidth: 780 }}>The three ways a school gets AI for {p}: a free preview, the paid AI module à la carte, or the Pro bundle that includes it. Edit names, prices and modules below.</p>
+        </div>
+
+        {/* THREE PRICING CARDS */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: 14, marginBottom: 18, alignItems: "stretch" }}>
+          {/* FREE */}
+          <div style={{ background: F.surface, border: `1px solid ${F.border}`, borderTop: `4px solid ${F.yellow}`, borderRadius: 14, padding: "20px 20px 22px", boxShadow: F.shadowSm, display: "flex", flexDirection: "column" }}>
+            <div style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: "0.07em", color: F.muted2, marginBottom: 8 }}>FREE · VALIDATION</div>
+            <input value={pkg.free.name} onChange={e => setFree({ name: e.target.value })} style={{ ...eInp, fontSize: 18, fontWeight: 800, color: F.plum, marginBottom: 4 }} />
+            <div style={{ display: "flex", alignItems: "baseline", gap: 6, margin: "6px 0 12px" }}>
+              <span style={{ fontSize: 26, fontWeight: 800, color: F.green }}>Free</span>
+              <span style={{ fontSize: 12, color: F.muted2 }}>· in every plan</span>
+            </div>
+            <input value={pkg.free.tagline} onChange={e => setFree({ tagline: e.target.value })} style={{ ...eInp, fontSize: 12.5, color: F.muted, marginBottom: 12 }} />
+            <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 7 }}>
+              {(pkg.free.bullets || []).map((b, i) => (
+                <li key={i} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12.5, color: F.muted }}>
+                  <span style={{ color: F.green, fontWeight: 800 }}>✓</span>
+                  <input value={b} onChange={e => { const bl = [...pkg.free.bullets]; bl[i] = e.target.value; setFree({ bullets: bl }); }} style={{ ...eInp, flex: 1, fontSize: 12.5, color: F.muted }} />
+                  <button onClick={() => setFree({ bullets: pkg.free.bullets.filter((_, ix) => ix !== i) })} style={{ border: "none", background: "transparent", color: F.muted2, cursor: "pointer", fontSize: 13, fontFamily: "inherit" }}>×</button>
+                </li>
+              ))}
+            </ul>
+            <button onClick={() => setFree({ bullets: [...(pkg.free.bullets || []), ""] })} style={{ marginTop: 10, alignSelf: "flex-start", padding: "3px 10px", borderRadius: 7, border: `1px dashed ${F.borderStrong}`, background: "transparent", color: F.muted, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>+ line</button>
+            <div style={{ marginTop: 12, fontSize: 10.5, color: F.muted2, fontStyle: "italic" }}>Shared across all products.</div>
+          </div>
+
+          {/* PAID AI */}
+          <div style={{ background: F.surface, border: `1px solid ${F.border}`, borderTop: `4px solid ${F.orange}`, borderRadius: 14, padding: "20px 20px 22px", boxShadow: F.shadowSm, display: "flex", flexDirection: "column" }}>
+            <div style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: "0.07em", color: F.orange, marginBottom: 8 }}>PAID · À LA CARTE</div>
+            <input value={pd.aiName} onChange={e => setProd(p, { aiName: e.target.value })} style={{ ...eInp, fontSize: 18, fontWeight: 800, color: F.plum, marginBottom: 4 }} />
+            <div style={{ display: "flex", alignItems: "baseline", gap: 4, margin: "6px 0 12px" }}>
+              <span style={{ fontSize: 20, fontWeight: 800, color: F.plum }}>$</span>
+              <input type="number" min="0" value={aip || ""} placeholder="0" onChange={e => setAiPrice(p, e.target.value)} style={moneyInp} />
+              <span style={{ fontSize: 12, color: F.muted2, whiteSpace: "nowrap" }}>/ yr</span>
+            </div>
+            <input value={pd.aiTagline} onChange={e => setProd(p, { aiTagline: e.target.value })} style={{ ...eInp, fontSize: 12.5, color: F.muted, marginBottom: 10 }} />
+            {/* available on */}
+            <div style={{ fontSize: 10.5, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 6 }}>Available on</div>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 12 }}>
+              {(pkg.plans || ["Essential", "Standard", "Pro"]).filter(pl => pl !== "Pro").map(pl => {
+                const on = (pd.availableOn || []).includes(pl);
+                return (
+                  <button key={pl} onClick={() => setProd(p, { availableOn: on ? pd.availableOn.filter(x => x !== pl) : [...(pd.availableOn || []), pl] })} style={{ padding: "4px 11px", borderRadius: 999, fontSize: 11.5, fontWeight: 700, cursor: "pointer", background: on ? F.orange : F.surface, color: on ? F.paper : F.muted2, border: `1px solid ${on ? F.orange : F.borderStrong}`, fontFamily: "inherit" }}>{pl}{on ? " ✓" : ""}</button>
+                );
+              })}
+            </div>
+            <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 7 }}>
+              {(pd.aiBullets || []).map((b, i) => (
+                <li key={i} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12.5, color: F.muted }}>
+                  <span style={{ color: F.orange, fontWeight: 800 }}>✓</span>
+                  <input value={b} onChange={e => { const bl = [...pd.aiBullets]; bl[i] = e.target.value; setProd(p, { aiBullets: bl }); }} style={{ ...eInp, flex: 1, fontSize: 12.5, color: F.muted }} />
+                  <button onClick={() => setProd(p, { aiBullets: pd.aiBullets.filter((_, ix) => ix !== i) })} style={{ border: "none", background: "transparent", color: F.muted2, cursor: "pointer", fontSize: 13, fontFamily: "inherit" }}>×</button>
+                </li>
+              ))}
+            </ul>
+            <button onClick={() => setProd(p, { aiBullets: [...(pd.aiBullets || []), ""] })} style={{ marginTop: 10, alignSelf: "flex-start", padding: "3px 10px", borderRadius: 7, border: `1px dashed ${F.borderStrong}`, background: "transparent", color: F.muted, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>+ line</button>
+          </div>
+
+          {/* PRO BUNDLE — highlighted */}
+          <div style={{ background: F.plum, border: `1px solid ${F.plum}`, borderRadius: 14, padding: "20px 20px 22px", boxShadow: F.shadowLg, display: "flex", flexDirection: "column", position: "relative", overflow: "hidden" }}>
+            <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 4, background: F.gradient }} />
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+              <span style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: "0.07em", color: F.lightYellow }}>BUNDLE · MOST INCLUSIVE</span>
+              <span style={{ fontSize: 9.5, fontWeight: 800, color: F.plum, background: F.gradient, padding: "2px 8px", borderRadius: 999 }}>INCLUDES AI</span>
+            </div>
+            <input value={pd.proName} onChange={e => setProd(p, { proName: e.target.value })} style={{ ...eInp, fontSize: 18, fontWeight: 800, color: F.paper, borderColor: F.lightPlum, marginBottom: 4 }} />
+            <div style={{ display: "flex", alignItems: "baseline", gap: 4, margin: "6px 0 12px" }}>
+              <span style={{ fontSize: 20, fontWeight: 800, color: F.paper }}>$</span>
+              <input type="number" min="0" value={pd.proPrice || ""} placeholder="0" onChange={e => setProd(p, { proPrice: e.target.value === "" ? 0 : (parseFloat(e.target.value) || 0) })} style={{ ...moneyInp, color: F.paper, background: F.lightPlum + "44", borderColor: F.lightPlum }} />
+              <span style={{ fontSize: 12, color: F.lightPink, whiteSpace: "nowrap" }}>/ yr</span>
+            </div>
+            <input value={pd.proTagline} onChange={e => setProd(p, { proTagline: e.target.value })} style={{ ...eInp, fontSize: 12.5, color: F.lightPink, borderColor: F.lightPlum, marginBottom: 12 }} />
+            <div style={{ fontSize: 10.5, fontWeight: 700, color: F.lightYellow, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>Everything included</div>
+            <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 7 }}>
+              {mods.map((m, i) => {
+                const isAI = (m || "").trim().toLowerCase() === "ai";
+                return (
+                  <li key={i} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: F.paper }}>
+                    <span style={{ color: isAI ? F.yellow : F.lightPink, fontWeight: 800 }}>✓</span>
+                    <input value={m} onChange={e => setModule(p, i, e.target.value)} style={{ ...eInp, flex: 1, fontSize: 13, fontWeight: isAI ? 800 : 600, color: isAI ? F.yellow : F.paper, borderColor: F.lightPlum }} />
+                    <button onClick={() => delModule(p, i)} style={{ border: "none", background: "transparent", color: F.lightPink, cursor: "pointer", fontSize: 13, fontFamily: "inherit" }}>×</button>
+                  </li>
+                );
+              })}
+            </ul>
+            <button onClick={() => addModule(p)} style={{ marginTop: 10, alignSelf: "flex-start", padding: "3px 10px", borderRadius: 7, border: `1px dashed ${F.lightPlum}`, background: "transparent", color: F.lightPink, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>+ module</button>
+          </div>
+        </div>
+
+        {/* takeaway */}
+        <div style={{ ...card, borderLeft: `4px solid ${F.orange}`, display: "flex", gap: 18, flexWrap: "wrap", alignItems: "center" }}>
+          <div style={{ flex: 1, minWidth: 220 }}>
+            <div style={sectionTitle}>The upsell</div>
+            <p style={{ margin: 0, fontSize: 13, color: F.muted, lineHeight: 1.5 }}>Free preview proves the value → schools buy <strong style={{ color: F.plum }}>{pd.aiName}</strong>{usd0(aip) ? <> at <strong style={{ color: F.plum }}>{usd0(aip)}/yr</strong></> : ""}, or step up to <strong style={{ color: F.plum }}>{pd.proName}</strong>{usd0(pd.proPrice) ? <> at <strong style={{ color: F.plum }}>{usd0(pd.proPrice)}/yr</strong></> : ""} for all {mods.length} modules.</p>
+          </div>
+          {usd0(aip) && usd0(pd.proPrice) && (
+            <div style={{ background: F.bg, border: `1px solid ${F.border}`, borderRadius: 10, padding: "12px 18px", textAlign: "center" }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: F.muted2, marginBottom: 4 }}>Pro uplift over AI-only</div>
+              <div style={{ fontSize: 22, fontWeight: 800, color: F.green }}>+{usd0(Math.max(0, pd.proPrice - aip))}<span style={{ fontSize: 11, color: F.muted2, fontWeight: 600 }}>/yr</span></div>
+            </div>
+          )}
         </div>
       </>
     );

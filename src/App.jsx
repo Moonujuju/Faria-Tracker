@@ -243,7 +243,7 @@ const DEFAULT_AI = [
   ] },
   { id: 203, name: "AI 2nd Language Translations", description: "On-the-fly translation of applicant content and outbound messages.", deadline: "2026-06-30", owner: "", product: "OpenApply", type: "feature", priority: "medium", effort: "medium", impact: "medium", milestones: [
     { label: "Pick target languages and provider", target: "2026-05-15", done: false },{ label: "Design translation UX", target: "2026-05-30", done: false },{ label: "Build inline translation flows", target: "2026-06-15", done: false },{ label: "Launch to early adopters", target: "2026-06-30", done: false },
-  ], status: "not-started", valueRationale: "Broad low-friction utility — non-English-speaking applicants and parents get an immediate translation. Universally useful, low inference cost per use; fits the AI Essential surface.", wowOutcomes: [
+  ], status: "not-started", valueRationale: "Broad low-friction utility — non-English-speaking applicants and parents get an immediate translation. Universally useful, low inference cost per use; fits the AI Starter surface.", wowOutcomes: [
     "Schools with 20%+ non-English-speaking applicants report a 10-15% lift in application completion",
     "Admissions team no longer copy-pastes through Google Translate during review",
   ] },
@@ -263,7 +263,7 @@ const DEFAULT_AI = [
   ] },
   { id: 206, name: "AI Lead Scoring", description: "Predictive scoring of applicant likelihood to enroll, with explanations.", deadline: "2026-09-30", owner: "", product: "OpenApply", type: "feature", priority: "high", effort: "high", impact: "high", milestones: [
     { label: "Research scoring models and bias mitigation", target: "2026-07-15", done: false },{ label: "Design score UX and override workflow", target: "2026-08-15", done: false },{ label: "Train model on anonymized data", target: "2026-09-15", done: false },{ label: "Pilot with 3 schools", target: "2026-09-30", done: false },
-  ], status: "not-started", valueRationale: "Produces a measurable outcome (conversion lift, time-to-decision) and unlocks predictive enrolment likelihood schools currently approximate by hand. The headline Pro feature.", wowOutcomes: [
+  ], status: "not-started", valueRationale: "Produces a measurable outcome (conversion lift, time-to-decision) and unlocks predictive enrolment likelihood schools currently approximate by hand. The headline AI Max feature.", wowOutcomes: [
     "15% conversion lift in the top-scored applicant cohort vs the rest",
     "Director time-to-decision down from 8 days to under 3 days on top-scored applicants",
     "80% of yield comes from the top 40% of leads — admissions team prioritises follow-up correctly",
@@ -283,13 +283,13 @@ const DEFAULT_AI = [
   ] },
   { id: 209, name: "AI Custom Dashboard", description: "AI-assisted custom dashboards summarizing admissions metrics in plain language.", deadline: "2026-12-31", owner: "", product: "OpenApply", type: "feature", priority: "medium", effort: "medium", impact: "medium", milestones: [
     { label: "Pick chart primitives and metric set", target: "2026-10-15", done: false },{ label: "Design dashboard builder", target: "2026-11-15", done: false },{ label: "Build NL-to-dashboard pipeline", target: "2026-12-15", done: false },{ label: "Launch to early adopters", target: "2026-12-31", done: false },
-  ], status: "not-started", valueRationale: "Broad analytics utility — universally useful, low inference cost per query. Sits in Essential to differentiate the platform without gating insight from free-tier schools.", wowOutcomes: [
+  ], status: "not-started", valueRationale: "Broad analytics utility — universally useful, low inference cost per query. Sits in AI Starter to differentiate the platform without gating insight from free-tier schools.", wowOutcomes: [
     "Director answers ad-hoc 'how many X' questions in plain English — replaces 30+ minutes of manual spreadsheet work per query",
     "Custom-dashboard usage doubles within 60 days of launch in pilot schools",
   ] },
   { id: 210, name: "AI Document Verification", description: "AI-assisted verification of uploaded documents — transcripts, IDs, recommendation letters — flagging forgeries, inconsistencies and missing items.", deadline: "2026-09-30", owner: "", product: "OpenApply", type: "feature", priority: "high", effort: "high", impact: "high", milestones: [
     { label: "Define document types and verification signals", target: "2026-07-15", done: false },{ label: "Design verification UX + override workflow", target: "2026-08-15", done: false },{ label: "Build OCR + integrity pipeline", target: "2026-09-15", done: false },{ label: "Pilot with 3 schools", target: "2026-09-30", done: false },
-  ], status: "not-started", valueRationale: "Unlocks fraud detection schools cannot reliably do by eye today, and saves admissions teams hours of manual cross-referencing per applicant. Direct trust-and-throughput win — clean fit for Pro.", wowOutcomes: [
+  ], status: "not-started", valueRationale: "Unlocks fraud detection schools cannot reliably do by eye today, and saves admissions teams hours of manual cross-referencing per applicant. Direct trust-and-throughput win — clean fit for AI Max.", wowOutcomes: [
     "Admissions staff manual document review time drops by 80%",
     "Catches 95%+ of forged/altered documents before the admissions decision",
     "Applicant time-to-complete drops from 12 days to under 5 by surfacing missing or invalid docs immediately",
@@ -372,7 +372,7 @@ const MONZ_PRODUCTS = ["OpenApply", "ManageBac+", "Atlas", "SchoolsBuddy", "Vect
 // us./eu. Bedrock cross-region rates run ~10% above global.
 const MODEL_COSTS_SEED = [
   { id: "m-opus",     name: "Claude Opus 4.x",      tier: "frontier", provider: "Anthropic / Bedrock", inPer1M: 15,   outPer1M: 75,  region: "us · eu · ca", source: "token_pricer.ex", notes: "Top reasoning; licensing premium on Bedrock." },
-  { id: "m-sonnet",   name: "Claude Sonnet 4.x",    tier: "frontier", provider: "Anthropic / Bedrock", inPer1M: 3,    outPer1M: 15,  region: "us · eu · ca", source: "token_pricer.ex", notes: "Strong default for Pro features (global rate; us./eu. ≈ $3.30/$16.50)." },
+  { id: "m-sonnet",   name: "Claude Sonnet 4.x",    tier: "frontier", provider: "Anthropic / Bedrock", inPer1M: 3,    outPer1M: 15,  region: "us · eu · ca", source: "token_pricer.ex", notes: "Strong default for AI Max features (global rate; us./eu. ≈ $3.30/$16.50)." },
   { id: "m-haiku",    name: "Claude Haiku 4.5",     tier: "mid",      provider: "Anthropic / Bedrock", inPer1M: 1,    outPer1M: 5,   region: "us · eu · ca", source: "token_pricer.ex", notes: "Fast & cheap for light tasks." },
   { id: "m-gpt41",    name: "GPT-4.1",              tier: "frontier", provider: "OpenAI",              inPer1M: 2,    outPer1M: 8,   region: "us", source: "token_pricer.ex", notes: "gpt-4.1-2025-04-14." },
   { id: "m-qwen",     name: "Qwen2.5 72B (open)",   tier: "open",     provider: "Alibaba / Bedrock",   inPer1M: 0.20, outPer1M: 0.60, region: "in & out of China", source: "estimate", notes: "No frontier licensing — good free-tier default. token_pricer lists Alibaba-hosted at ¥4/¥12 per 1M (CNY); USD here is the Bedrock open-weight estimate." },
@@ -498,6 +498,20 @@ const DEFAULT_MONETIZATION = {
       { id: "g2", title: "Grow revenue fast", desc: "AI Max becomes one of our fastest growing sources of revenue across every product." },
       { id: "g3", title: "Category leadership", desc: "Schools see us as the trusted AI partner in our space." },
     ],
+    aiTiers: [
+      { id: "at1", name: "AI Starter", bullets: [
+        "Free for Essential & Standard schools",
+        "Very low, strict rate limits on some AI features",
+        "No agents or advanced features (set per product)",
+        "Goal: schools see the value of AI and organically upsell to AI Max or the Pro plan",
+      ] },
+      { id: "at2", name: "AI Max", bullets: [
+        "Paid add-on for Essential & Standard schools",
+        "Also included in the Pro bundle",
+        "High AI credit limit (throttling still enforced)",
+        "Agents and advanced features included",
+      ] },
+    ],
     marginTarget: { low: 50, high: 75 },
     introPricing: {
       price: 1000,
@@ -534,8 +548,9 @@ const DEFAULT_MONETIZATION = {
       ],
     },
     timeline: [
-      { id: "tl1", label: "AI Max launches as its own module", when: "September 2026" },
-      { id: "tl2", label: "Pro is repackaged to include AI Max and other add-ons", when: "End of 2026" },
+      { id: "tl1", label: "AI Max launches as its own stand-alone module", when: "September 2026" },
+      { id: "tl2", label: "AI Max continues as a stand-alone module, unchanged", when: "End of 2026" },
+      { id: "tl3", label: "Pro is repackaged to also include AI Max and other add-ons", when: "End of 2026" },
     ],
     uxNotes: "",
     gtmNotes: "",
@@ -875,7 +890,7 @@ const DEFAULT_COMPETITIVE = {
   feedSplitNotes: "Universal free adoption tier beneath the paid models — observed at Copilot Chat, Instructure access features, HubSpot enrichment, Salesforce Foundations, and Khan core platform. The \"standalone AI tax\" grievance: buyers resent paying for AI on top of core software they already license, which structurally favors integrated suites over point solutions (MagicSchool is the cautionary case; PowerSchool and Instructure benefit). Some vendors embed AI cost into the base rather than charging separately — Zoom bundles AI at no extra charge as an adoption lever; Adobe raised base plan prices ~10% to fund AI instead of adding a line item. Both avoid a visible \"AI surcharge.\"",
   benchmarkNotes: "No convergence — the market has not settled on one model. Salesforce deliberately offers three at once so buyers self-select. Strong pull toward outcome-based pricing in support and sales tooling (Intercom, HubSpot, Zendesk), framed around paying for value not compute. The outcome-pricing catch: bills rise as the AI improves and swing with usage, which finance teams dislike — keeps pulling vendors back toward per-seat / per-user wrappers that give a budgetable number. Credits as a hidden compute layer (HubSpot's current approach): customer-facing price is per-outcome, compute is metered underneath. For Faria's positioning as an integrated education suite, Instructure IgniteAI and PowerSchool PowerBuddy are the closest structural comparables — both bundle AI as suite differentiation rather than a separate revenue line, with future tiering on compute-heavy capabilities.",
   summary: {
-    headline: "Bundle AI into per-account/year SKUs. Credits operate underneath — not as the headline price. AI Essential stays genuinely useful; the multi-product bundle discount is the commercial weapon.",
+    headline: "Bundle AI into per-account/year SKUs. Credits operate underneath — not as the headline price. AI Starter stays genuinely useful; the multi-product bundle discount is the commercial weapon.",
     patterns: [
       "Education buyers reject a standalone \"AI tax\" — MagicSchool's documented critique. PowerSchool, Coursera and Instructure bundle AI into the existing suite subscription.",
       "Pricing falls fast in education — Khanmigo went from $60 → $35 → $15 per student/year in under two years. Plan to defend the number down.",
@@ -885,7 +900,7 @@ const DEFAULT_COMPETITIVE = {
     implications: [
       "Keep per-account / year as the SKU unit. Per-student is under heavy downward pressure; per-seat is for productivity tools.",
       "Credits live under the SKU, not as the headline. Mirror HubSpot — customer-facing price is per-SKU; credits govern inference spend.",
-      "AI Essential must be genuinely useful, not a trial. Every successful benchmark runs a real free tier alongside paid.",
+      "AI Starter must be genuinely useful, not a trial. Every successful benchmark runs a real free tier alongside paid.",
       "Lean into the multi-product bundle discount — that's how integrated-suite vendors (PowerSchool, Instructure) actually sell against MagicSchool-style point solutions.",
     ],
     watchout: "The next-cycle move the data suggests is dropping the AI Max SKU entirely and rolling AI into the base product subscription (Adobe / Zoom / Notion / Google Workspace pattern). Faria isn't there yet — schools are still evaluating AI as a differentiated feature — but the 18–36 month trajectory points that way as features commoditize.",
@@ -1403,7 +1418,7 @@ function EXAMPLE_VISION() {
       { id: id("bet3"), choice: "Open the data via MCP so schools' own AI agents can query OpenApply", tradeoff: "Platform/ecosystem play over short-term feature revenue", dependency: "MCP server build; security review" },
     ],
     model: {
-      packaging: "Two tiers: AI Essential (free, default-on, cheap/open models, low caps) and AI Max (paid SKU, frontier models, higher caps). Multi-product bundle discount across Faria.",
+      packaging: "Two tiers: AI Starter (free, default-on, cheap/open models, low caps) and AI Max (paid SKU, frontier models, higher caps). Multi-product bundle discount across Faria.",
       pricing: "Per account / year add-on. Free-tier allowance sized from a comfortable annual spend (cost lab + finance model); credits/usage tracked under the hood, the customer sees a simple action allowance.",
       expansion: "Land with Document Verification + draft replies → expand to agentic nurture + Analyst → bundle with ManageBac+ across the school.",
     },
@@ -1642,19 +1657,21 @@ function mergeMonz(saved) {
       const spPE = sp.packageExample || {};
       return {
         ...dp, ...sp,
-        // Goals are fixed copy now (not editable in the UI) — always take the current default,
-        // never a stale saved value from before the goal text changed in code.
+        // Goals, tier definitions, pricing copy and the timeline are fixed copy (not editable in
+        // the UI) — always take the current default, never a stale saved value from before the
+        // text changed in code.
         goals: dp.goals,
+        aiTiers: dp.aiTiers,
         marginTarget: { ...dp.marginTarget, ...(sp.marginTarget || {}) },
-        introPricing: { ...dp.introPricing, ...(sp.introPricing || {}), reasons: sp.introPricing?.reasons || dp.introPricing.reasons },
-        standardPricing: { ...dp.standardPricing, ...(sp.standardPricing || {}) },
+        introPricing: dp.introPricing,
+        standardPricing: dp.standardPricing,
         upsell: { ...dp.upsell, ...(sp.upsell || {}) },
         packageExample: {
           ...dp.packageExample, ...spPE,
           alaCarte: idMerge(dp.packageExample.alaCarte, spPE.alaCarte),
           tiers: idMerge(dp.packageExample.tiers, spPE.tiers),
         },
-        timeline: idMerge(dp.timeline, sp.timeline),
+        timeline: dp.timeline,
       };
     })(),
   };
@@ -2179,7 +2196,7 @@ function AiMonetizationPage({ subRoute, setSubRoute, deepRoute, setDeepRoute }) 
   const featuresByProduct = (prod) => ai.inits.filter(f => f.product === prod);
   const proReadyDate = (prod) => {
     const pros = featuresByProduct(prod).filter(f => effectiveTier(f) === "pro");
-    if (pros.length === 0) return { label: "No Pro candidates yet", muted: true };
+    if (pros.length === 0) return { label: "No AI Max candidates yet", muted: true };
     const openPros = pros.filter(f => f.status !== "complete");
     if (openPros.length === 0) {
       const last = pros.map(f => f.deadline).sort().slice(-1)[0];
@@ -2197,7 +2214,7 @@ function AiMonetizationPage({ subRoute, setSubRoute, deepRoute, setDeepRoute }) 
   const tierBadge = (tier) => {
     const map = {
       pro:        { bg: F.plum,        fg: F.paper, label: "AI Max" },
-      essential:  { bg: F.lightYellow, fg: F.plum,  label: "AI Essential" },
+      essential:  { bg: F.lightYellow, fg: F.plum,  label: "AI Starter" },
       unassigned: { bg: F.bg,          fg: F.muted2, label: "Unassigned" },
     };
     const m = map[tier] || map.unassigned;
@@ -2215,12 +2232,12 @@ function AiMonetizationPage({ subRoute, setSubRoute, deepRoute, setDeepRoute }) 
       {(() => {
         const titles = {
           overview:    { t: "Overview", s: "The plan in plain language: our goals, the AI Max pricing and margin, how the upsell works, and what's next." },
-          plan:        { t: "Monetization Framework", s: "Working framework for AI Essential vs AI Max across Faria products. Edit anything inline, this is a living document." },
+          plan:        { t: "Monetization Framework", s: "Working framework for AI Starter vs AI Max across Faria products. Edit anything inline, this is a living document." },
           usage:       { t: "Usage & cost", s: "AI cost model — FAIF model pricing in the Overview; pick a product to price each AI feature by scenario (schools × usage level) into $/school/mo and a fleet total." },
-          competitive: { t: "Competitive Analysis", s: "Track how competitors are pricing and packaging AI. Use this to calibrate our Pro tier and bundle pricing." },
-          market:      { t: "Market Validation", s: "Per-product school validation — pilots, willingness to pay, and which Pro outcomes schools have confirmed." },
-          finance:     { t: "Finance", s: "AI Max economics — Overview rolls up Essential vs Pro AI cost (from Usage) and SKUs/pricing; pick a product to model AI Max price points, margin and break-even." },
-          packages:    { t: "Pricing Packages", s: "How we package and sell AI — a free preview to prove the value, a paid AI module per product, and a Pro bundle that includes AI alongside every other module." },
+          competitive: { t: "Competitive Analysis", s: "Track how competitors are pricing and packaging AI. Use this to calibrate our AI Max tier and bundle pricing." },
+          market:      { t: "Market Validation", s: "Per-product school validation — pilots, willingness to pay, and which AI Max outcomes schools have confirmed." },
+          finance:     { t: "Finance", s: "AI Max economics — Overview rolls up AI Starter vs AI Max AI cost (from Usage) and SKUs/pricing; pick a product to model AI Max price points, margin and break-even." },
+          packages:    { t: "Pricing Packages", s: "How we package and sell AI — a free preview to prove the value, a paid AI module per product, and a AI Max bundle that includes AI alongside every other module." },
         };
         const cur = titles[view] || titles.plan;
         return (
@@ -2265,17 +2282,17 @@ function AiMonetizationPage({ subRoute, setSubRoute, deepRoute, setDeepRoute }) 
       {view === "packages"    && <MonzPackagesPage monz={mz} setMonz={setMz} deepRoute={deepRoute} setDeepRoute={setDeepRoute} />}
 
       {view === "plan" && (<>
-      {/* Framework card — Essential vs Pro two-up, demarcation criteria as a full-width band below */}
+      {/* Framework card — AI Starter vs AI Max two-up, demarcation criteria as a full-width band below */}
       <div style={card}>
         <div style={sectionTitle}>Framework</div>
         <p style={{ margin: "-2px 0 14px", fontSize: 12.5, color: F.muted, lineHeight: 1.5, maxWidth: 760 }}>Two tiers of AI across every Faria product. A feature only earns its way into the paid tier if it clears the demarcation line below.</p>
 
-        {/* Essential vs Pro — balanced two-up */}
+        {/* AI Starter vs AI Max — balanced two-up */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 12 }}>
-          {/* AI Essential */}
+          {/* AI Starter */}
           <div style={{ background: F.lightYellow + "55", border: `1px solid ${F.border}`, borderTop: `3px solid ${F.yellow}`, borderRadius: 10, padding: "18px 20px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-              <span style={{ fontSize: 14, fontWeight: 800, color: F.plum, textTransform: "uppercase", letterSpacing: "0.08em" }}>AI Essential</span>
+              <span style={{ fontSize: 14, fontWeight: 800, color: F.plum, textTransform: "uppercase", letterSpacing: "0.08em" }}>AI Starter</span>
               <span style={{ fontSize: 10, fontWeight: 800, color: F.plum, background: F.yellow, padding: "2px 8px", borderRadius: 4 }}>FREE</span>
             </div>
             <p style={{ margin: "0 0 12px", fontSize: 12.5, color: F.plum, fontWeight: 700 }}>Default-on for every school</p>
@@ -2344,7 +2361,7 @@ function AiMonetizationPage({ subRoute, setSubRoute, deepRoute, setDeepRoute }) 
               </div>
             ))}
           </div>
-          <div style={{ marginTop: 12, fontSize: 11.5, color: F.muted, fontStyle: "italic", textAlign: "center" }}>Pass <strong style={{ color: F.plum }}>any one</strong> rule → Pro. Else → Essential. <span style={{ color: F.muted2 }}>(Examples illustrative — actual tier assignment per feature lives in each product block.)</span></div>
+          <div style={{ marginTop: 12, fontSize: 11.5, color: F.muted, fontStyle: "italic", textAlign: "center" }}>Pass <strong style={{ color: F.plum }}>any one</strong> rule → AI Max. Else → AI Starter. <span style={{ color: F.muted2 }}>(Examples illustrative — actual tier assignment per feature lives in each product block.)</span></div>
         </div>
       </div>
 
@@ -2387,7 +2404,7 @@ function AiMonetizationPage({ subRoute, setSubRoute, deepRoute, setDeepRoute }) 
                 cursor: "pointer", textAlign: "left", fontFamily: "inherit", color: F.plum, display: "block",
               }}>
                 <div style={{ fontSize: 14, fontWeight: 700, color: F.plum, marginBottom: 6 }}>{prod}</div>
-                <div style={{ fontSize: 11, color: F.muted, marginBottom: 10 }}>{proCount} Pro · {essCount} Essential{unCount > 0 ? ` · ${unCount} unassigned` : ""}</div>
+                <div style={{ fontSize: 11, color: F.muted, marginBottom: 10 }}>{proCount} AI Max · {essCount} AI Starter{unCount > 0 ? ` · ${unCount} unassigned` : ""}</div>
                 <div style={{ fontSize: 10.5, fontWeight: 700, color: ready.complete ? F.green : (ready.muted ? F.muted2 : F.plum), background: ready.complete ? F.greenSoft : F.bg, padding: "3px 9px", borderRadius: 999, display: "inline-block", border: `1px solid ${ready.complete ? F.green : F.border}` }}>{ready.label}</div>
                 <div style={{ marginTop: 12, fontSize: 11, fontWeight: 700, color: F.pink }}>View details →</div>
               </button>
@@ -2408,7 +2425,7 @@ function AiMonetizationPage({ subRoute, setSubRoute, deepRoute, setDeepRoute }) 
         const un  = feats.filter(f => effectiveTier(f) === "unassigned").sort(byDeadline);
         const ship = proShipped(prod);
         const ready = proReadyDate(prod);
-        // Pro features that also have an Essential foothold (preview or available)
+        // AI Max features that also have an AI Starter foothold (preview or available)
         const proWithEssAccess = pro.filter(f => f.essentialAccess && f.essentialAccess !== "locked");
 
         return (
@@ -2417,16 +2434,16 @@ function AiMonetizationPage({ subRoute, setSubRoute, deepRoute, setDeepRoute }) 
               <span style={{ color: F.plum, fontSize: 12, transition: "transform 0.15s", transform: isOpen ? "rotate(90deg)" : "rotate(0deg)" }}>▶</span>
               <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: F.plum, flex: 1 }}>{prod}</h2>
               <span style={{ fontSize: 11, fontWeight: 700, color: ready.complete ? F.green : (ready.muted ? F.muted2 : F.plum), background: ready.complete ? F.greenSoft : F.bg, padding: "3px 10px", borderRadius: 999, border: `1px solid ${ready.complete ? F.green : F.border}` }}>{ready.label}</span>
-              <span style={{ fontSize: 11, color: F.muted, fontWeight: 600 }}>{ship.done}/{ship.total} Pro shipped</span>
+              <span style={{ fontSize: 11, color: F.muted, fontWeight: 600 }}>{ship.done}/{ship.total} AI Max shipped</span>
             </div>
 
             {isOpen && (
               <div style={{ marginTop: 16 }}>
-                {/* "Wow" outcomes — surfaced from Pro features. Edit each feature's outcome inline. */}
+                {/* "Wow" outcomes — surfaced from AI Max features. Edit each feature's outcome inline. */}
                 <div style={{ marginBottom: 18 }}>
-                  <div style={sectionTitle}>"Wow" outcomes — carried from Pro features</div>
+                  <div style={sectionTitle}>"Wow" outcomes — carried from AI Max features</div>
                   {pro.length === 0 ? (
-                    <p style={{ margin: 0, fontSize: 12.5, color: F.muted, fontStyle: "italic" }}>No Pro features yet. Move features into Pro and set their "wow" outcome to track 2–3 validation targets before paid go-live.</p>
+                    <p style={{ margin: 0, fontSize: 12.5, color: F.muted, fontStyle: "italic" }}>No AI Max features yet. Move features into AI Max and set their "wow" outcome to track 2–3 validation targets before paid go-live.</p>
                   ) : (
                     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                       {pro.map(f => {
@@ -2460,7 +2477,7 @@ function AiMonetizationPage({ subRoute, setSubRoute, deepRoute, setDeepRoute }) 
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
                   {[
                     { key: "pro", title: "AI Max", list: pro, bg: F.plum, fg: F.paper, bd: F.plum },
-                    { key: "essential", title: "AI Essential", list: ess, bg: F.lightYellow, fg: F.plum, bd: F.yellow },
+                    { key: "essential", title: "AI Starter", list: ess, bg: F.lightYellow, fg: F.plum, bd: F.yellow },
                   ].map(b => (
                     <div key={b.key} style={{ background: F.bg, border: `1px solid ${F.border}`, borderRadius: 10, overflow: "hidden" }}>
                       <div style={{ background: b.bg, color: b.fg, padding: "8px 12px", fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -2484,8 +2501,8 @@ function AiMonetizationPage({ subRoute, setSubRoute, deepRoute, setDeepRoute }) 
                             {f.valueRationale && <div style={{ fontSize: 11.5, color: F.muted, marginLeft: 12, marginBottom: 6, lineHeight: 1.4 }}><span style={{ fontWeight: 700, color: F.muted2 }}>Why {b.title}:</span> {f.valueRationale}</div>}
                             <div style={{ display: "flex", gap: 4, marginLeft: 12, flexWrap: "wrap" }}>
                               <button onClick={() => setEditFeat(f.id)} style={{ ...bt("ghost"), padding: "3px 8px", fontSize: 10.5 }}>edit</button>
-                              {b.key !== "pro" && <button onClick={() => setFeatField(f.id, { tier: "pro" })} style={{ ...bt(), padding: "3px 8px", fontSize: 10.5 }}>→ Pro</button>}
-                              {b.key !== "essential" && <button onClick={() => setFeatField(f.id, { tier: "essential" })} style={{ ...bt(), padding: "3px 8px", fontSize: 10.5 }}>→ Essential</button>}
+                              {b.key !== "pro" && <button onClick={() => setFeatField(f.id, { tier: "pro" })} style={{ ...bt(), padding: "3px 8px", fontSize: 10.5 }}>→ AI Max</button>}
+                              {b.key !== "essential" && <button onClick={() => setFeatField(f.id, { tier: "essential" })} style={{ ...bt(), padding: "3px 8px", fontSize: 10.5 }}>→ AI Starter</button>}
                               <button onClick={() => setFeatField(f.id, { tier: "unassigned" })} style={{ ...bt("ghost"), padding: "3px 8px", fontSize: 10.5, color: F.muted }}>→ Unassigned</button>
                             </div>
                           </div>
@@ -2507,8 +2524,8 @@ function AiMonetizationPage({ subRoute, setSubRoute, deepRoute, setDeepRoute }) 
                           <span style={{ fontSize: 9, fontWeight: 800, padding: "2px 7px", borderRadius: 3, background: sC(f.status), color: "#fff", textTransform: "uppercase", letterSpacing: "0.05em", whiteSpace: "nowrap" }}>{statusOpt?.label || f.status}</span>
                           <span style={{ flex: 1, fontSize: 12.5, fontWeight: 600, color: F.plum, minWidth: 200 }}>{f.name}</span>
                           <span style={{ fontSize: 10, color: F.muted2, fontWeight: 600 }}>{fmt(f.deadline)}</span>
-                          <button onClick={() => setFeatField(f.id, { tier: "pro" })} style={{ ...bt(), padding: "3px 8px", fontSize: 10.5 }}>→ Pro</button>
-                          <button onClick={() => setFeatField(f.id, { tier: "essential" })} style={{ ...bt(), padding: "3px 8px", fontSize: 10.5 }}>→ Essential</button>
+                          <button onClick={() => setFeatField(f.id, { tier: "pro" })} style={{ ...bt(), padding: "3px 8px", fontSize: 10.5 }}>→ AI Max</button>
+                          <button onClick={() => setFeatField(f.id, { tier: "essential" })} style={{ ...bt(), padding: "3px 8px", fontSize: 10.5 }}>→ AI Starter</button>
                         </div>
                         );
                       })}
@@ -2517,25 +2534,25 @@ function AiMonetizationPage({ subRoute, setSubRoute, deepRoute, setDeepRoute }) 
                 )}
 
                 {/* Fair use limits */}
-                <div style={sectionTitle}>Essential access for Pro features</div>
+                <div style={sectionTitle}>AI Starter access for AI Max features</div>
                 <p style={{ margin: "-4px 0 10px", fontSize: 12, color: F.muted, lineHeight: 1.5 }}>
-                  Under <strong style={{ color: F.plum }}>Model B</strong> (shared credits), Pro features can still have an Essential foothold — a smaller-scope preview, or full access that just consumes the smaller free credit pool. Use this to track which Pro features pull double-duty as Essential teasers.
+                  Under <strong style={{ color: F.plum }}>Model B</strong> (shared credits), AI Max features can still have an AI Starter foothold — a smaller-scope preview, or full access that just consumes the smaller free credit pool. Use this to track which AI Max features pull double-duty as AI Starter teasers.
                 </p>
                 <div style={{ background: F.bg, border: `1px solid ${F.border}`, borderRadius: 10, overflow: "hidden", marginBottom: 8 }}>
                   <div style={{ display: "grid", gridTemplateColumns: "1.6fr 170px 1fr 70px", background: F.surface, padding: "8px 12px", fontSize: 10.5, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em", borderBottom: `1px solid ${F.border}` }}>
-                    <div>Pro feature</div>
-                    <div>Essential access</div>
-                    <div>What Essential users see</div>
+                    <div>AI Max feature</div>
+                    <div>AI Starter access</div>
+                    <div>What AI Starter users see</div>
                     <div></div>
                   </div>
-                  {pro.length === 0 && <div style={{ padding: 14, fontSize: 12.5, color: F.muted, fontStyle: "italic", textAlign: "center" }}>No Pro features for {prod} yet. Once features are assigned to Pro they'll appear here so you can map their Essential access.</div>}
+                  {pro.length === 0 && <div style={{ padding: 14, fontSize: 12.5, color: F.muted, fontStyle: "italic", textAlign: "center" }}>No AI Max features for {prod} yet. Once features are assigned to AI Max they'll appear here so you can map their AI Starter access.</div>}
                   {pro.map(f => {
-                    // Older saved data may have "available" — treat as preview (limited credits in Essential).
+                    // Older saved data may have "available" — treat as preview (limited credits in AI Starter).
                     const raw = f.essentialAccess || "locked";
                     const access = raw === "preview" || raw === "available" ? "preview" : "locked";
                     const badge = access === "preview"
                       ? { bg: F.orange, fg: F.plum, label: "Preview · limited credits" }
-                      : { bg: F.muted2, fg: "#fff", label: "Locked · Pro only" };
+                      : { bg: F.muted2, fg: "#fff", label: "Locked · AI Max only" };
                     return (
                       <div key={f.id} style={{ display: "grid", gridTemplateColumns: "1.6fr 170px 1fr 70px", padding: "10px 12px", borderBottom: `1px solid ${F.border}`, alignItems: "center", gap: 8 }}>
                         <div style={{ fontSize: 12.5, fontWeight: 600, color: F.plum, minWidth: 0 }}>{f.name}</div>
@@ -2550,7 +2567,7 @@ function AiMonetizationPage({ subRoute, setSubRoute, deepRoute, setDeepRoute }) 
                 </div>
                 {proWithEssAccess.length > 0 && (
                   <div style={{ marginTop: 10, padding: "10px 12px", background: F.bg, border: `1px solid ${F.border}`, borderRadius: 8, fontSize: 12, color: F.plum, lineHeight: 1.5 }}>
-                    <strong>{proWithEssAccess.length} of {pro.length}</strong> Pro {prod} feature{pro.length === 1 ? "" : "s"} also reachable from Essential — every one of these is an upgrade hook (school taps the ceiling on the smaller credit pool and is nudged to Pro).
+                    <strong>{proWithEssAccess.length} of {pro.length}</strong> AI Max {prod} feature{pro.length === 1 ? "" : "s"} also reachable from AI Starter — every one of these is an upgrade hook (school taps the ceiling on the smaller credit pool and is nudged to AI Max).
                   </div>
                 )}
                 <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap", marginTop: 10 }}>
@@ -2573,7 +2590,7 @@ function AiMonetizationPage({ subRoute, setSubRoute, deepRoute, setDeepRoute }) 
             const pct = ship.total > 0 ? Math.round((ship.done / ship.total) * 100) : 0;
             return (
               <div key={prod} style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <div style={{ minWidth: 110, fontSize: 13, fontWeight: 700, color: F.plum }}>{prod} Pro</div>
+                <div style={{ minWidth: 110, fontSize: 13, fontWeight: 700, color: F.plum }}>{prod} AI Max</div>
                 <div style={{ flex: 1, height: 8, borderRadius: 4, background: F.bg, border: `1px solid ${F.border}`, overflow: "hidden" }}>
                   <div style={{ width: `${pct}%`, height: "100%", background: ready.complete ? F.green : F.plum, transition: "width 0.3s" }} />
                 </div>
@@ -2595,7 +2612,7 @@ function AiMonetizationPage({ subRoute, setSubRoute, deepRoute, setDeepRoute }) 
         return (
           <Modal onClose={() => setEditFeat(null)}>
             <h3 style={{ margin: "0 0 4px", fontSize: 18, fontWeight: 700, color: F.plum }}>Feature details</h3>
-            <p style={{ margin: "0 0 16px", fontSize: 13, color: F.muted }}>{editFeatObj.name} · {editFeatObj.product} · <strong style={{ color: F.plum }}>{effectiveTier(editFeatObj) === "pro" ? "AI Max" : effectiveTier(editFeatObj) === "essential" ? "AI Essential" : "Unassigned"}</strong></p>
+            <p style={{ margin: "0 0 16px", fontSize: 13, color: F.muted }}>{editFeatObj.name} · {editFeatObj.product} · <strong style={{ color: F.plum }}>{effectiveTier(editFeatObj) === "pro" ? "AI Max" : effectiveTier(editFeatObj) === "essential" ? "AI Starter" : "Unassigned"}</strong></p>
 
             <div style={lb}>"Wow" outcomes <span style={{ color: F.pink, marginLeft: 4 }}>★</span></div>
             {outs.length === 0 && (
@@ -2611,7 +2628,7 @@ function AiMonetizationPage({ subRoute, setSubRoute, deepRoute, setDeepRoute }) 
             <p style={{ margin: "0 0 14px", fontSize: 11.5, color: F.muted, fontStyle: "italic" }}>Measurable wins we'll validate before {editFeatObj.product} AI Max goes live. Surfaced at the top of the {editFeatObj.product} block.</p>
 
             <div style={lb}>Value rationale</div>
-            <textarea value={editFeatObj.valueRationale || ""} onChange={e => setFeatField(editFeatObj.id, { valueRationale: e.target.value })} rows={3} placeholder="Why is this Pro (or Essential)? e.g. saves 5+ hrs/wk of manual review; unlocks predictive enrolment likelihood" style={{ ...inp, width: "100%", resize: "vertical", marginBottom: 14 }} />
+            <textarea value={editFeatObj.valueRationale || ""} onChange={e => setFeatField(editFeatObj.id, { valueRationale: e.target.value })} rows={3} placeholder="Why is this AI Max (or AI Starter)? e.g. saves 5+ hrs/wk of manual review; unlocks predictive enrolment likelihood" style={{ ...inp, width: "100%", resize: "vertical", marginBottom: 14 }} />
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
               <div>
@@ -2628,11 +2645,11 @@ function AiMonetizationPage({ subRoute, setSubRoute, deepRoute, setDeepRoute }) 
 
             {effectiveTier(editFeatObj) === "pro" && (
               <>
-                <div style={lb}>Essential access</div>
+                <div style={lb}>AI Starter access</div>
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
                   {[
-                    { v: "locked",  label: "Locked",  sub: "Pro-only — Essential users cannot run this feature" },
-                    { v: "preview", label: "Preview", sub: "Essential users can try it, but get a small allotment of credits" },
+                    { v: "locked",  label: "Locked",  sub: "AI Max-only — AI Starter users cannot run this feature" },
+                    { v: "preview", label: "Preview", sub: "AI Starter users can try it, but get a small allotment of credits" },
                   ].map(opt => {
                     // Coerce legacy "available" → "preview" for the active check
                     const raw = editFeatObj.essentialAccess || "locked";
@@ -2659,8 +2676,8 @@ function AiMonetizationPage({ subRoute, setSubRoute, deepRoute, setDeepRoute }) 
                     );
                   })}
                 </div>
-                <input value={editFeatObj.essentialNote || ""} onChange={e => setFeatField(editFeatObj.id, { essentialNote: e.target.value })} placeholder='e.g. "1 free preview per applicant; full mode requires Pro credits"' style={{ ...inp, width: "100%", marginBottom: 4 }} />
-                <p style={{ margin: "4px 0 16px", fontSize: 11.5, color: F.muted, fontStyle: "italic" }}>What does an Essential user actually see when they try this Pro feature? Surfaced in the "Essential access" table below the buckets.</p>
+                <input value={editFeatObj.essentialNote || ""} onChange={e => setFeatField(editFeatObj.id, { essentialNote: e.target.value })} placeholder='e.g. "1 free preview per applicant; full mode requires AI Max credits"' style={{ ...inp, width: "100%", marginBottom: 4 }} />
+                <p style={{ margin: "4px 0 16px", fontSize: 11.5, color: F.muted, fontStyle: "italic" }}>What does an AI Starter user actually see when they try this AI Max feature? Surfaced in the "AI Starter access" table below the buckets.</p>
               </>
             )}
 
@@ -2703,23 +2720,23 @@ function LimitsModal({ feat, feats, onPick, onChange, onClose }) {
       </select>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
         <div>
-          <div style={lb}>Per user · Essential</div>
+          <div style={lb}>Per user · AI Starter</div>
           <input type="number" min="0" value={al.perUser?.essential ?? ""} onChange={e => setField("perUser.essential", e.target.value)} placeholder="—" style={{ ...inp, width: "100%" }} />
         </div>
         <div>
-          <div style={lb}>Per user · Pro</div>
+          <div style={lb}>Per user · AI Max</div>
           <input type="number" min="0" value={al.perUser?.pro ?? ""} onChange={e => setField("perUser.pro", e.target.value)} placeholder="—" style={{ ...inp, width: "100%" }} />
         </div>
         <div>
-          <div style={lb}>Per account · Essential</div>
+          <div style={lb}>Per account · AI Starter</div>
           <input type="number" min="0" value={al.perAccount?.essential ?? ""} onChange={e => setField("perAccount.essential", e.target.value)} placeholder="—" style={{ ...inp, width: "100%" }} />
         </div>
         <div>
-          <div style={lb}>Per account · Pro</div>
+          <div style={lb}>Per account · AI Max</div>
           <input type="number" min="0" value={al.perAccount?.pro ?? ""} onChange={e => setField("perAccount.pro", e.target.value)} placeholder="—" style={{ ...inp, width: "100%" }} />
         </div>
       </div>
-      <p style={{ margin: "0 0 14px", fontSize: 11.5, color: F.muted, fontStyle: "italic" }}>Essential's lower limits both shape the value gap and keep our inference spend bounded for free users. Pro's higher caps still protect against runaway power-user costs.</p>
+      <p style={{ margin: "0 0 14px", fontSize: 11.5, color: F.muted, fontStyle: "italic" }}>AI Starter's lower limits both shape the value gap and keep our inference spend bounded for free users. AI Max's higher caps still protect against runaway power-user costs.</p>
       <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
         <button onClick={() => { onChange({ actionLimits: null }); onClose(); }} style={bt("ghost")}>Remove limits</button>
         <button onClick={onClose} style={bt("primary")}>Done</button>
@@ -3248,11 +3265,11 @@ function MonzCompetitivePage() {
                   <textarea value={c.pricingDetails} onChange={e => updateCompetitor(c.id, { pricingDetails: e.target.value })} rows={2} placeholder="Tiers, add-ons, volume discounts, contract length…" style={{ ...inp, width: "100%", resize: "vertical" }} />
                 </div>
                 <div>
-                  <div style={lb}>Free / Essential features</div>
+                  <div style={lb}>Free / AI Starter features</div>
                   <textarea value={c.essentialFeatures} onChange={e => updateCompetitor(c.id, { essentialFeatures: e.target.value })} rows={3} placeholder="What's included at no extra cost…" style={{ ...inp, width: "100%", resize: "vertical" }} />
                 </div>
                 <div>
-                  <div style={lb}>Paid / Pro features</div>
+                  <div style={lb}>Paid / AI Max features</div>
                   <textarea value={c.proFeatures} onChange={e => updateCompetitor(c.id, { proFeatures: e.target.value })} rows={3} placeholder="What's behind the paid tier…" style={{ ...inp, width: "100%", resize: "vertical" }} />
                 </div>
                 <div>
@@ -3291,7 +3308,7 @@ function MonzCompetitivePage() {
 
       <div style={card}>
         <div style={sectionTitle}>Feeds split + pricing observations</div>
-        <textarea value={comp.feedSplitNotes} onChange={e => setComp(prev => ({ ...prev, feedSplitNotes: e.target.value }))} rows={4} placeholder="How competitors split features between free and paid tiers, and how that informs our Pro line…" style={{ ...inp, width: "100%", resize: "vertical" }} />
+        <textarea value={comp.feedSplitNotes} onChange={e => setComp(prev => ({ ...prev, feedSplitNotes: e.target.value }))} rows={4} placeholder="How competitors split features between free and paid tiers, and how that informs our AI Max line…" style={{ ...inp, width: "100%", resize: "vertical" }} />
       </div>
 
       {confirmDel != null && (
@@ -3601,8 +3618,8 @@ function MonzMarketPage() {
                   <textarea value={v.feedback} onChange={e => update(v.id, { feedback: e.target.value })} rows={3} placeholder="What did they say? Pain points, reactions, objections…" style={{ ...inp, width: "100%", resize: "vertical" }} />
                 </div>
                 <div style={{ gridColumn: "1 / -1" }}>
-                  <div style={lb}>Pro "wow" outcomes validated</div>
-                  <textarea value={v.wowOutcomesValidated} onChange={e => update(v.id, { wowOutcomesValidated: e.target.value })} rows={2} placeholder="Which Pro feature outcomes did this school confirm as valuable?" style={{ ...inp, width: "100%", resize: "vertical" }} />
+                  <div style={lb}>AI Max "wow" outcomes validated</div>
+                  <textarea value={v.wowOutcomesValidated} onChange={e => update(v.id, { wowOutcomesValidated: e.target.value })} rows={2} placeholder="Which AI Max feature outcomes did this school confirm as valuable?" style={{ ...inp, width: "100%", resize: "vertical" }} />
                 </div>
                 <div style={{ gridColumn: "1 / -1" }}>
                   <div style={lb}>Notes</div>
@@ -3649,7 +3666,7 @@ function MonzFinancePage({ monz, setMonz, deepRoute, setDeepRoute }) {
   const focusedProduct = SLUG_PRODUCT[deepRoute] || null;
   const setFocusedProduct = (prod) => setDeepRoute(prod ? (PRODUCT_SLUG[prod] || "") : "");
 
-  // free-tier + AI-Pro pricing-model mutators
+  // free-tier + AI-AI Max pricing-model mutators
   const setFTB = (k, v) => setFin(prev => ({ ...prev, freeTierBudget: { ...prev.freeTierBudget, [k]: v === "" ? 0 : (parseFloat(v) || 0) } }));
   const setPP = (prod, patch) => setFin(prev => ({ ...prev, proPricing: { ...prev.proPricing, [prod]: { ...prev.proPricing[prod], ...patch } } }));
   const setCand = (prod, id, patch) => setFin(prev => ({ ...prev, proPricing: { ...prev.proPricing, [prod]: { ...prev.proPricing[prod], candidates: (prev.proPricing[prod]?.candidates || []).map(c => c.id === id ? { ...c, ...patch } : c) } } }));
@@ -3696,7 +3713,7 @@ function MonzFinancePage({ monz, setMonz, deepRoute, setDeepRoute }) {
   const aiCostMo = (prod, scope, lvl) => enabledRows(prod).filter(r => scope === "all" ? true : r.tier === scope).reduce((s, r) => s + featPerSchool(r, lvl), 0);
   const essentialMo = (prod, lvl) => aiCostMo(prod, "essential", lvl);
   const cappedEssMo = (prod, lvl) => { const raw = essentialMo(prod, lvl); const ecap = monz.essentialCaps?.[prod] ?? null; return ecap !== null ? Math.min(raw, ecap) : raw; };
-  const proServeMo = (prod, lvl) => aiCostMo(prod, "all", lvl);  // total AI a Pro school uses — the margin basis
+  const proServeMo = (prod, lvl) => aiCostMo(prod, "all", lvl);  // total AI a AI Max school uses — the margin basis
   const proOnlyMo = (prod, lvl) => aiCostMo(prod, "pro", lvl);   // incremental pro-only features
   const featCount = (prod) => ({ ess: enabledRows(prod).filter(r => r.tier === "essential").length, pro: enabledRows(prod).filter(r => r.tier === "pro").length });
 
@@ -3729,7 +3746,7 @@ function MonzFinancePage({ monz, setMonz, deepRoute, setDeepRoute }) {
     </div>
   );
 
-  // ── OVERVIEW: portfolio Essential vs Pro cost + free-tier give-away + SKUs/pricing ──
+  // ── OVERVIEW: portfolio AI Starter vs AI Max cost + free-tier give-away + SKUs/pricing ──
   const renderOverview = () => {
     const prows = MONZ_PRODUCTS.map(p => {
       const ess = cappedEssMo(p, level), rawEss = essentialMo(p, level), proServe = proServeMo(p, level), price = skuPriceOf(p);
@@ -3745,16 +3762,16 @@ function MonzFinancePage({ monz, setMonz, deepRoute, setDeepRoute }) {
         {/* portfolio cost vs price */}
         <div style={{ ...card, borderLeft: `4px solid ${F.plum}` }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap", marginBottom: 4 }}>
-            <div style={sectionTitle}>Portfolio · Essential vs Pro AI cost, and margin at the current price</div>
+            <div style={sectionTitle}>Portfolio · AI Starter vs AI Max AI cost, and margin at the current price</div>
             {levelPills}
           </div>
-          <p style={{ margin: "0 0 12px", fontSize: 12.5, color: F.muted, lineHeight: 1.5, maxWidth: 900 }}>Costs pulled live from <strong style={{ color: F.pink }}>Usage</strong> at <strong>{levelLabel}</strong> usage. <strong style={{ color: F.green }}>Essential</strong> = AI in the free/base tier (the give-away). <strong style={{ color: F.plum }}>Pro (to serve)</strong> = every AI feature a Pro school uses (Essential + Pro) — what the AI Max price must cover. Margin uses each product's current AI Max price from SKUs below.</p>
+          <p style={{ margin: "0 0 12px", fontSize: 12.5, color: F.muted, lineHeight: 1.5, maxWidth: 900 }}>Costs pulled live from <strong style={{ color: F.pink }}>Usage</strong> at <strong>{levelLabel}</strong> usage. <strong style={{ color: F.green }}>AI Starter</strong> = AI in the free/base tier (the give-away). <strong style={{ color: F.plum }}>AI Max (to serve)</strong> = every AI feature a AI Max school uses (AI Starter + AI Max) — what the AI Max price must cover. Margin uses each product's current AI Max price from SKUs below.</p>
           <div style={{ overflowX: "auto", border: `1px solid ${F.border}`, borderRadius: 8 }}>
             <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 760 }}>
               <thead><tr style={{ background: F.bg }}>
                 <th style={th}>Product</th>
-                <th style={{ ...th, textAlign: "right" }}>Essential $/sch/mo</th>
-                <th style={{ ...th, textAlign: "right" }}>Pro (to serve) $/sch/mo</th>
+                <th style={{ ...th, textAlign: "right" }}>AI Starter $/sch/mo</th>
+                <th style={{ ...th, textAlign: "right" }}>AI Max (to serve) $/sch/mo</th>
                 <th style={{ ...th, textAlign: "right" }}>AI Max price / yr</th>
                 <th style={{ ...th, textAlign: "right" }}>Margin / sch / mo</th>
                 <th style={{ ...th, textAlign: "right" }}>Margin %</th>
@@ -3785,10 +3802,10 @@ function MonzFinancePage({ monz, setMonz, deepRoute, setDeepRoute }) {
           <p style={{ margin: "10px 0 0", fontSize: 11.5, color: F.muted2, fontStyle: "italic" }}>Click a product for its full AI Max pricing &amp; break-even model. <span style={{ color: F.green }}>Green</span> = profit, <span style={{ color: F.pink }}>pink</span> = loss at the current price.</p>
         </div>
 
-        {/* Essential tier — free-tier give-away budget */}
+        {/* AI Starter tier — free-tier give-away budget */}
         <div style={{ ...card, borderLeft: `4px solid ${F.yellow}` }}>
-          <div style={sectionTitle}>Essential tier · free-tier give-away</div>
-          <p style={{ margin: "-2px 0 14px", fontSize: 12.5, color: F.muted, lineHeight: 1.5, maxWidth: 900 }}>The Essential AI we include for free. Start from a comfortable annual spend, divide by schools for a per-school allowance, then check each product's Essential cost (from Usage) against it. Run it as a <strong>shared pot</strong> — the per-school figure is an average, not a hard cap.</p>
+          <div style={sectionTitle}>AI Starter tier · free-tier give-away</div>
+          <p style={{ margin: "-2px 0 14px", fontSize: 12.5, color: F.muted, lineHeight: 1.5, maxWidth: 900 }}>The AI Starter AI we include for free. Start from a comfortable annual spend, divide by schools for a per-school allowance, then check each product's AI Starter cost (from Usage) against it. Run it as a <strong>shared pot</strong> — the per-school figure is an average, not a hard cap.</p>
           <div style={{ display: "flex", gap: 22, flexWrap: "wrap", alignItems: "flex-end" }}>
             <div>
               <div style={lb}>Comfortable annual spend (USD)</div>
@@ -3827,7 +3844,7 @@ function MonzFinancePage({ monz, setMonz, deepRoute, setDeepRoute }) {
               );
             })}
           </div>
-          <p style={{ margin: "10px 0 0", fontSize: 11.5, color: F.muted2, fontStyle: "italic" }}>Essential cost at {levelLabel} usage vs the {usd(ftbPerSchoolMo)}/school/mo allowance. Costs shown are effective (after cap). <span style={{ color: F.pink }}>Pink</span> = give-away exceeds the allowance. Set per-product caps on the Usage page.</p>
+          <p style={{ margin: "10px 0 0", fontSize: 11.5, color: F.muted2, fontStyle: "italic" }}>AI Starter cost at {levelLabel} usage vs the {usd(ftbPerSchoolMo)}/school/mo allowance. Costs shown are effective (after cap). <span style={{ color: F.pink }}>Pink</span> = give-away exceeds the allowance. Set per-product caps on the Usage page.</p>
         </div>
 
         {/* SKUs & pricing — the pricing source of truth */}
@@ -3913,7 +3930,7 @@ function MonzFinancePage({ monz, setMonz, deepRoute, setDeepRoute }) {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap" }}>
             <div>
               <span style={{ fontSize: 18, fontWeight: 800, color: F.plum }}>{p} — AI Max economics</span>
-              <p style={{ margin: "4px 0 0", fontSize: 12.5, color: F.muted, lineHeight: 1.5, maxWidth: 760 }}>AI cost is pulled live from <strong style={{ color: F.pink }}>Usage</strong> ({fc.ess} Essential + {fc.pro} Pro features enabled). Margin compares the AI Max price against the <strong>total AI a Pro school uses</strong>.</p>
+              <p style={{ margin: "4px 0 0", fontSize: 12.5, color: F.muted, lineHeight: 1.5, maxWidth: 760 }}>AI cost is pulled live from <strong style={{ color: F.pink }}>Usage</strong> ({fc.ess} AI Starter + {fc.pro} AI Max features enabled). Margin compares the AI Max price against the <strong>total AI a AI Max school uses</strong>.</p>
             </div>
             {levelPills}
           </div>
@@ -3924,9 +3941,9 @@ function MonzFinancePage({ monz, setMonz, deepRoute, setDeepRoute }) {
           <div style={sectionTitle}>AI cost to serve · {levelLabel} usage</div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))", gap: 12 }}>
             {[
-              { l: "Essential (free give-away)", mo: ess, c: F.green, sub: essIsCapped ? `capped at ${usd(ecap)}/mo · uncapped ${usd(rawEss)} · ${fc.ess} features` : `${fc.ess} feature${fc.ess === 1 ? "" : "s"} · included for everyone` },
-              { l: "Pro — total to serve a Pro school", mo: proServe, c: F.plum, sub: "Essential + Pro · the margin basis", strong: true },
-              { l: "Pro-only (incremental)", mo: proOnly, c: F.orange, sub: `${fc.pro} premium feature${fc.pro === 1 ? "" : "s"} AI Max unlocks` },
+              { l: "AI Starter (free give-away)", mo: ess, c: F.green, sub: essIsCapped ? `capped at ${usd(ecap)}/mo · uncapped ${usd(rawEss)} · ${fc.ess} features` : `${fc.ess} feature${fc.ess === 1 ? "" : "s"} · included for everyone` },
+              { l: "AI Max — total to serve a AI Max school", mo: proServe, c: F.plum, sub: "AI Starter + AI Max · the margin basis", strong: true },
+              { l: "AI Max-only (incremental)", mo: proOnly, c: F.orange, sub: `${fc.pro} premium feature${fc.pro === 1 ? "" : "s"} AI Max unlocks` },
             ].map((s, i) => (
               <div key={i} style={{ background: F.bg, border: `1px solid ${s.strong ? F.plum : F.border}`, borderTop: `3px solid ${s.c}`, borderRadius: 10, padding: "13px 15px" }}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: F.muted2, marginBottom: 6, minHeight: 28 }}>{s.l}</div>
@@ -4008,7 +4025,7 @@ function MonzFinancePage({ monz, setMonz, deepRoute, setDeepRoute }) {
               <div style={{ fontSize: 11, fontWeight: 700, color: F.muted2, marginBottom: 6 }}>Fleet gross profit · at current price</div>
               <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
                 <input type="number" min="0" value={pp.schoolsOnPro || ""} placeholder="0" onChange={e => setPP(p, { schoolsOnPro: Math.max(0, parseInt(e.target.value) || 0) })} style={{ ...inp, width: 80, textAlign: "right", padding: "4px 7px", fontSize: 12 }} />
-                <span style={{ fontSize: 12, color: F.muted }}>schools on Pro</span>
+                <span style={{ fontSize: 12, color: F.muted }}>schools on AI Max</span>
               </div>
               <div style={{ fontSize: 20, fontWeight: 800, color: skuPrice > 0 && fleetProfitYr >= 0 ? F.green : skuPrice > 0 ? F.pink : F.muted2 }}>{skuPrice > 0 ? usd0(fleetProfitYr) : "—"}<span style={{ fontSize: 11, color: F.muted2, fontWeight: 600 }}> /yr</span></div>
               <div style={{ fontSize: 10.5, color: F.muted2, marginTop: 4 }}>{skuPrice > 0 ? `(${usd0(skuPrice)} − ${usd0(costYr)}) × ${(pp.schoolsOnPro || 0).toLocaleString()}` : "Set a current price in SKUs"}</div>
@@ -4073,11 +4090,6 @@ function MonzOverviewPage({ monz, setMonz }) {
 
   const patchOv = (patch) => setMonz(prev => ({ ...prev, overview: { ...prev.overview, ...patch } }));
   const setMarginTarget = (key, val) => patchOv({ marginTarget: { ...ov.marginTarget, [key]: Math.max(0, Math.min(100, parseFloat(val) || 0)) } });
-  const setIntro = (patch) => patchOv({ introPricing: { ...ov.introPricing, ...patch } });
-  const setIntroReason = (i, val) => { const r = [...ov.introPricing.reasons]; r[i] = val; setIntro({ reasons: r }); };
-  const addIntroReason = () => setIntro({ reasons: [...ov.introPricing.reasons, ""] });
-  const delIntroReason = (i) => setIntro({ reasons: ov.introPricing.reasons.filter((_, ix) => ix !== i) });
-  const setStandard = (patch) => patchOv({ standardPricing: { ...ov.standardPricing, ...patch } });
   const aiMaxPrice = Number(monz.products["OpenApply"]?.price) || 0;
   const setUpsell = (patch) => patchOv({ upsell: { ...ov.upsell, ...patch } });
   const pe = ov.packageExample;
@@ -4137,12 +4149,14 @@ function MonzOverviewPage({ monz, setMonz }) {
 
   const sections = [
     { id: "ov-goals",   label: "Goals" },
+    { id: "ov-tiers",   label: "Tiers" },
     { id: "ov-revenue", label: "Revenue & Cost" },
     { id: "ov-upsell",  label: "Upsell Experience" },
     { id: "ov-ux",      label: "UX" },
     { id: "ov-gtm",     label: "GTM" },
   ];
   const goalAccents = [F.yellow, F.orange, F.pink];
+  const tierAccents = { "AI Starter": F.yellow, "AI Max": F.plum };
 
   return (
     <>
@@ -4170,9 +4184,33 @@ function MonzOverviewPage({ monz, setMonz }) {
         </div>
       </div>
 
+      {/* TIERS */}
+      <div id="ov-tiers" style={card}>
+        <div style={sectionTitle}>2. Tiers</div>
+        <p style={{ margin: "-2px 0 16px", fontSize: 12.5, color: F.muted, lineHeight: 1.5, maxWidth: 800 }}>The two AI tiers, and what each one is for.</p>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 14 }}>
+          {ov.aiTiers.map(t => {
+            const isMax = t.name === "AI Max";
+            return (
+              <div key={t.id} style={{ background: isMax ? F.plum : F.bg, border: `1px solid ${isMax ? F.plum : F.border}`, borderTop: `4px solid ${tierAccents[t.name] || F.borderStrong}`, borderRadius: 12, padding: "16px 18px" }}>
+                <div style={{ fontSize: 15, fontWeight: 800, color: isMax ? F.paper : F.plum, marginBottom: 10 }}>{t.name}</div>
+                <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 7 }}>
+                  {t.bullets.map((b, i) => (
+                    <li key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 12.5, color: isMax ? F.lightPink : F.muted, lineHeight: 1.4 }}>
+                      <span style={{ color: isMax ? F.yellow : F.orange, fontWeight: 800 }}>✓</span>
+                      <span>{b}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
       {/* REVENUE & COST */}
       <div id="ov-revenue" style={card}>
-        <div style={sectionTitle}>2. Revenue & Cost</div>
+        <div style={sectionTitle}>3. Revenue & Cost</div>
         <div style={{ display: "flex", alignItems: "baseline", gap: 10, flexWrap: "wrap", marginBottom: 6 }}>
           <span style={{ fontSize: 16, fontWeight: 800, color: F.plum }}>Profit margin goal</span>
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -4188,34 +4226,32 @@ function MonzOverviewPage({ monz, setMonz }) {
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 14, marginBottom: 16 }}>
           {/* introductory price */}
           <div style={{ background: F.bg, border: `1px solid ${F.border}`, borderTop: `4px solid ${F.orange}`, borderRadius: 12, padding: "18px 20px" }}>
-            <div style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: "0.07em", color: F.orange, marginBottom: 10 }}>INTRODUCTORY PRICE</div>
+            <div style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: "0.07em", color: F.orange, marginBottom: 10 }}>AI MAX · INTRODUCTORY PRICE</div>
             <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 10 }}>
               <span style={{ fontSize: 30, fontWeight: 800, color: F.plum }}>${(ov.introPricing.price || 0).toLocaleString()}</span>
               <span style={{ fontSize: 13, color: F.muted2, fontWeight: 700 }}>/ first year</span>
             </div>
-            <input value={ov.introPricing.windowLabel} onChange={e => setIntro({ windowLabel: e.target.value })} style={{ ...eInp, width: "100%", fontSize: 12.5, color: F.muted, marginBottom: 14 }} />
+            <div style={{ fontSize: 12.5, color: F.muted, marginBottom: 14 }}>{ov.introPricing.windowLabel}</div>
             <div style={{ fontSize: 10.5, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 7 }}>Why a lower price to start</div>
             <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 7 }}>
               {ov.introPricing.reasons.map((r, i) => (
-                <li key={i} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12.5, color: F.muted }}>
+                <li key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 12.5, color: F.muted, lineHeight: 1.4 }}>
                   <span style={{ color: F.orange, fontWeight: 800 }}>•</span>
-                  <input value={r} onChange={e => setIntroReason(i, e.target.value)} style={{ ...eInp, flex: 1, fontSize: 12.5, color: F.muted }} />
-                  <button onClick={() => delIntroReason(i)} style={{ border: "none", background: "transparent", color: F.muted2, cursor: "pointer", fontSize: 13, fontFamily: "inherit" }}>×</button>
+                  <span>{r}</span>
                 </li>
               ))}
             </ul>
-            <button onClick={addIntroReason} style={{ marginTop: 9, padding: "3px 10px", borderRadius: 7, border: `1px dashed ${F.borderStrong}`, background: "transparent", color: F.muted, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>+ reason</button>
           </div>
 
           {/* standard price */}
           <div style={{ background: F.plum, border: `1px solid ${F.plum}`, borderRadius: 12, padding: "18px 20px" }}>
-            <div style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: "0.07em", color: F.lightYellow, marginBottom: 10 }}>STANDARD PRICE</div>
+            <div style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: "0.07em", color: F.lightYellow, marginBottom: 10 }}>AI MAX · STANDARD PRICE</div>
             <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 10 }}>
               <span style={{ fontSize: 30, fontWeight: 800, color: F.paper }}>${aiMaxPrice.toLocaleString()}</span>
               <span style={{ fontSize: 13, color: F.lightPink, fontWeight: 700 }}>/ year</span>
             </div>
-            <input value={ov.standardPricing.startLabel} onChange={e => setStandard({ startLabel: e.target.value })} style={{ ...eInp, width: "100%", fontSize: 12.5, color: F.lightPink, borderColor: F.lightPlum, marginBottom: 10 }} />
-            <textarea value={ov.standardPricing.note} onChange={e => setStandard({ note: e.target.value })} rows={2} style={{ ...ta, border: `1px dashed ${F.lightPlum}`, background: "transparent", fontSize: 12.5, color: F.lightPink }} />
+            <div style={{ fontSize: 12.5, color: F.lightPink, marginBottom: 10 }}>{ov.standardPricing.startLabel}</div>
+            <div style={{ fontSize: 12.5, color: F.lightPink, lineHeight: 1.4 }}>{ov.standardPricing.note}</div>
           </div>
         </div>
 
@@ -4223,14 +4259,14 @@ function MonzOverviewPage({ monz, setMonz }) {
         <div style={{ background: F.bg, border: `1px solid ${F.border}`, borderTop: `4px solid ${F.green}`, borderRadius: 12, padding: "16px 18px" }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: F.muted2, marginBottom: 6 }}>Fleet gross profit, OpenApply, at the standard price</div>
           <div style={{ fontSize: 26, fontWeight: 800, color: fleetProfitYr >= 0 ? F.green : F.pink }}>{aiMaxPrice > 0 ? usd0(fleetProfitYr) : "not set"}<span style={{ fontSize: 12, color: F.muted2, fontWeight: 600 }}> / year</span></div>
-          <div style={{ fontSize: 11.5, color: F.muted2, marginTop: 4 }}>{aiMaxPrice > 0 ? `(${usd0(aiMaxPrice)} minus ${usd0(costYr)} cost) times ${finSchools.toLocaleString()} schools on Pro` : "Set the standard price above to see this number"}</div>
-          <div style={{ fontSize: 10.5, color: F.muted2, marginTop: 8, fontStyle: "italic" }}>This is the same tile shown on Finance, OpenApply. The number of schools on Pro is set there; the price is set on Finance or Pricing Packages.</div>
+          <div style={{ fontSize: 11.5, color: F.muted2, marginTop: 4 }}>{aiMaxPrice > 0 ? `(${usd0(aiMaxPrice)} minus ${usd0(costYr)} cost) times ${finSchools.toLocaleString()} schools on AI Max` : "Set the standard price above to see this number"}</div>
+          <div style={{ fontSize: 10.5, color: F.muted2, marginTop: 8, fontStyle: "italic" }}>This is the same tile shown on Finance, OpenApply. The number of schools on AI Max is set there; the price is set on Finance or Pricing Packages.</div>
         </div>
       </div>
 
       {/* UPSELL EXPERIENCE */}
       <div id="ov-upsell" style={card}>
-        <div style={sectionTitle}>3. Upsell Experience</div>
+        <div style={sectionTitle}>4. Upsell Experience</div>
         <p style={{ margin: "-2px 0 18px", fontSize: 12.5, color: F.muted, lineHeight: 1.5, maxWidth: 800 }}>A simple sales structure. Schools reach <strong style={{ color: F.plum }}>{ov.upsell.productName}</strong> one of two ways.</p>
 
         {/* start node */}
@@ -4268,14 +4304,6 @@ function MonzOverviewPage({ monz, setMonz }) {
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, maxWidth: 620, margin: "0 auto 22px" }}>
           <div style={{ background: F.bg, border: `1px dashed ${F.orange}`, borderRadius: 10, padding: "9px 12px", textAlign: "center", fontSize: 11.5, color: F.muted, fontWeight: 600 }}>Their plan + {ov.upsell.productName}</div>
           <div style={{ background: F.bg, border: `1px dashed ${F.pink}`, borderRadius: 10, padding: "9px 12px", textAlign: "center", fontSize: 11.5, color: F.muted, fontWeight: 600 }}>Pro plan, {ov.upsell.productName} included</div>
-        </div>
-
-        <div style={{ background: F.lightYellow + "33", border: `1px solid ${F.border}`, borderLeft: `4px solid ${F.yellow}`, borderRadius: 10, padding: "14px 18px", marginBottom: 22 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-            <span style={{ fontSize: 16 }}>💡</span>
-            <span style={{ fontSize: 12.5, fontWeight: 800, color: F.plum, textTransform: "uppercase", letterSpacing: "0.05em" }}>Why we price it this way</span>
-          </div>
-          <textarea value={ov.upsell.strategyNote} onChange={e => setUpsell({ strategyNote: e.target.value })} rows={2} style={{ ...ta, border: `1px dashed ${F.border}`, background: "transparent", fontSize: 12.5, color: F.muted }} />
         </div>
 
         {/* package example: tiers first, full width */}
@@ -4326,11 +4354,13 @@ function MonzOverviewPage({ monz, setMonz }) {
           </div>
         </div>
 
+        <p style={{ margin: "0 0 22px", fontSize: 12.5, color: F.muted, lineHeight: 1.5, maxWidth: 780 }}>{ov.upsell.strategyNote}</p>
+
         {/* implementation timeline, static */}
         <div style={{ ...sectionTitle, marginTop: 8 }}>Implementation timeline</div>
-        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "stretch", gap: 0 }}>
+        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", gap: 0 }}>
           {ov.timeline.map((t, i) => (
-            <div key={t.id} style={{ display: "flex", alignItems: "center" }}>
+            <div key={t.id} style={{ display: "flex", alignItems: "flex-start" }}>
               <div style={{ minWidth: 200, maxWidth: 240 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
                   <div style={{ width: 10, height: 10, borderRadius: 999, background: F.pink, flexShrink: 0 }} />
@@ -4338,7 +4368,7 @@ function MonzOverviewPage({ monz, setMonz }) {
                 </div>
                 <div style={{ fontSize: 13, color: F.plum, fontWeight: 600, lineHeight: 1.4, paddingLeft: 18 }}>{t.label}</div>
               </div>
-              {i < ov.timeline.length - 1 && <div style={{ width: 40, height: 2, background: F.border, margin: "0 12px 22px" }} />}
+              {i < ov.timeline.length - 1 && <span style={{ color: F.muted2, fontSize: 16, margin: "1px 14px 0" }}>→</span>}
             </div>
           ))}
         </div>
@@ -4346,14 +4376,14 @@ function MonzOverviewPage({ monz, setMonz }) {
 
       {/* UX */}
       <div id="ov-ux" style={card}>
-        <div style={sectionTitle}>4. UX</div>
+        <div style={sectionTitle}>5. UX</div>
         <p style={{ margin: "-2px 0 12px", fontSize: 12.5, color: F.muted2, fontStyle: "italic" }}>Coming soon. Add notes below as this takes shape.</p>
         <textarea value={ov.uxNotes} onChange={e => patchOv({ uxNotes: e.target.value })} rows={4} placeholder="Notes on the UX for AI Max: how schools discover it, try it, and buy it." style={ta} />
       </div>
 
       {/* GTM */}
       <div id="ov-gtm" style={card}>
-        <div style={sectionTitle}>5. GTM</div>
+        <div style={sectionTitle}>6. GTM</div>
         <p style={{ margin: "-2px 0 12px", fontSize: 12.5, color: F.muted2, fontStyle: "italic" }}>Coming soon. Add notes below as this takes shape.</p>
         <textarea value={ov.gtmNotes} onChange={e => patchOv({ gtmNotes: e.target.value })} rows={4} placeholder="Notes on go to market: sales enablement, launch communications, who owns what." style={ta} />
       </div>
@@ -4748,7 +4778,7 @@ function FairUseExample({ monz, setMonz, deepRoute, setDeepRoute }) {
     const sel = rows.find(r => r.id === selFeat);
     const levelTotals = LEVELS.map(L => { const tot = enabledRows.reduce((s, x) => s + dollarsPerSchool(x.r, L.key), 0); return { ...L, perSchool: tot, fleet: tot * numSchools }; });
 
-    // Essential-only cost (for cap tracking)
+    // AI Starter-only cost (for cap tracking)
     const cap = monz.essentialCaps?.[focusedProduct] ?? null;
     const essEnabled = enabledRows.filter(x => x.r.tier === "essential");
     const essLevels = LEVELS.map(L => essEnabled.reduce((s, x) => s + dollarsPerSchool(x.r, L.key), 0));
@@ -4759,7 +4789,7 @@ function FairUseExample({ monz, setMonz, deepRoute, setDeepRoute }) {
         <div style={{ ...card, borderLeft: `4px solid ${F.pink}` }}>
           <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap", marginBottom: 4 }}>
             <span style={{ fontSize: 18, fontWeight: 800, color: F.plum }}>{focusedProduct} — AI cost model</span>
-            <span style={{ fontSize: 12, color: F.muted2 }}>{rows.length} AI features · Pro &amp; Essential</span>
+            <span style={{ fontSize: 12, color: F.muted2 }}>{rows.length} AI features · AI Max &amp; AI Starter</span>
           </div>
           <p style={{ margin: "0 0 14px", fontSize: 12.5, color: F.muted, lineHeight: 1.5, maxWidth: 880 }}>Each feature is priced on the model it runs. Volume is built from school drivers — <strong style={{ color: F.plum }}>reach × adoption × uses</strong> — not a flat guess; the usage level flexes the adoption band. Set the scenario below, then read $/school/mo and the fleet total.</p>
           <div style={{ display: "flex", gap: 28, flexWrap: "wrap" }}>
@@ -4779,10 +4809,10 @@ function FairUseExample({ monz, setMonz, deepRoute, setDeepRoute }) {
           </div>
         </div>
 
-        {/* Essential AI cap */}
+        {/* AI Starter AI cap */}
         <div style={{ ...card, borderLeft: `4px solid ${F.yellow}` }}>
           <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 6, flexWrap: "wrap" }}>
-            <div style={sectionTitle}>Essential AI cap</div>
+            <div style={sectionTitle}>AI Starter AI cap</div>
             <span style={{ fontSize: 11, color: F.muted2 }}>monthly hard limit per school · resets on the 1st · throttles if exceeded</span>
           </div>
           <div style={{ display: "flex", gap: 18, flexWrap: "wrap", alignItems: "flex-end" }}>
@@ -4814,7 +4844,7 @@ function FairUseExample({ monz, setMonz, deepRoute, setDeepRoute }) {
                 })}
               </div>
             ) : (
-              <p style={{ margin: 0, fontSize: 11.5, color: F.muted2, fontStyle: "italic" }}>No cap set — Essential features run uncapped. Enter a $ amount to bound your Essential AI spend; schools that hit the cap throttle for the rest of the month.</p>
+              <p style={{ margin: 0, fontSize: 11.5, color: F.muted2, fontStyle: "italic" }}>No cap set — AI Starter features run uncapped. Enter a $ amount to bound your AI Starter AI spend; schools that hit the cap throttle for the rest of the month.</p>
             )}
           </div>
         </div>
@@ -4955,7 +4985,7 @@ function FairUseExample({ monz, setMonz, deepRoute, setDeepRoute }) {
               <div><div style={lb}>Input tokens</div><input type="number" min="0" value={sel.inputTokens} onChange={e => setLabRow(sel.id, { inputTokens: +e.target.value })} style={{ ...numInp, width: "100%" }} /></div>
               <div><div style={lb}>Output tokens</div><input type="number" min="0" value={sel.outputTokens} onChange={e => setLabRow(sel.id, { outputTokens: +e.target.value })} style={{ ...numInp, width: "100%" }} /></div>
               <div><div style={lb}>Model calls / run</div><input type="number" min="1" value={sel.runsPerAction} onChange={e => setLabRow(sel.id, { runsPerAction: Math.max(1, +e.target.value) })} style={{ ...numInp, width: "100%" }} /></div>
-              <div><div style={lb}>Tier</div><select value={sel.tier} onChange={e => setLabRow(sel.id, { tier: e.target.value })} style={{ ...selInp, width: "100%", maxWidth: "none" }}><option value="pro">Pro</option><option value="essential">Essential</option></select></div>
+              <div><div style={lb}>Tier</div><select value={sel.tier} onChange={e => setLabRow(sel.id, { tier: e.target.value })} style={{ ...selInp, width: "100%", maxWidth: "none" }}><option value="pro">AI Max</option><option value="essential">AI Starter</option></select></div>
               <div><div style={lb}>Status</div><select value={sel.status} onChange={e => setLabRow(sel.id, { status: e.target.value })} style={{ ...selInp, width: "100%", maxWidth: "none" }}><option value="live">live</option><option value="beta">beta</option><option value="roadmap">roadmap</option></select></div>
             </div>
             <div style={sectionTitle}>Cost per run across all models (¢)</div>
@@ -4965,7 +4995,7 @@ function FairUseExample({ monz, setMonz, deepRoute, setDeepRoute }) {
               highlightTop
               valueSuffix="¢"
             />
-            <div style={{ marginTop: 10, fontSize: 11.5, color: F.muted, lineHeight: 1.5 }}>Same prompt ({sel.inputTokens.toLocaleString()} in / {sel.outputTokens.toLocaleString()} out tokens × {calls(sel)} call{calls(sel) > 1 ? "s" : ""}), {models.length} models. The frontier ↔ open-source gap is the lever — keep light work on a cheap model, reserve the frontier model for the Pro-grade features.</div>
+            <div style={{ marginTop: 10, fontSize: 11.5, color: F.muted, lineHeight: 1.5 }}>Same prompt ({sel.inputTokens.toLocaleString()} in / {sel.outputTokens.toLocaleString()} out tokens × {calls(sel)} call{calls(sel) > 1 ? "s" : ""}), {models.length} models. The frontier ↔ open-source gap is the lever — keep light work on a cheap model, reserve the frontier model for the AI Max-grade features.</div>
           </div>
         )}
 
@@ -5017,7 +5047,7 @@ fleet total = ${usd(P)} × ${numSchools.toLocaleString()} schools = ${usd(P * nu
     { g: "Product build — OpenApply / ManageBac", chip: "▢ To build", color: F.orange, items: [
       "Store a usage record per request: sessionID → userID → school → school group, model, in/out tokens, USD, operation, region, timestamp",
       "Pre-flight capacity check before each run (any allowance left?)",
-      "Entitlement → model selection: free school → cheap model, Pro school → frontier",
+      "Entitlement → model selection: free school → cheap model, AI Max school → frontier",
       "Cap business rules per user / per school / per school group + shared pot",
       "Buy-more UI when an allowance runs low",
       "Hourly retro-build from the history API for front-end-only integrations (Atlas PHP / ManageBac JS)",
@@ -5162,7 +5192,7 @@ fleet total = ${usd(P)} × ${numSchools.toLocaleString()} schools = ${usd(P * nu
   return (
     <>
       <div style={{ ...card, borderLeft: `4px solid ${F.plum}` }}>
-        <p style={{ margin: 0, fontSize: 13, color: F.muted, lineHeight: 1.55 }}>Model what AI actually costs per school so the free tier and Pro pricing are grounded in numbers, not guesses. <strong style={{ color: F.plum }}>Overview</strong> holds the FAIF model pricing, usage bands, and the engineer-handoff checklist; pick a <strong style={{ color: F.plum }}>product</strong> to price each AI feature across a scenario (schools × usage level).</p>
+        <p style={{ margin: 0, fontSize: 13, color: F.muted, lineHeight: 1.55 }}>Model what AI actually costs per school so the free tier and AI Max pricing are grounded in numbers, not guesses. <strong style={{ color: F.plum }}>Overview</strong> holds the FAIF model pricing, usage bands, and the engineer-handoff checklist; pick a <strong style={{ color: F.plum }}>product</strong> to price each AI feature across a scenario (schools × usage level).</p>
       </div>
       {chipNav}
       {focusedProduct ? renderProduct() : renderOverview()}

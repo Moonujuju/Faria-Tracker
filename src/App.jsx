@@ -4327,8 +4327,8 @@ function MonzOverviewPage({ monz, setMonz }) {
               <div key={t.id} style={{ background: isPro ? F.plum : F.surface, border: `1px solid ${isPro ? F.plum : F.border}`, borderTop: isPro ? "none" : `4px solid ${F.borderStrong}`, borderRadius: 12, padding: "14px 16px", position: "relative", overflow: "hidden" }}>
                 {isPro && <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 4, background: F.gradient }} />}
                 <input value={t.name} onChange={e => setTier(t.id, { name: e.target.value })} style={{ ...eInp, width: "100%", fontSize: 14, fontWeight: 800, color: isPro ? F.paper : F.plum, borderColor: isPro ? F.lightPlum : F.border, marginBottom: 6 }} />
+                <div style={{ fontSize: 10.5, color: isPro ? F.lightPink : F.muted2, marginBottom: 4 }}>Sample: a 1,000-student school</div>
                 <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 10 }}>
-                  <span style={{ fontSize: 11, color: isPro ? F.lightPink : F.muted2 }}>avg</span>
                   <span style={{ fontSize: 14, fontWeight: 700, color: isPro ? F.paper : F.plum }}>$</span>
                   <input type="number" min="0" value={t.avgPrice || ""} placeholder="0" onChange={e => setTier(t.id, { avgPrice: parseFloat(e.target.value) || 0 })} style={{ ...inp, width: 80, fontSize: 14, fontWeight: 700, padding: "3px 6px", background: isPro ? F.lightPlum + "44" : F.surface, color: isPro ? F.paper : F.plum, borderColor: isPro ? F.lightPlum : F.borderStrong }} />
                 </div>
@@ -4345,6 +4345,12 @@ function MonzOverviewPage({ monz, setMonz }) {
                   })}
                 </div>
                 <button onClick={() => addTierModule(t.id)} style={{ marginTop: 8, padding: "3px 10px", borderRadius: 7, border: `1px dashed ${isPro ? F.lightPlum : F.borderStrong}`, background: "transparent", color: isPro ? F.lightPink : F.muted, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>+ module</button>
+                {isPro && (
+                  <div style={{ marginTop: 10, background: F.lightPlum + "33", border: `1px dashed ${F.lightPink}`, borderRadius: 8, padding: "8px 10px" }}>
+                    <div style={{ fontSize: 11, fontWeight: 800, color: F.lightYellow }}>≈30% cheaper than buying these add-ons separately</div>
+                    <div style={{ fontSize: 10.5, color: F.lightPink, marginTop: 3, lineHeight: 1.3 }}>Add-ons run a 40 to 50% profit margin on their own, so the bundle discount still leaves healthy margin.</div>
+                  </div>
+                )}
               </div>
             );
           })}

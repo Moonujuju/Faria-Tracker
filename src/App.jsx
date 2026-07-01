@@ -303,7 +303,7 @@ const DEFAULT_AI = [
   ] },
   { id: 212, name: "AI Analyst", description: "Always-on natural-language analyst over admissions data — answers ad-hoc questions, drafts board-ready reports, and surfaces trends the team would otherwise miss.", deadline: "2026-12-31", owner: "", product: "OpenApply", type: "feature", priority: "high", effort: "high", impact: "high", milestones: [
     { label: "Scope analyst use cases and question taxonomy", target: "2026-10-15", done: false },{ label: "Design conversational analyst UX", target: "2026-11-15", done: false },{ label: "Build NL → query → narrative pipeline", target: "2026-12-15", done: false },{ label: "Pilot with admissions directors at 5 schools", target: "2026-12-31", done: false },
-  ], status: "not-started", valueRationale: "Saves admissions leadership 5+ hours/week of manual analysis and unlocks always-on intelligence over the pipeline. The decision-support headline of AI Pro — the feature directors will actually open the laptop for.", wowOutcomes: [
+  ], status: "not-started", valueRationale: "Saves admissions leadership 5+ hours/week of manual analysis and unlocks always-on intelligence over the pipeline. The decision-support headline of AI Max — the feature directors will actually open the laptop for.", wowOutcomes: [
     "Director answers 80% of ad-hoc admissions questions in seconds without opening a spreadsheet",
     "Quarterly admissions board reports auto-drafted in under 30 minutes vs 8+ hours of manual data pull",
     "Surfaces 3+ actionable trend insights per month the team would otherwise have missed",
@@ -417,11 +417,11 @@ const COST_LAB_SEED = [
 ];
 const DEFAULT_MONETIZATION = {
   products: {
-    "OpenApply":    { sku: "OpenApply AI Pro",    unit: "per account / year", price: 0 },
-    "ManageBac+":   { sku: "ManageBac+ AI Pro",   unit: "per account / year", price: 0 },
-    "Atlas":        { sku: "Atlas AI Pro",        unit: "per account / year", price: 0 },
-    "SchoolsBuddy": { sku: "SchoolsBuddy AI Pro", unit: "per account / year", price: 0 },
-    "Vectare":      { sku: "Vectare AI Pro",      unit: "per account / year", price: 0 },
+    "OpenApply":    { sku: "OpenApply AI Max",    unit: "per account / year", price: 0 },
+    "ManageBac+":   { sku: "ManageBac+ AI Max",   unit: "per account / year", price: 0 },
+    "Atlas":        { sku: "Atlas AI Max",        unit: "per account / year", price: 0 },
+    "SchoolsBuddy": { sku: "SchoolsBuddy AI Max", unit: "per account / year", price: 0 },
+    "Vectare":      { sku: "Vectare AI Max",      unit: "per account / year", price: 0 },
   },
   bundleDiscounts: [
     { products: 2, pct: 10 },
@@ -496,12 +496,7 @@ const DEFAULT_MONETIZATION = {
     goals: [
       { id: "g1", title: "Schools get real value", desc: "AI has to be genuinely easy to use and lead to results schools can point to, not just a feature on a list." },
       { id: "g2", title: "Grow revenue fast", desc: "AI Max becomes one of our fastest growing sources of revenue across every product." },
-      { id: "g3", title: "Reach every product", desc: "AI Max is live and selling on all five products, not just one flagship, so no school is left behind." },
-    ],
-    goalIdeas: [
-      "Category leadership: schools see us as the trusted AI partner in our space.",
-      "Stickiness: AI becomes a real reason schools renew and expand with us.",
-      "Team readiness: every product team can ship and support AI Max on their own.",
+      { id: "g3", title: "Category leadership", desc: "Schools see us as the trusted AI partner in our space." },
     ],
     marginTarget: { low: 50, high: 75 },
     introPricing: {
@@ -522,7 +517,6 @@ const DEFAULT_MONETIZATION = {
       productName: "AI Max",
       path1Note: "Schools on the Essential or Standard plan can buy AI Max on its own, for one product at a time.",
       path2Note: "Or they upgrade to that product's Pro plan, which includes AI Max plus everything else.",
-      exampleModuleLabel: "ManageBac+ AI Max",
       strategyNote: "We'll price Pro so upgrading saves schools money overall and means they stop buying small add-ons one at a time, while growing our revenue per school.",
     },
     packageExample: {
@@ -894,7 +888,7 @@ const DEFAULT_COMPETITIVE = {
       "AI Essential must be genuinely useful, not a trial. Every successful benchmark runs a real free tier alongside paid.",
       "Lean into the multi-product bundle discount — that's how integrated-suite vendors (PowerSchool, Instructure) actually sell against MagicSchool-style point solutions.",
     ],
-    watchout: "The next-cycle move the data suggests is dropping the AI Pro SKU entirely and rolling AI into the base product subscription (Adobe / Zoom / Notion / Google Workspace pattern). Faria isn't there yet — schools are still evaluating AI as a differentiated feature — but the 18–36 month trajectory points that way as features commoditize.",
+    watchout: "The next-cycle move the data suggests is dropping the AI Max SKU entirely and rolling AI into the base product subscription (Adobe / Zoom / Notion / Google Workspace pattern). Faria isn't there yet — schools are still evaluating AI as a differentiated feature — but the 18–36 month trajectory points that way as features commoditize.",
   },
 };
 const COMPETITOR_TEMPLATE = () => ({
@@ -960,7 +954,7 @@ const DEFAULT_MARKET = {
       contactName: "",
       contactRole: "Survey respondents — admissions teams (global)",
       contactEmail: "",
-      wowOutcomesValidated: "Top requested features validate OA AI Pro priorities: Document checking missing/mismatched/expired (59/75) → AI Document Verification; Draft replies to family inquiries (54) → AI Admissions Assistant; Applicant profile summarizer (45) → AI Applicant Insights; Auto-tagging & sorting (42) → screening/sorting; AI search across applicant data (32) → AI Search / Analyst; Lead scoring (26) → AI Lead Scoring.",
+      wowOutcomesValidated: "Top requested features validate OA AI Max priorities: Document checking missing/mismatched/expired (59/75) → AI Document Verification; Draft replies to family inquiries (54) → AI Admissions Assistant; Applicant profile summarizer (45) → AI Applicant Insights; Auto-tagging & sorting (42) → screening/sorting; AI search across applicant data (32) → AI Search / Analyst; Lead scoring (26) → AI Lead Scoring.",
       notes: "Source: OpenApply \"AI in Admissions\" survey, 15–17 Jun 2026, 75 responses across Europe excl. UK&I (26), Middle East & Africa (18), Asia-Pacific (16), UK & Ireland (11), Latin America (2), North America (1). 1 response flagged low-quality. Broadens the earlier UK user-group read to a global cohort — same pattern holds.",
       survey: {
         event: "AI in Admissions Survey",
@@ -1099,7 +1093,7 @@ const DEFAULT_MARKET = {
       contactName: "",
       contactRole: "User-group attendees (admissions leaders)",
       contactEmail: "",
-      wowOutcomesValidated: "Top requested features validate OA AI Pro priorities: Draft replies to family inquiries (33/49) → AI Admissions Assistant; Document checking missing/mismatched/expired (32) → AI Document Verification; Auto-tagging & sorting (32) + Applicant profile summarizer (23) → AI Applicant Insights / screening; Lead scoring (17) → AI Lead Scoring.",
+      wowOutcomesValidated: "Top requested features validate OA AI Max priorities: Draft replies to family inquiries (33/49) → AI Admissions Assistant; Document checking missing/mismatched/expired (32) → AI Document Verification; Auto-tagging & sorting (32) + Applicant profile summarizer (23) → AI Applicant Insights / screening; Lead scoring (17) → AI Lead Scoring.",
       notes: "Source: OpenApply UK User Group Conference, 2026-06-12. 50 attendees from different UK schools; 45–49 responded per question. Caveat: single region (UK) — re-run with APAC / Americas cohorts before generalising.",
       survey: {
         event: "UK User Group Conference",
@@ -1268,7 +1262,7 @@ const DEFAULT_FINANCE = {
   },
   usageInputs: Object.fromEntries(MONZ_PRODUCTS.map(p => [p, { essActionsPerSchoolMonth: 0, proActionsPerSchoolMonth: 0, tokensPerAction: 0, freeModelId: "m-qwen", proModelId: "m-sonnet" }])),
   freeTierBudget: { annualSpendUSD: 10000, schools: 1000 },
-  // Per-product AI Pro pricing model: candidate prices to compare + target margin + fleet size.
+  // Per-product AI Max pricing model: candidate prices to compare + target margin + fleet size.
   proPricing: Object.fromEntries(MONZ_PRODUCTS.map(p => [p, {
     targetMarginPct: 70,
     schoolsOnPro: 500,
@@ -1365,7 +1359,7 @@ function EXAMPLE_VISION() {
     who: {
       segment: "International & private K-12 schools running selective admissions (~1,000 schools today); admissions-led buyers.",
       buyer: "Director / Head of Admissions; final sign-off for paid add-ons often the Head of School or Bursar.",
-      payer: "The school, via its annual OpenApply SaaS contract — AI Pro is a paid add-on on top of the base license.",
+      payer: "The school, via its annual OpenApply SaaS contract — AI Max is a paid add-on on top of the base license.",
       profiles: [
         { id: id("p1"), name: "Director of Admissions", role: "Buyer / champion", jtbd: "Hit enrolment targets with a lean team; cut manual chasing & reviewing so staff spend time on families, not paperwork." },
         { id: id("p2"), name: "Admissions Officer", role: "Daily user", jtbd: "Process applications, chase missing documents, and answer family inquiries quickly and accurately." },
@@ -1375,7 +1369,7 @@ function EXAMPLE_VISION() {
       position: "Category-leading admissions CRM for international/private K-12 with deep workflow lock-in (forms, checklists, family portal). AI is early — a few Essential conveniences shipped; no paid AI tier yet.",
       baselines: [
         { id: id("b1"), metric: "Schools on OpenApply", value: "~1,000" },
-        { id: id("b2"), metric: "AI Pro attach", value: "0% (not launched)" },
+        { id: id("b2"), metric: "AI Max attach", value: "0% (not launched)" },
         { id: id("b3"), metric: "Survey sentiment toward AI", value: "~95% positive (75 resp, Jun 2026)" },
         { id: id("b4"), metric: "Top validated demand", value: "Document checking 59/75 · Draft replies 54/75" },
       ],
@@ -1383,13 +1377,13 @@ function EXAMPLE_VISION() {
       notWorking: ["No paid AI tier yet — monetization left on the table.", "AI shipped piecemeal, not packaged or sold.", "Usage/cost not yet tracked, so free-tier pricing is guesswork (now being fixed)."],
     },
     vision: {
-      now: "AI Pro ships for back-to-school 2026: a packaged set of admissions AI that demonstrably saves teams 5+ hrs/week — Document Verification, draft family replies, Applicant Insights — sold as a per-account add-on with a genuinely useful free Essential tier underneath.",
+      now: "AI Max ships for back-to-school 2026: a packaged set of admissions AI that demonstrably saves teams 5+ hrs/week — Document Verification, draft family replies, Applicant Insights — sold as a per-account add-on with a genuinely useful free Essential tier underneath.",
       next: "The admissions assistant goes agentic: it doesn't just draft, it runs the chase — follows up on missing documents, nurtures unconverted leads, answers routine family questions end-to-end, human-in-the-loop. AI becomes the way admissions runs in OpenApply.",
       outer: "OpenApply is the AI-native system of record for school admissions: schools (and their own AI agents, via MCP) query and act on applicant data conversationally; the platform predicts enrolment and guides the funnel. The moat is the data + workflow, not any single model.",
     },
     northStar: {
       value: "Admissions staff hours saved per school per month — 'proof of time saved' is the validated buying lever.",
-      commercial: "AI Pro ARR (attach rate × per-account price across the base).",
+      commercial: "AI Max ARR (attach rate × per-account price across the base).",
     },
     why: {
       whyNow: "Open-source models are now cheap and good enough to run admissions tasks at viable cost; schools are actively evaluating AI (95% positive) and Finance wants AI monetized, not uncapped. The proxy + usage/cost stack to do this safely now exists.",
@@ -1404,26 +1398,26 @@ function EXAMPLE_VISION() {
       kill: "Accuracy/trust can't be made reliable enough for admissions → pull back to assistive-only, drop the autonomous bets.",
     },
     bets: [
-      { id: id("bet1"), choice: "Package admissions AI as a paid 'AI Pro' add-on with a useful free Essential tier", tradeoff: "Not bundling AI into the base price yet — forgoes simplicity for a clearer revenue line + upgrade path", dependency: "Shared FAIF proxy + usage/cost tracking (AI eng); Finance sign-off on free-tier spend" },
+      { id: id("bet1"), choice: "Package admissions AI as a paid 'AI Max' add-on with a useful free Essential tier", tradeoff: "Not bundling AI into the base price yet — forgoes simplicity for a clearer revenue line + upgrade path", dependency: "Shared FAIF proxy + usage/cost tracking (AI eng); Finance sign-off on free-tier spend" },
       { id: id("bet2"), choice: "Go agentic on the admissions chase (documents, nurture, replies)", tradeoff: "Higher build + trust/safety cost vs. simple assistive features", dependency: "Frontier-model access via Bedrock; safeguarding / policy review" },
       { id: id("bet3"), choice: "Open the data via MCP so schools' own AI agents can query OpenApply", tradeoff: "Platform/ecosystem play over short-term feature revenue", dependency: "MCP server build; security review" },
     ],
     model: {
-      packaging: "Two tiers: AI Essential (free, default-on, cheap/open models, low caps) and AI Pro (paid SKU, frontier models, higher caps). Multi-product bundle discount across Faria.",
+      packaging: "Two tiers: AI Essential (free, default-on, cheap/open models, low caps) and AI Max (paid SKU, frontier models, higher caps). Multi-product bundle discount across Faria.",
       pricing: "Per account / year add-on. Free-tier allowance sized from a comfortable annual spend (cost lab + finance model); credits/usage tracked under the hood, the customer sees a simple action allowance.",
       expansion: "Land with Document Verification + draft replies → expand to agentic nurture + Analyst → bundle with ManageBac+ across the school.",
     },
     goals: [
       { id: id("g1"), kind: "product", metric: "Pro 'wow' features live", baseline: "0", target: "3", window: "h0" },
       { id: id("g2"), kind: "product", metric: "Staff hours saved / school / month", baseline: "0", target: "5+", window: "h1" },
-      { id: id("g3"), kind: "commercial", metric: "AI Pro attach (% of base)", baseline: "0%", target: "10%", window: "h2" },
-      { id: id("g4"), kind: "commercial", metric: "AI Pro ARR", baseline: "$0", target: "first material ARR", window: "h2" },
+      { id: id("g3"), kind: "commercial", metric: "AI Max attach (% of base)", baseline: "0%", target: "10%", window: "h2" },
+      { id: id("g4"), kind: "commercial", metric: "AI Max ARR", baseline: "$0", target: "first material ARR", window: "h2" },
       { id: id("g5"), kind: "product", metric: "Agentic tasks live (chase / nurture)", baseline: "0", target: "2", window: "h2" },
     ],
     horizon: {
       h0: {
         building: ["AI Document Verification (cross-check docs vs the school's checklist)", "AI Writing Assistant — draft family replies", "Usage + cost tracking wired in via the proxy", "Essential vs Pro packaging + paywall"],
-        state: "AI Pro is live for early-adopter schools with two flagship time-savers in production; we can measure hours saved and cost per school.",
+        state: "AI Max is live for early-adopter schools with two flagship time-savers in production; we can measure hours saved and cost per school.",
       },
       h1: {
         building: ["AI Applicant Insights / summaries on every profile", "AI Lead Scoring", "Buy-more / allowance UI", "Schools sign-off + Pro onboarding"],
@@ -1435,15 +1429,15 @@ function EXAMPLE_VISION() {
       },
     },
     initiatives: [
-      { id: id("i1"), program: "AI Pro launch (Document Verification + draft replies)", deliversBet: "Bet 1 — packaged AI Pro", owner: "OA PM (Admissions AI)", team: "OA product + AI eng", budget: "TBD", buildBuy: "build", targetDate: "2026-09-01", status: "in-progress", success: "2 Pro features in prod; ≥5 pilot schools; measured hours saved." },
+      { id: id("i1"), program: "AI Max launch (Document Verification + draft replies)", deliversBet: "Bet 1 — packaged AI Max", owner: "OA PM (Admissions AI)", team: "OA product + AI eng", budget: "TBD", buildBuy: "build", targetDate: "2026-09-01", status: "in-progress", success: "2 Pro features in prod; ≥5 pilot schools; measured hours saved." },
       { id: id("i2"), program: "Usage & cost tracking + caps", deliversBet: "Bet 1 — margin & pricing", owner: "AI eng lead", team: "AI eng + OA backend", budget: "shared", buildBuy: "build", targetDate: "2026-08-15", status: "in-progress", success: "Per-user/school usage + cost recorded; pre-flight cap check live." },
       { id: id("i3"), program: "Agentic nurture workflows", deliversBet: "Bet 2 — agentic chase", owner: "OA PM (Agentic)", team: "OA product + AI eng", budget: "TBD", buildBuy: "build", targetDate: "2026-12-15", status: "planned", success: "2 autonomous tasks live with human-in-the-loop; opt-in pilots." },
       { id: id("i4"), program: "MCP server", deliversBet: "Bet 3 — open data", owner: "OA backend lead", team: "OA backend", budget: "TBD", buildBuy: "build", targetDate: "2027-03-01", status: "planned", success: "Beta MCP endpoint; security review passed; 1+ design partner." },
     ],
     milestones: [
-      { id: id("m1"), milestone: "AI Pro beta — Document Verification + draft replies live for pilot schools", window: "h0", owner: "OA PM", status: "in-progress" },
+      { id: id("m1"), milestone: "AI Max beta — Document Verification + draft replies live for pilot schools", window: "h0", owner: "OA PM", status: "in-progress" },
       { id: id("m2"), milestone: "Usage + cost tracking and caps in production", window: "h0", owner: "AI eng", status: "in-progress" },
-      { id: id("m3"), milestone: "AI Pro GA — packaging, paywall, buy-more flow", window: "h1", owner: "OA PM + GTM", status: "planned" },
+      { id: id("m3"), milestone: "AI Max GA — packaging, paywall, buy-more flow", window: "h1", owner: "OA PM + GTM", status: "planned" },
       { id: id("m4"), milestone: "Applicant Insights + Lead Scoring shipped", window: "h1", owner: "OA product", status: "planned" },
       { id: id("m5"), milestone: "Agentic nurture pilot (autonomous follow-ups)", window: "h2", owner: "OA PM (Agentic)", status: "planned" },
       { id: id("m6"), milestone: "MCP server beta", window: "h2", owner: "OA backend", status: "planned" },
@@ -1459,7 +1453,7 @@ function EXAMPLE_VISION() {
       vision: { on: true, text: "Today: OpenApply drafts your family replies and auto-checks documents. Soon: it runs the chase for you — following up, nurturing leads, answering pipeline questions in plain language." },
       northStar: { on: true, text: "Our measure of success is simple: hours of your team's time saved every month." },
       horizon: { on: true, text: "Next 3 months: AI drafting + document checking. By 6 months: applicant summaries and who's-likely-to-enrol scoring. By 12 months: an AI teammate that follows up and reports for you." },
-      goals: { on: true, text: "By next school year: AI Pro saving teams 5+ hours/week, covering review, screening and follow-up." },
+      goals: { on: true, text: "By next school year: AI Max saving teams 5+ hours/week, covering review, screening and follow-up." },
     },
     updatedAt: "2026-06-18",
   };
@@ -1648,8 +1642,9 @@ function mergeMonz(saved) {
       const spPE = sp.packageExample || {};
       return {
         ...dp, ...sp,
-        goals: idMerge(dp.goals, sp.goals),
-        goalIdeas: sp.goalIdeas || dp.goalIdeas,
+        // Goals are fixed copy now (not editable in the UI) — always take the current default,
+        // never a stale saved value from before the goal text changed in code.
+        goals: dp.goals,
         marginTarget: { ...dp.marginTarget, ...(sp.marginTarget || {}) },
         introPricing: { ...dp.introPricing, ...(sp.introPricing || {}), reasons: sp.introPricing?.reasons || dp.introPricing.reasons },
         standardPricing: { ...dp.standardPricing, ...(sp.standardPricing || {}) },
@@ -2201,7 +2196,7 @@ function AiMonetizationPage({ subRoute, setSubRoute, deepRoute, setDeepRoute }) 
   // Tier badge
   const tierBadge = (tier) => {
     const map = {
-      pro:        { bg: F.plum,        fg: F.paper, label: "AI Pro" },
+      pro:        { bg: F.plum,        fg: F.paper, label: "AI Max" },
       essential:  { bg: F.lightYellow, fg: F.plum,  label: "AI Essential" },
       unassigned: { bg: F.bg,          fg: F.muted2, label: "Unassigned" },
     };
@@ -2220,11 +2215,11 @@ function AiMonetizationPage({ subRoute, setSubRoute, deepRoute, setDeepRoute }) 
       {(() => {
         const titles = {
           overview:    { t: "Overview", s: "The plan in plain language: our goals, the AI Max pricing and margin, how the upsell works, and what's next." },
-          plan:        { t: "Monetization Framework", s: "Working framework for AI Essential vs AI Pro across Faria products. Edit anything inline, this is a living document." },
+          plan:        { t: "Monetization Framework", s: "Working framework for AI Essential vs AI Max across Faria products. Edit anything inline, this is a living document." },
           usage:       { t: "Usage & cost", s: "AI cost model — FAIF model pricing in the Overview; pick a product to price each AI feature by scenario (schools × usage level) into $/school/mo and a fleet total." },
           competitive: { t: "Competitive Analysis", s: "Track how competitors are pricing and packaging AI. Use this to calibrate our Pro tier and bundle pricing." },
           market:      { t: "Market Validation", s: "Per-product school validation — pilots, willingness to pay, and which Pro outcomes schools have confirmed." },
-          finance:     { t: "Finance", s: "AI Pro economics — Overview rolls up Essential vs Pro AI cost (from Usage) and SKUs/pricing; pick a product to model AI Pro price points, margin and break-even." },
+          finance:     { t: "Finance", s: "AI Max economics — Overview rolls up Essential vs Pro AI cost (from Usage) and SKUs/pricing; pick a product to model AI Max price points, margin and break-even." },
           packages:    { t: "Pricing Packages", s: "How we package and sell AI — a free preview to prove the value, a paid AI module per product, and a Pro bundle that includes AI alongside every other module." },
         };
         const cur = titles[view] || titles.plan;
@@ -2290,10 +2285,10 @@ function AiMonetizationPage({ subRoute, setSubRoute, deepRoute, setDeepRoute }) 
               <li>Lower fair-use caps to keep inference cost bounded on the free tier</li>
             </ul>
           </div>
-          {/* AI Pro */}
+          {/* AI Max */}
           <div style={{ background: F.plum, border: `1px solid ${F.plum}`, borderTop: `3px solid ${F.yellow}`, borderRadius: 10, padding: "18px 20px", color: F.paper }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-              <span style={{ fontSize: 14, fontWeight: 800, color: F.paper, textTransform: "uppercase", letterSpacing: "0.08em" }}>AI Pro</span>
+              <span style={{ fontSize: 14, fontWeight: 800, color: F.paper, textTransform: "uppercase", letterSpacing: "0.08em" }}>AI Max</span>
               <span style={{ fontSize: 10, fontWeight: 800, color: F.plum, background: F.yellow, padding: "2px 8px", borderRadius: 4 }}>PAID SKU</span>
             </div>
             <p style={{ margin: "0 0 12px", fontSize: 12.5, color: F.paper, fontWeight: 700, opacity: 0.95 }}>Separate SKU per product · bundle discount stacks</p>
@@ -2309,7 +2304,7 @@ function AiMonetizationPage({ subRoute, setSubRoute, deepRoute, setDeepRoute }) 
         <div style={{ marginTop: 14, background: F.bg, border: `1px solid ${F.border}`, borderRadius: 10, padding: "16px 20px" }}>
           <div style={{ textAlign: "center", marginBottom: 12 }}>
             <div style={{ fontSize: 10.5, fontWeight: 800, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 4 }}>The demarcation line</div>
-            <div style={{ fontSize: 14, color: F.plum, fontWeight: 800 }}>A feature crosses into AI Pro when it passes <span style={{ color: F.pink }}>any one</span> of these</div>
+            <div style={{ fontSize: 14, color: F.plum, fontWeight: 800 }}>A feature crosses into AI Max when it passes <span style={{ color: F.pink }}>any one</span> of these</div>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 10 }}>
             {[
@@ -2457,14 +2452,14 @@ function AiMonetizationPage({ subRoute, setSubRoute, deepRoute, setDeepRoute }) 
                       })}
                     </div>
                   )}
-                  <p style={{ margin: "10px 0 0", fontSize: 11.5, color: F.muted, fontStyle: "italic" }}>Validate 2–3 of these before {prod} AI Pro goes live.</p>
+                  <p style={{ margin: "10px 0 0", fontSize: 11.5, color: F.muted, fontStyle: "italic" }}>Validate 2–3 of these before {prod} AI Max goes live.</p>
                 </div>
 
                 {/* Feature buckets */}
                 <div style={sectionTitle}>Features by tier</div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
                   {[
-                    { key: "pro", title: "AI Pro", list: pro, bg: F.plum, fg: F.paper, bd: F.plum },
+                    { key: "pro", title: "AI Max", list: pro, bg: F.plum, fg: F.paper, bd: F.plum },
                     { key: "essential", title: "AI Essential", list: ess, bg: F.lightYellow, fg: F.plum, bd: F.yellow },
                   ].map(b => (
                     <div key={b.key} style={{ background: F.bg, border: `1px solid ${F.border}`, borderRadius: 10, overflow: "hidden" }}>
@@ -2600,7 +2595,7 @@ function AiMonetizationPage({ subRoute, setSubRoute, deepRoute, setDeepRoute }) 
         return (
           <Modal onClose={() => setEditFeat(null)}>
             <h3 style={{ margin: "0 0 4px", fontSize: 18, fontWeight: 700, color: F.plum }}>Feature details</h3>
-            <p style={{ margin: "0 0 16px", fontSize: 13, color: F.muted }}>{editFeatObj.name} · {editFeatObj.product} · <strong style={{ color: F.plum }}>{effectiveTier(editFeatObj) === "pro" ? "AI Pro" : effectiveTier(editFeatObj) === "essential" ? "AI Essential" : "Unassigned"}</strong></p>
+            <p style={{ margin: "0 0 16px", fontSize: 13, color: F.muted }}>{editFeatObj.name} · {editFeatObj.product} · <strong style={{ color: F.plum }}>{effectiveTier(editFeatObj) === "pro" ? "AI Max" : effectiveTier(editFeatObj) === "essential" ? "AI Essential" : "Unassigned"}</strong></p>
 
             <div style={lb}>"Wow" outcomes <span style={{ color: F.pink, marginLeft: 4 }}>★</span></div>
             {outs.length === 0 && (
@@ -2613,7 +2608,7 @@ function AiMonetizationPage({ subRoute, setSubRoute, deepRoute, setDeepRoute }) 
               </div>
             ))}
             <button onClick={addOut} style={{ padding: "5px 11px", borderRadius: 7, border: `1px dashed ${F.borderStrong}`, background: "transparent", color: F.plum, fontSize: 11.5, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", marginTop: 2, marginBottom: 12 }}>+ Add wow outcome</button>
-            <p style={{ margin: "0 0 14px", fontSize: 11.5, color: F.muted, fontStyle: "italic" }}>Measurable wins we'll validate before {editFeatObj.product} AI Pro goes live. Surfaced at the top of the {editFeatObj.product} block.</p>
+            <p style={{ margin: "0 0 14px", fontSize: 11.5, color: F.muted, fontStyle: "italic" }}>Measurable wins we'll validate before {editFeatObj.product} AI Max goes live. Surfaced at the top of the {editFeatObj.product} block.</p>
 
             <div style={lb}>Value rationale</div>
             <textarea value={editFeatObj.valueRationale || ""} onChange={e => setFeatField(editFeatObj.id, { valueRationale: e.target.value })} rows={3} placeholder="Why is this Pro (or Essential)? e.g. saves 5+ hrs/wk of manual review; unlocks predictive enrolment likelihood" style={{ ...inp, width: "100%", resize: "vertical", marginBottom: 14 }} />
@@ -3724,7 +3719,7 @@ function MonzFinancePage({ monz, setMonz, deepRoute, setDeepRoute }) {
     <div style={{ display: "flex", gap: 6, marginBottom: 18, flexWrap: "wrap", alignItems: "center" }}>
       {chip("Overview", null, !focusedProduct)}
       {MONZ_PRODUCTS.map(p => chip(p, p, focusedProduct === p))}
-      <span style={{ fontSize: 11, color: F.muted2, marginLeft: 4 }}>· pick a product to model AI Pro pricing &amp; margin</span>
+      <span style={{ fontSize: 11, color: F.muted2, marginLeft: 4 }}>· pick a product to model AI Max pricing &amp; margin</span>
     </div>
   );
   const levelPills = (
@@ -3753,14 +3748,14 @@ function MonzFinancePage({ monz, setMonz, deepRoute, setDeepRoute }) {
             <div style={sectionTitle}>Portfolio · Essential vs Pro AI cost, and margin at the current price</div>
             {levelPills}
           </div>
-          <p style={{ margin: "0 0 12px", fontSize: 12.5, color: F.muted, lineHeight: 1.5, maxWidth: 900 }}>Costs pulled live from <strong style={{ color: F.pink }}>Usage</strong> at <strong>{levelLabel}</strong> usage. <strong style={{ color: F.green }}>Essential</strong> = AI in the free/base tier (the give-away). <strong style={{ color: F.plum }}>Pro (to serve)</strong> = every AI feature a Pro school uses (Essential + Pro) — what the AI Pro price must cover. Margin uses each product's current AI Pro price from SKUs below.</p>
+          <p style={{ margin: "0 0 12px", fontSize: 12.5, color: F.muted, lineHeight: 1.5, maxWidth: 900 }}>Costs pulled live from <strong style={{ color: F.pink }}>Usage</strong> at <strong>{levelLabel}</strong> usage. <strong style={{ color: F.green }}>Essential</strong> = AI in the free/base tier (the give-away). <strong style={{ color: F.plum }}>Pro (to serve)</strong> = every AI feature a Pro school uses (Essential + Pro) — what the AI Max price must cover. Margin uses each product's current AI Max price from SKUs below.</p>
           <div style={{ overflowX: "auto", border: `1px solid ${F.border}`, borderRadius: 8 }}>
             <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 760 }}>
               <thead><tr style={{ background: F.bg }}>
                 <th style={th}>Product</th>
                 <th style={{ ...th, textAlign: "right" }}>Essential $/sch/mo</th>
                 <th style={{ ...th, textAlign: "right" }}>Pro (to serve) $/sch/mo</th>
-                <th style={{ ...th, textAlign: "right" }}>AI Pro price / yr</th>
+                <th style={{ ...th, textAlign: "right" }}>AI Max price / yr</th>
                 <th style={{ ...th, textAlign: "right" }}>Margin / sch / mo</th>
                 <th style={{ ...th, textAlign: "right" }}>Margin %</th>
                 <th style={{ ...th, textAlign: "center" }}>Open</th>
@@ -3787,7 +3782,7 @@ function MonzFinancePage({ monz, setMonz, deepRoute, setDeepRoute }) {
               </tbody>
             </table>
           </div>
-          <p style={{ margin: "10px 0 0", fontSize: 11.5, color: F.muted2, fontStyle: "italic" }}>Click a product for its full AI Pro pricing &amp; break-even model. <span style={{ color: F.green }}>Green</span> = profit, <span style={{ color: F.pink }}>pink</span> = loss at the current price.</p>
+          <p style={{ margin: "10px 0 0", fontSize: 11.5, color: F.muted2, fontStyle: "italic" }}>Click a product for its full AI Max pricing &amp; break-even model. <span style={{ color: F.green }}>Green</span> = profit, <span style={{ color: F.pink }}>pink</span> = loss at the current price.</p>
         </div>
 
         {/* Essential tier — free-tier give-away budget */}
@@ -3838,7 +3833,7 @@ function MonzFinancePage({ monz, setMonz, deepRoute, setDeepRoute }) {
         {/* SKUs & pricing — the pricing source of truth */}
         <div style={card}>
           <div style={sectionTitle}>SKUs &amp; pricing</div>
-          <p style={{ margin: "-2px 0 12px", fontSize: 12, color: F.muted2, fontStyle: "italic" }}>The AI Pro price per product feeds the margin analysis above and on each product page.</p>
+          <p style={{ margin: "-2px 0 12px", fontSize: 12, color: F.muted2, fontStyle: "italic" }}>The AI Max price per product feeds the margin analysis above and on each product page.</p>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12 }}>
             {MONZ_PRODUCTS.map(p => {
               const pd = monz.products[p] || { sku: "", unit: "", price: 0 };
@@ -3889,7 +3884,7 @@ function MonzFinancePage({ monz, setMonz, deepRoute, setDeepRoute }) {
     );
   };
 
-  // ── PER-PRODUCT: AI Pro economics — cost (from Usage) vs price, break-even, sensitivity, fleet ──
+  // ── PER-PRODUCT: AI Max economics — cost (from Usage) vs price, break-even, sensitivity, fleet ──
   const renderProduct = () => {
     const p = focusedProduct;
     const pp = fin.proPricing[p] || { targetMarginPct: 70, schoolsOnPro: 500, candidates: [] };
@@ -3917,8 +3912,8 @@ function MonzFinancePage({ monz, setMonz, deepRoute, setDeepRoute }) {
         <div style={{ ...card, borderLeft: `4px solid ${F.pink}` }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap" }}>
             <div>
-              <span style={{ fontSize: 18, fontWeight: 800, color: F.plum }}>{p} — AI Pro economics</span>
-              <p style={{ margin: "4px 0 0", fontSize: 12.5, color: F.muted, lineHeight: 1.5, maxWidth: 760 }}>AI cost is pulled live from <strong style={{ color: F.pink }}>Usage</strong> ({fc.ess} Essential + {fc.pro} Pro features enabled). Margin compares the AI Pro price against the <strong>total AI a Pro school uses</strong>.</p>
+              <span style={{ fontSize: 18, fontWeight: 800, color: F.plum }}>{p} — AI Max economics</span>
+              <p style={{ margin: "4px 0 0", fontSize: 12.5, color: F.muted, lineHeight: 1.5, maxWidth: 760 }}>AI cost is pulled live from <strong style={{ color: F.pink }}>Usage</strong> ({fc.ess} Essential + {fc.pro} Pro features enabled). Margin compares the AI Max price against the <strong>total AI a Pro school uses</strong>.</p>
             </div>
             {levelPills}
           </div>
@@ -3931,7 +3926,7 @@ function MonzFinancePage({ monz, setMonz, deepRoute, setDeepRoute }) {
             {[
               { l: "Essential (free give-away)", mo: ess, c: F.green, sub: essIsCapped ? `capped at ${usd(ecap)}/mo · uncapped ${usd(rawEss)} · ${fc.ess} features` : `${fc.ess} feature${fc.ess === 1 ? "" : "s"} · included for everyone` },
               { l: "Pro — total to serve a Pro school", mo: proServe, c: F.plum, sub: "Essential + Pro · the margin basis", strong: true },
-              { l: "Pro-only (incremental)", mo: proOnly, c: F.orange, sub: `${fc.pro} premium feature${fc.pro === 1 ? "" : "s"} AI Pro unlocks` },
+              { l: "Pro-only (incremental)", mo: proOnly, c: F.orange, sub: `${fc.pro} premium feature${fc.pro === 1 ? "" : "s"} AI Max unlocks` },
             ].map((s, i) => (
               <div key={i} style={{ background: F.bg, border: `1px solid ${s.strong ? F.plum : F.border}`, borderTop: `3px solid ${s.c}`, borderRadius: 10, padding: "13px 15px" }}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: F.muted2, marginBottom: 6, minHeight: 28 }}>{s.l}</div>
@@ -3943,10 +3938,10 @@ function MonzFinancePage({ monz, setMonz, deepRoute, setDeepRoute }) {
           </div>
         </div>
 
-        {/* AI Pro price → margin */}
+        {/* AI Max price → margin */}
         <div style={card}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: 8, marginBottom: 10 }}>
-            <div style={sectionTitle}>AI Pro price points → margin</div>
+            <div style={sectionTitle}>AI Max price points → margin</div>
             <button onClick={() => addCand(p)} style={{ padding: "5px 12px", borderRadius: 7, border: `1px dashed ${F.borderStrong}`, background: "transparent", color: F.plum, fontSize: 11.5, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>+ Add price point</button>
           </div>
           <div style={{ overflowX: "auto", border: `1px solid ${F.border}`, borderRadius: 8 }}>
@@ -4007,7 +4002,7 @@ function MonzFinancePage({ monz, setMonz, deepRoute, setDeepRoute }) {
                 <span style={{ fontSize: 12, color: F.muted }}>% →</span>
               </div>
               <div style={{ fontSize: 20, fontWeight: 800, color: F.green }}>{usd0(floorYr)}<span style={{ fontSize: 11, color: F.muted2, fontWeight: 600 }}> /yr</span></div>
-              <div style={{ fontSize: 10.5, color: F.muted2, marginTop: 4 }}>Minimum AI Pro price to hit {target}% margin.</div>
+              <div style={{ fontSize: 10.5, color: F.muted2, marginTop: 4 }}>Minimum AI Max price to hit {target}% margin.</div>
             </div>
             <div style={{ background: F.bg, border: `1px solid ${F.border}`, borderTop: `3px solid ${F.plum}`, borderRadius: 10, padding: "12px 15px" }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: F.muted2, marginBottom: 6 }}>Fleet gross profit · at current price</div>
@@ -4049,8 +4044,8 @@ function MonzFinancePage({ monz, setMonz, deepRoute, setDeepRoute }) {
                 </tbody>
               </table>
             </div>
-          ) : <p style={{ margin: 0, fontSize: 12.5, color: F.muted, fontStyle: "italic" }}>Set a current AI Pro price in SKUs (Overview) to see how margin holds up if usage runs Low → Heavy.</p>}
-          <p style={{ margin: "10px 0 0", fontSize: 11.5, color: F.muted2, fontStyle: "italic" }}>Does AI Pro still profit if schools use it harder than expected? Heavy multiplies every feature's runs by ×{usageLevels.heavy ?? 2}.</p>
+          ) : <p style={{ margin: 0, fontSize: 12.5, color: F.muted, fontStyle: "italic" }}>Set a current AI Max price in SKUs (Overview) to see how margin holds up if usage runs Low → Heavy.</p>}
+          <p style={{ margin: "10px 0 0", fontSize: 11.5, color: F.muted2, fontStyle: "italic" }}>Does AI Max still profit if schools use it harder than expected? Heavy multiplies every feature's runs by ×{usageLevels.heavy ?? 2}.</p>
         </div>
       </>
     );
@@ -4077,8 +4072,6 @@ function MonzOverviewPage({ monz, setMonz }) {
   useEffect(() => { (async () => { const s = await loadState("faria-monz-finance-v1"); setFin(mergeFinance(s)); })(); }, []);
 
   const patchOv = (patch) => setMonz(prev => ({ ...prev, overview: { ...prev.overview, ...patch } }));
-  const setGoal = (id, patch) => patchOv({ goals: ov.goals.map(g => g.id === id ? { ...g, ...patch } : g) });
-  const useIdea = (text) => patchOv({ goals: ov.goals.map(g => g.id === "g3" ? { ...g, desc: text } : g) });
   const setMarginTarget = (key, val) => patchOv({ marginTarget: { ...ov.marginTarget, [key]: Math.max(0, Math.min(100, parseFloat(val) || 0)) } });
   const setIntro = (patch) => patchOv({ introPricing: { ...ov.introPricing, ...patch } });
   const setIntroReason = (i, val) => { const r = [...ov.introPricing.reasons]; r[i] = val; setIntro({ reasons: r }); };
@@ -4086,7 +4079,6 @@ function MonzOverviewPage({ monz, setMonz }) {
   const delIntroReason = (i) => setIntro({ reasons: ov.introPricing.reasons.filter((_, ix) => ix !== i) });
   const setStandard = (patch) => patchOv({ standardPricing: { ...ov.standardPricing, ...patch } });
   const aiMaxPrice = Number(monz.products["OpenApply"]?.price) || 0;
-  const setAiMaxPrice = (v) => setMonz(prev => ({ ...prev, products: { ...prev.products, OpenApply: { ...prev.products.OpenApply, price: v === "" ? null : (parseFloat(v) || 0) } } }));
   const setUpsell = (patch) => patchOv({ upsell: { ...ov.upsell, ...patch } });
   const pe = ov.packageExample;
   const setPE = (patch) => patchOv({ packageExample: { ...pe, ...patch } });
@@ -4098,9 +4090,6 @@ function MonzOverviewPage({ monz, setMonz }) {
   const setTierModule = (tid, i, val) => { const m = [...tierModules(tid)]; m[i] = val; setTier(tid, { modules: m }); };
   const addTierModule = (tid) => setTier(tid, { modules: [...tierModules(tid), ""] });
   const delTierModule = (tid, i) => setTier(tid, { modules: tierModules(tid).filter((_, ix) => ix !== i) });
-  const setTimelineItem = (id, patch) => patchOv({ timeline: ov.timeline.map(t => t.id === id ? { ...t, ...patch } : t) });
-  const addTimelineItem = () => patchOv({ timeline: [...ov.timeline, { id: "tl" + (ov.timeline.length + 1) + Math.random().toString(36).slice(2, 6), label: "", when: "" }] });
-  const delTimelineItem = (id) => patchOv({ timeline: ov.timeline.filter(t => t.id !== id) });
 
   // ── cost engine, OpenApply only (same math as Usage & Finance) ──
   const fModelById = Object.fromEntries((monz.modelCosts || []).map(m => [m.id, m]));
@@ -4116,13 +4105,11 @@ function MonzOverviewPage({ monz, setMonz }) {
   const costYr = proServeMo * 12;
   const calcMargin = (price) => { const priceMo = price / 12; const marginMo = priceMo - proServeMo; return { priceMo, marginMo, marginPct: priceMo > 0 ? (marginMo / priceMo) * 100 : NaN }; };
   const standardCalc = calcMargin(aiMaxPrice);
-  const introCalc = calcMargin(ov.introPricing.price || 0);
   const finSchools = fin?.proPricing?.OpenApply?.schoolsOnPro ?? 0;
   const fleetProfitYr = (aiMaxPrice - costYr) * finSchools;
 
   const usd0 = (n) => isFinite(n) ? `$${Math.round(n).toLocaleString()}` : "not set";
   const pctf = (n) => isFinite(n) ? `${n.toFixed(0)}%` : "not set";
-  const inBand = (n) => isFinite(n) && n >= ov.marginTarget.low && n <= ov.marginTarget.high;
 
   const card = { background: F.surface, border: `1px solid ${F.border}`, borderRadius: 12, padding: "20px 24px", marginBottom: 18, boxShadow: F.shadowSm, scrollMarginTop: 16 };
   const sectionTitle = { fontSize: 11, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 };
@@ -4175,22 +4162,11 @@ function MonzOverviewPage({ monz, setMonz }) {
             <div key={g.id} style={{ background: F.bg, border: `1px solid ${F.border}`, borderTop: `4px solid ${goalAccents[i % 3]}`, borderRadius: 12, padding: "16px 18px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
                 {numBadge(i + 1, F.plum, F.paper)}
-                <input value={g.title} onChange={e => setGoal(g.id, { title: e.target.value })} style={{ ...eInp, flex: 1, fontSize: 15, fontWeight: 800, color: F.plum }} />
+                <div style={{ fontSize: 15, fontWeight: 800, color: F.plum }}>{g.title}</div>
               </div>
-              <textarea value={g.desc} onChange={e => setGoal(g.id, { desc: e.target.value })} rows={3} style={{ ...ta, border: `1px dashed ${F.border}`, background: "transparent", fontSize: 12.5, color: F.muted }} />
+              <div style={{ fontSize: 12.5, color: F.muted, lineHeight: 1.5 }}>{g.desc}</div>
             </div>
           ))}
-        </div>
-        <div style={{ marginTop: 14, background: F.lightYellow + "33", border: `1px solid ${F.border}`, borderRadius: 10, padding: "12px 16px" }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: F.muted2, marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.05em" }}>Other ideas for goal 3</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            {ov.goalIdeas.map((idea, i) => (
-              <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 12.5, color: F.muted }}>
-                <span>{idea}</span>
-                <button onClick={() => useIdea(idea)} style={{ marginLeft: "auto", flexShrink: 0, padding: "3px 10px", borderRadius: 7, border: `1px solid ${F.borderStrong}`, background: F.surface, color: F.plum, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>Use this</button>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
 
@@ -4211,16 +4187,15 @@ function MonzOverviewPage({ monz, setMonz }) {
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 14, marginBottom: 16 }}>
           {/* introductory price */}
-          <div style={{ background: F.bg, border: `1px solid ${F.border}`, borderTop: `4px solid ${F.orange}`, borderRadius: 12, padding: "16px 18px" }}>
-            <div style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: "0.07em", color: F.orange, marginBottom: 8 }}>INTRODUCTORY PRICE</div>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 8 }}>
-              <span style={{ fontSize: 20, fontWeight: 800, color: F.plum }}>$</span>
-              <input type="number" min="0" value={ov.introPricing.price || ""} placeholder="0" onChange={e => setIntro({ price: e.target.value === "" ? 0 : (parseFloat(e.target.value) || 0) })} style={{ ...inp, width: 100, fontSize: 20, fontWeight: 800, padding: "4px 8px" }} />
-              <span style={{ fontSize: 12, color: F.muted2 }}>/ year</span>
+          <div style={{ background: F.bg, border: `1px solid ${F.border}`, borderTop: `4px solid ${F.orange}`, borderRadius: 12, padding: "18px 20px" }}>
+            <div style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: "0.07em", color: F.orange, marginBottom: 10 }}>INTRODUCTORY PRICE</div>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 10 }}>
+              <span style={{ fontSize: 30, fontWeight: 800, color: F.plum }}>${(ov.introPricing.price || 0).toLocaleString()}</span>
+              <span style={{ fontSize: 13, color: F.muted2, fontWeight: 700 }}>/ first year</span>
             </div>
-            <input value={ov.introPricing.windowLabel} onChange={e => setIntro({ windowLabel: e.target.value })} style={{ ...eInp, width: "100%", fontSize: 12.5, color: F.muted, marginBottom: 10 }} />
-            <div style={{ fontSize: 10.5, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 6 }}>Why a lower price to start</div>
-            <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 6 }}>
+            <input value={ov.introPricing.windowLabel} onChange={e => setIntro({ windowLabel: e.target.value })} style={{ ...eInp, width: "100%", fontSize: 12.5, color: F.muted, marginBottom: 14 }} />
+            <div style={{ fontSize: 10.5, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 7 }}>Why a lower price to start</div>
+            <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 7 }}>
               {ov.introPricing.reasons.map((r, i) => (
                 <li key={i} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12.5, color: F.muted }}>
                   <span style={{ color: F.orange, fontWeight: 800 }}>•</span>
@@ -4229,24 +4204,18 @@ function MonzOverviewPage({ monz, setMonz }) {
                 </li>
               ))}
             </ul>
-            <button onClick={addIntroReason} style={{ marginTop: 8, padding: "3px 10px", borderRadius: 7, border: `1px dashed ${F.borderStrong}`, background: "transparent", color: F.muted, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>+ reason</button>
-            <div style={{ marginTop: 12, paddingTop: 10, borderTop: `1px solid ${F.border}`, fontSize: 11.5, color: F.muted }}>At this price, margin on OpenApply AI Max would be about <strong style={{ color: inBand(introCalc.marginPct) ? F.green : F.orange }}>{pctf(introCalc.marginPct)}</strong>. That is expected to be low or even negative while we prove the value.</div>
+            <button onClick={addIntroReason} style={{ marginTop: 9, padding: "3px 10px", borderRadius: 7, border: `1px dashed ${F.borderStrong}`, background: "transparent", color: F.muted, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>+ reason</button>
           </div>
 
           {/* standard price */}
-          <div style={{ background: F.plum, border: `1px solid ${F.plum}`, borderRadius: 12, padding: "16px 18px" }}>
-            <div style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: "0.07em", color: F.lightYellow, marginBottom: 8 }}>STANDARD PRICE</div>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 8 }}>
-              <span style={{ fontSize: 20, fontWeight: 800, color: F.paper }}>$</span>
-              <input type="number" min="0" value={aiMaxPrice || ""} placeholder="0" onChange={e => setAiMaxPrice(e.target.value)} style={{ ...inp, width: 100, fontSize: 20, fontWeight: 800, padding: "4px 8px", background: F.lightPlum + "44", color: F.paper, borderColor: F.lightPlum }} />
-              <span style={{ fontSize: 12, color: F.lightPink }}>/ year</span>
+          <div style={{ background: F.plum, border: `1px solid ${F.plum}`, borderRadius: 12, padding: "18px 20px" }}>
+            <div style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: "0.07em", color: F.lightYellow, marginBottom: 10 }}>STANDARD PRICE</div>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 10 }}>
+              <span style={{ fontSize: 30, fontWeight: 800, color: F.paper }}>${aiMaxPrice.toLocaleString()}</span>
+              <span style={{ fontSize: 13, color: F.lightPink, fontWeight: 700 }}>/ year</span>
             </div>
-            <input value={ov.standardPricing.startLabel} onChange={e => setStandard({ startLabel: e.target.value })} style={{ ...eInp, width: "100%", fontSize: 12.5, color: F.lightPink, borderColor: F.lightPlum, marginBottom: 8 }} />
+            <input value={ov.standardPricing.startLabel} onChange={e => setStandard({ startLabel: e.target.value })} style={{ ...eInp, width: "100%", fontSize: 12.5, color: F.lightPink, borderColor: F.lightPlum, marginBottom: 10 }} />
             <textarea value={ov.standardPricing.note} onChange={e => setStandard({ note: e.target.value })} rows={2} style={{ ...ta, border: `1px dashed ${F.lightPlum}`, background: "transparent", fontSize: 12.5, color: F.lightPink }} />
-            <div style={{ marginTop: 12, paddingTop: 10, borderTop: `1px solid ${F.lightPlum}`, fontSize: 11.5, color: F.lightPink }}>
-              At this price, margin is about <strong style={{ color: inBand(standardCalc.marginPct) ? F.yellow : F.pink }}>{pctf(standardCalc.marginPct)}</strong>, {inBand(standardCalc.marginPct) ? "inside our goal range." : "outside our goal range, worth a second look."}
-            </div>
-            <div style={{ marginTop: 8, fontSize: 10.5, color: F.lightPink, fontStyle: "italic" }}>This is the same price used on the Finance and Pricing Packages pages. Change it once, here or there, and it updates everywhere.</div>
           </div>
         </div>
 
@@ -4255,57 +4224,63 @@ function MonzOverviewPage({ monz, setMonz }) {
           <div style={{ fontSize: 11, fontWeight: 700, color: F.muted2, marginBottom: 6 }}>Fleet gross profit, OpenApply, at the standard price</div>
           <div style={{ fontSize: 26, fontWeight: 800, color: fleetProfitYr >= 0 ? F.green : F.pink }}>{aiMaxPrice > 0 ? usd0(fleetProfitYr) : "not set"}<span style={{ fontSize: 12, color: F.muted2, fontWeight: 600 }}> / year</span></div>
           <div style={{ fontSize: 11.5, color: F.muted2, marginTop: 4 }}>{aiMaxPrice > 0 ? `(${usd0(aiMaxPrice)} minus ${usd0(costYr)} cost) times ${finSchools.toLocaleString()} schools on Pro` : "Set the standard price above to see this number"}</div>
-          <div style={{ fontSize: 10.5, color: F.muted2, marginTop: 8, fontStyle: "italic" }}>This is the same tile shown on Finance, OpenApply. The number of schools on Pro is set there; the price is set here or there, it is the same value either way.</div>
+          <div style={{ fontSize: 10.5, color: F.muted2, marginTop: 8, fontStyle: "italic" }}>This is the same tile shown on Finance, OpenApply. The number of schools on Pro is set there; the price is set on Finance or Pricing Packages.</div>
         </div>
       </div>
 
       {/* UPSELL EXPERIENCE */}
       <div id="ov-upsell" style={card}>
         <div style={sectionTitle}>3. Upsell Experience</div>
-        <p style={{ margin: "-2px 0 16px", fontSize: 12.5, color: F.muted, lineHeight: 1.5, maxWidth: 800 }}>A simple sales structure. Schools reach <strong style={{ color: F.plum }}>{ov.upsell.productName}</strong> one of two ways.</p>
+        <p style={{ margin: "-2px 0 18px", fontSize: 12.5, color: F.muted, lineHeight: 1.5, maxWidth: 800 }}>A simple sales structure. Schools reach <strong style={{ color: F.plum }}>{ov.upsell.productName}</strong> one of two ways.</p>
 
-        <div style={{ display: "flex", justifyContent: "center", marginBottom: 6 }}>
-          <div style={{ background: F.bg, border: `1px solid ${F.borderStrong}`, borderRadius: 999, padding: "8px 18px", fontSize: 13, fontWeight: 700, color: F.plum }}>A school on an <span style={{ color: F.pink }}>Essential</span> or <span style={{ color: F.pink }}>Standard</span> plan</div>
-        </div>
-        <div style={{ textAlign: "center", color: F.muted2, fontSize: 18, lineHeight: 1, marginBottom: 6 }}>↓</div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 14, marginBottom: 16 }}>
-          <div style={{ background: F.surface, border: `1px solid ${F.border}`, borderLeft: `4px solid ${F.orange}`, borderRadius: 12, padding: "16px 18px" }}>
-            <div style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: "0.07em", color: F.orange, marginBottom: 6 }}>PATH 1, BUY IT ON ITS OWN</div>
-            <textarea value={ov.upsell.path1Note} onChange={e => setUpsell({ path1Note: e.target.value })} rows={2} style={{ ...ta, border: `1px dashed ${F.border}`, background: "transparent", fontSize: 12.5, color: F.muted }} />
-            <div style={{ marginTop: 12, background: F.bg, border: `1px solid ${F.border}`, borderRadius: 8, padding: "8px 12px", display: "inline-block" }}>
-              <span style={{ fontSize: 11, color: F.muted2, marginRight: 6 }}>Example:</span>
-              <input value={ov.upsell.exampleModuleLabel} onChange={e => setUpsell({ exampleModuleLabel: e.target.value })} style={{ ...eInp, fontSize: 13, fontWeight: 700, color: F.plum }} />
-            </div>
-          </div>
-          <div style={{ background: F.plum, border: `1px solid ${F.plum}`, borderLeft: `4px solid ${F.pink}`, borderRadius: 12, padding: "16px 18px" }}>
-            <div style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: "0.07em", color: F.lightYellow, marginBottom: 6 }}>PATH 2, UPGRADE TO PRO</div>
-            <textarea value={ov.upsell.path2Note} onChange={e => setUpsell({ path2Note: e.target.value })} rows={2} style={{ ...ta, border: `1px dashed ${F.lightPlum}`, background: "transparent", fontSize: 12.5, color: F.lightPink }} />
-          </div>
+        {/* start node */}
+        <div style={{ display: "flex", justifyContent: "center" }}>
+          <div style={{ background: F.plum, borderRadius: 999, padding: "9px 22px", fontSize: 13.5, fontWeight: 800, color: F.paper, boxShadow: F.shadowMd }}>A school on Essential or Standard</div>
         </div>
 
-        <div style={{ background: F.bg, border: `1px solid ${F.border}`, borderRadius: 10, padding: "12px 16px", marginBottom: 20 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: F.muted2, marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.05em" }}>Why we price it this way</div>
+        {/* branch connector */}
+        <div style={{ position: "relative", height: 34, maxWidth: 620, margin: "0 auto" }}>
+          <div style={{ position: "absolute", left: "50%", top: 0, height: 12, width: 2, background: F.borderStrong, transform: "translateX(-1px)" }} />
+          <div style={{ position: "absolute", left: "25%", right: "25%", top: 12, height: 2, background: F.borderStrong }} />
+          <div style={{ position: "absolute", left: "25%", top: 12, height: 22, width: 2, background: F.borderStrong, transform: "translateX(-1px)" }} />
+          <div style={{ position: "absolute", right: "25%", top: 12, height: 22, width: 2, background: F.borderStrong, transform: "translateX(1px)" }} />
+        </div>
+
+        {/* two paths */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, maxWidth: 620, margin: "0 auto" }}>
+          <div style={{ background: F.surface, border: `1px solid ${F.border}`, borderTop: `4px solid ${F.orange}`, borderRadius: 12, padding: "16px 16px 14px", textAlign: "center" }}>
+            <div style={{ fontSize: 26, marginBottom: 6 }}>🛒</div>
+            <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.06em", color: F.orange, marginBottom: 8 }}>PATH 1 · BUY IT ALONE</div>
+            <textarea value={ov.upsell.path1Note} onChange={e => setUpsell({ path1Note: e.target.value })} rows={3} style={{ ...ta, border: `1px dashed ${F.border}`, background: "transparent", fontSize: 12, color: F.muted, textAlign: "center" }} />
+          </div>
+          <div style={{ background: F.plum, border: `1px solid ${F.plum}`, borderTop: `4px solid ${F.pink}`, borderRadius: 12, padding: "16px 16px 14px", textAlign: "center" }}>
+            <div style={{ fontSize: 26, marginBottom: 6 }}>📦</div>
+            <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.06em", color: F.lightYellow, marginBottom: 8 }}>PATH 2 · UPGRADE TO PRO</div>
+            <textarea value={ov.upsell.path2Note} onChange={e => setUpsell({ path2Note: e.target.value })} rows={3} style={{ ...ta, border: `1px dashed ${F.lightPlum}`, background: "transparent", fontSize: 12, color: F.lightPink, textAlign: "center" }} />
+          </div>
+        </div>
+
+        {/* down arrows into outcomes */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, maxWidth: 620, margin: "0 auto" }}>
+          <div style={{ textAlign: "center", color: F.muted2, fontSize: 16, lineHeight: 1, padding: "6px 0" }}>↓</div>
+          <div style={{ textAlign: "center", color: F.muted2, fontSize: 16, lineHeight: 1, padding: "6px 0" }}>↓</div>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, maxWidth: 620, margin: "0 auto 22px" }}>
+          <div style={{ background: F.bg, border: `1px dashed ${F.orange}`, borderRadius: 10, padding: "9px 12px", textAlign: "center", fontSize: 11.5, color: F.muted, fontWeight: 600 }}>Their plan + {ov.upsell.productName}</div>
+          <div style={{ background: F.bg, border: `1px dashed ${F.pink}`, borderRadius: 10, padding: "9px 12px", textAlign: "center", fontSize: 11.5, color: F.muted, fontWeight: 600 }}>Pro plan, {ov.upsell.productName} included</div>
+        </div>
+
+        <div style={{ background: F.lightYellow + "33", border: `1px solid ${F.border}`, borderLeft: `4px solid ${F.yellow}`, borderRadius: 10, padding: "14px 18px", marginBottom: 22 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+            <span style={{ fontSize: 16 }}>💡</span>
+            <span style={{ fontSize: 12.5, fontWeight: 800, color: F.plum, textTransform: "uppercase", letterSpacing: "0.05em" }}>Why we price it this way</span>
+          </div>
           <textarea value={ov.upsell.strategyNote} onChange={e => setUpsell({ strategyNote: e.target.value })} rows={2} style={{ ...ta, border: `1px dashed ${F.border}`, background: "transparent", fontSize: 12.5, color: F.muted }} />
         </div>
 
-        {/* package example */}
+        {/* package example: tiers first, full width */}
         <div style={{ ...sectionTitle, marginTop: 4 }}>A closer look at {pe.product}</div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 14, marginBottom: 14 }}>
-          <div style={{ background: F.surface, border: `1px solid ${F.border}`, borderRadius: 12, padding: "14px 16px" }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: F.muted2, marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.05em" }}>À la carte, on Essential or Standard</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              {pe.alaCarte.map(a => (
-                <div key={a.id} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <input value={a.name} onChange={e => setAla(a.id, { name: e.target.value })} style={{ ...eInp, flex: 1, fontSize: 12.5, color: F.plum, fontWeight: 600 }} />
-                  <span style={{ fontSize: 12, color: F.muted2 }}>$</span>
-                  <input type="number" min="0" value={a.price || ""} placeholder="0" onChange={e => setAla(a.id, { price: parseFloat(e.target.value) || 0 })} style={{ ...inp, width: 70, textAlign: "right", padding: "4px 7px", fontSize: 12 }} />
-                  <button onClick={() => delAla(a.id)} style={{ border: "none", background: "transparent", color: F.muted2, cursor: "pointer", fontSize: 13, fontFamily: "inherit" }}>×</button>
-                </div>
-              ))}
-            </div>
-            <button onClick={addAla} style={{ marginTop: 8, padding: "3px 10px", borderRadius: 7, border: `1px dashed ${F.borderStrong}`, background: "transparent", color: F.muted, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>+ item</button>
-          </div>
-
           {pe.tiers.map((t, ti) => {
             const isPro = ti === pe.tiers.length - 1;
             return (
@@ -4335,22 +4310,37 @@ function MonzOverviewPage({ monz, setMonz }) {
           })}
         </div>
 
-        {/* implementation timeline */}
-        <div style={{ ...sectionTitle, marginTop: 8 }}>Implementation timeline</div>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
-          {ov.timeline.map((t, i) => (
-            <div key={t.id} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <div style={{ background: F.bg, border: `1px solid ${F.border}`, borderRadius: 10, padding: "10px 14px", minWidth: 200 }}>
-                <input value={t.when} onChange={e => setTimelineItem(t.id, { when: e.target.value })} style={{ ...eInp, fontSize: 11, fontWeight: 800, color: F.pink, marginBottom: 4 }} />
-                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <textarea value={t.label} onChange={e => setTimelineItem(t.id, { label: e.target.value })} rows={2} style={{ ...ta, flex: 1, border: `1px dashed ${F.border}`, background: "transparent", fontSize: 12.5, color: F.plum, fontWeight: 600 }} />
-                  <button onClick={() => delTimelineItem(t.id)} style={{ border: "none", background: "transparent", color: F.muted2, cursor: "pointer", fontSize: 13, fontFamily: "inherit", alignSelf: "flex-start" }}>×</button>
-                </div>
+        {/* à la carte, underneath the tiers */}
+        <div style={{ background: F.bg, border: `1px solid ${F.border}`, borderRadius: 12, padding: "14px 16px", marginBottom: 20 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: F.muted2, marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.05em" }}>À la carte options, on Essential or Standard</div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            {pe.alaCarte.map(a => (
+              <div key={a.id} style={{ display: "flex", alignItems: "center", gap: 6, background: F.surface, border: `1px solid ${F.border}`, borderRadius: 999, padding: "5px 6px 5px 12px" }}>
+                <input value={a.name} onChange={e => setAla(a.id, { name: e.target.value })} style={{ ...eInp, width: 130, fontSize: 12.5, color: F.plum, fontWeight: 600, border: "none" }} />
+                <span style={{ fontSize: 12, color: F.muted2 }}>$</span>
+                <input type="number" min="0" value={a.price || ""} placeholder="0" onChange={e => setAla(a.id, { price: parseFloat(e.target.value) || 0 })} style={{ ...inp, width: 65, textAlign: "right", padding: "4px 7px", fontSize: 12, border: "none", background: F.bg }} />
+                <button onClick={() => delAla(a.id)} style={{ border: "none", background: "transparent", color: F.muted2, cursor: "pointer", fontSize: 13, fontFamily: "inherit" }}>×</button>
               </div>
-              {i < ov.timeline.length - 1 && <span style={{ color: F.muted2, fontSize: 18 }}>→</span>}
+            ))}
+            <button onClick={addAla} style={{ padding: "3px 14px", borderRadius: 999, border: `1px dashed ${F.borderStrong}`, background: "transparent", color: F.muted, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>+ item</button>
+          </div>
+        </div>
+
+        {/* implementation timeline, static */}
+        <div style={{ ...sectionTitle, marginTop: 8 }}>Implementation timeline</div>
+        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "stretch", gap: 0 }}>
+          {ov.timeline.map((t, i) => (
+            <div key={t.id} style={{ display: "flex", alignItems: "center" }}>
+              <div style={{ minWidth: 200, maxWidth: 240 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                  <div style={{ width: 10, height: 10, borderRadius: 999, background: F.pink, flexShrink: 0 }} />
+                  <div style={{ fontSize: 11, fontWeight: 800, color: F.pink, textTransform: "uppercase", letterSpacing: "0.04em" }}>{t.when}</div>
+                </div>
+                <div style={{ fontSize: 13, color: F.plum, fontWeight: 600, lineHeight: 1.4, paddingLeft: 18 }}>{t.label}</div>
+              </div>
+              {i < ov.timeline.length - 1 && <div style={{ width: 40, height: 2, background: F.border, margin: "0 12px 22px" }} />}
             </div>
           ))}
-          <button onClick={addTimelineItem} style={{ padding: "8px 14px", borderRadius: 10, border: `1px dashed ${F.borderStrong}`, background: "transparent", color: F.muted, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", alignSelf: "center" }}>+ milestone</button>
         </div>
       </div>
 

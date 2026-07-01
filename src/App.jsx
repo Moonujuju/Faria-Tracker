@@ -552,8 +552,18 @@ const DEFAULT_MONETIZATION = {
       { id: "tl2", label: "AI Max continues as a stand-alone module, unchanged", when: "End of 2026" },
       { id: "tl3", label: "Pro is repackaged to also include AI Max and other add-ons", when: "End of 2026" },
     ],
-    uxNotes: "",
-    gtmNotes: "",
+    // GTM steps: the product-team workstream, with stakeholder check-ins branching off the
+    // steps that need sign-off from outside the product team before moving on.
+    gtmSteps: [
+      { id: "gs1", title: "Outcome Mapping", stakeholders: ["Sales Reps team feedback"] },
+      { id: "gs2", title: "Market Validation", stakeholders: ["Schools feedback (focus groups, surveys)", "Product Marketing feedback"] },
+      { id: "gs3", title: "Cost Mapping", stakeholders: ["Sales VP feedback"] },
+      { id: "gs4", title: "Usage Limit Controls", stakeholders: ["Support team feedback"] },
+      { id: "gs5", title: "User Experience Design", stakeholders: ["Schools feedback", "Product Marketing feedback"] },
+      { id: "gs6", title: "AI Max V1 on Production", stakeholders: [] },
+      { id: "gs7", title: "User Feedback & Adoption Analysis", stakeholders: [] },
+      { id: "gs8", title: "AI Max V2 on Production", stakeholders: [] },
+    ],
   },
 };
 
@@ -1672,6 +1682,7 @@ function mergeMonz(saved) {
           tiers: idMerge(dp.packageExample.tiers, spPE.tiers),
         },
         timeline: dp.timeline,
+        gtmSteps: idMerge(dp.gtmSteps, sp.gtmSteps),
       };
     })(),
   };
@@ -4102,6 +4113,13 @@ function MonzOverviewPage({ monz, setMonz }) {
   const setTierModule = (tid, i, val) => { const m = [...tierModules(tid)]; m[i] = val; setTier(tid, { modules: m }); };
   const addTierModule = (tid) => setTier(tid, { modules: [...tierModules(tid), ""] });
   const delTierModule = (tid, i) => setTier(tid, { modules: tierModules(tid).filter((_, ix) => ix !== i) });
+  const setGtmStep = (id, patch) => patchOv({ gtmSteps: ov.gtmSteps.map(s => s.id === id ? { ...s, ...patch } : s) });
+  const addGtmStep = () => patchOv({ gtmSteps: [...ov.gtmSteps, { id: "gs" + (ov.gtmSteps.length + 1) + Math.random().toString(36).slice(2, 6), title: "", stakeholders: [] }] });
+  const delGtmStep = (id) => patchOv({ gtmSteps: ov.gtmSteps.filter(s => s.id !== id) });
+  const gtmStakeholders = (id) => ov.gtmSteps.find(s => s.id === id)?.stakeholders || [];
+  const setGtmStakeholder = (id, i, val) => { const arr = [...gtmStakeholders(id)]; arr[i] = val; setGtmStep(id, { stakeholders: arr }); };
+  const addGtmStakeholder = (id) => setGtmStep(id, { stakeholders: [...gtmStakeholders(id), ""] });
+  const delGtmStakeholder = (id, i) => setGtmStep(id, { stakeholders: gtmStakeholders(id).filter((_, ix) => ix !== i) });
 
   // ── cost engine, OpenApply only (same math as Usage & Finance) ──
   const fModelById = Object.fromEntries((monz.modelCosts || []).map(m => [m.id, m]));
@@ -4152,7 +4170,6 @@ function MonzOverviewPage({ monz, setMonz }) {
     { id: "ov-tiers",   label: "Tiers" },
     { id: "ov-revenue", label: "Revenue & Cost" },
     { id: "ov-upsell",  label: "Upsell Experience" },
-    { id: "ov-ux",      label: "UX" },
     { id: "ov-gtm",     label: "GTM" },
   ];
   const goalAccents = [F.yellow, F.orange, F.pink];
@@ -4374,18 +4391,43 @@ function MonzOverviewPage({ monz, setMonz }) {
         </div>
       </div>
 
-      {/* UX */}
-      <div id="ov-ux" style={card}>
-        <div style={sectionTitle}>5. UX</div>
-        <p style={{ margin: "-2px 0 12px", fontSize: 12.5, color: F.muted2, fontStyle: "italic" }}>Coming soon. Add notes below as this takes shape.</p>
-        <textarea value={ov.uxNotes} onChange={e => patchOv({ uxNotes: e.target.value })} rows={4} placeholder="Notes on the UX for AI Max: how schools discover it, try it, and buy it." style={ta} />
-      </div>
-
       {/* GTM */}
       <div id="ov-gtm" style={card}>
-        <div style={sectionTitle}>6. GTM</div>
-        <p style={{ margin: "-2px 0 12px", fontSize: 12.5, color: F.muted2, fontStyle: "italic" }}>Coming soon. Add notes below as this takes shape.</p>
-        <textarea value={ov.gtmNotes} onChange={e => patchOv({ gtmNotes: e.target.value })} rows={4} placeholder="Notes on go to market: sales enablement, launch communications, who owns what." style={ta} />
+        <div style={sectionTitle}>5. GTM</div>
+        <p style={{ margin: "-2px 0 20px", fontSize: 12.5, color: F.muted, lineHeight: 1.5, maxWidth: 800 }}>The steps to get AI Max from plan to market. Most of this is product-team work, run straight down the line below. Where a step needs a nod from outside the team first, that check-in branches off to the side.</p>
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          {ov.gtmSteps.map((s, i) => {
+            const isMilestone = /production/i.test(s.title);
+            const last = i === ov.gtmSteps.length - 1;
+            return (
+              <div key={s.id} style={{ display: "flex", gap: 14 }}>
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: 32, flexShrink: 0 }}>
+                  <div style={{ width: 30, height: 30, borderRadius: 999, background: isMilestone ? F.gradient : F.plum, color: isMilestone ? F.plum : F.paper, fontSize: isMilestone ? 14 : 13, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: F.shadowSm }}>
+                    {isMilestone ? "🚀" : i + 1}
+                  </div>
+                  {!last && <div style={{ width: 2, flex: 1, minHeight: 20, background: F.border, marginTop: 2 }} />}
+                </div>
+                <div style={{ flex: 1, paddingBottom: 22 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <input value={s.title} onChange={e => setGtmStep(s.id, { title: e.target.value })} style={{ ...eInp, fontSize: 14.5, fontWeight: 800, color: F.plum, padding: "5px 8px" }} />
+                    <button onClick={() => delGtmStep(s.id)} style={{ border: "none", background: "transparent", color: F.muted2, cursor: "pointer", fontSize: 13, fontFamily: "inherit" }}>×</button>
+                  </div>
+                  <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, marginTop: 8, marginLeft: 4 }}>
+                    {s.stakeholders.map((st, si) => (
+                      <div key={si} style={{ display: "flex", alignItems: "center", gap: 6, background: F.lightYellow + "44", border: `1px dashed ${F.yellow}`, borderRadius: 999, padding: "4px 5px 4px 10px" }}>
+                        <span style={{ fontSize: 11 }}>🤝</span>
+                        <input value={st} onChange={e => setGtmStakeholder(s.id, si, e.target.value)} style={{ ...eInp, fontSize: 11.5, color: F.muted, border: "none", background: "transparent", padding: "2px 2px", width: Math.max(90, st.length * 6.5) }} />
+                        <button onClick={() => delGtmStakeholder(s.id, si)} style={{ border: "none", background: "transparent", color: F.muted2, cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>×</button>
+                      </div>
+                    ))}
+                    <button onClick={() => addGtmStakeholder(s.id)} style={{ padding: "3px 10px", borderRadius: 999, border: `1px dashed ${F.borderStrong}`, background: "transparent", color: F.muted2, fontSize: 10.5, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>+ check-in</button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <button onClick={addGtmStep} style={{ marginTop: 4, padding: "5px 14px", borderRadius: 8, border: `1px dashed ${F.borderStrong}`, background: "transparent", color: F.muted, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>+ add step</button>
       </div>
     </>
   );

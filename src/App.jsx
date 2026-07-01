@@ -5262,6 +5262,24 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
   const topRef = useRef(null);
   const didMount = useRef(false);
 
+  // Journey graphic: user-toggled overrides for which actor is "involved" in a given
+  // milestone (keyed "milestoneTitle::actorId" -> boolean). Only entries that diverge
+  // from the built-in default are stored, so future milestone/actor edits still forward-fill.
+  const [journeyWho, setJourneyWho] = useState({});
+  const [journeyReady, setJourneyReady] = useState(false);
+  const journeySaveTimer = useRef(null);
+  useEffect(() => { (async () => { const s = await loadState("faria-journey-v1"); setJourneyWho(s && typeof s === "object" ? s : {}); setJourneyReady(true); })(); }, []);
+  useEffect(() => { if (!journeyReady) return; clearTimeout(journeySaveTimer.current); journeySaveTimer.current = setTimeout(() => saveState("faria-journey-v1", journeyWho), 1000); return () => clearTimeout(journeySaveTimer.current); }, [journeyWho, journeyReady]);
+  const journeyKey = (milestoneTitle, actorId) => `${milestoneTitle}::${actorId}`;
+  const isWhoActive = (m, actorId) => {
+    const k = journeyKey(m.t, actorId);
+    return k in journeyWho ? journeyWho[k] : m.who.includes(actorId);
+  };
+  const toggleWho = (m, actorId) => {
+    const k = journeyKey(m.t, actorId);
+    setJourneyWho(prev => ({ ...prev, [k]: !isWhoActive(m, actorId) }));
+  };
+
   useEffect(() => {
     const onKey = (e) => { if (e.key === "Escape" && open) setOpen(null); };
     window.addEventListener("keydown", onKey);
@@ -6100,6 +6118,14 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
       { id: "cx", role: "Carries the school voice — support & CX signal in, advisory input, onboarding out, and adoption health back into Prioritise." },
     ];
     const phMeta = Object.fromEntries(PHASES.map(p => [p.id, p]));
+    const LANE_IDS = LANES.map(l => l.id);
+    // Effective "who's in" for a milestone: default list minus anyone toggled off, plus
+    // anyone toggled on that wasn't there by default (appended in lane order).
+    const effectiveWho = (m) => {
+      const kept = m.who.filter(id => !LANE_IDS.includes(id) || isWhoActive(m, id));
+      const added = LANE_IDS.filter(id => !m.who.includes(id) && isWhoActive(m, id));
+      return [...kept, ...added];
+    };
     const LABELW = 130;
     return (
       <>
@@ -6109,6 +6135,8 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
           .jrn-mark:hover .jrn-pop, .jrn-mark:focus .jrn-pop, .jrn-mark:focus-within .jrn-pop { opacity: 1; visibility: visible; }
           .jrn-node { transition: transform 0.14s ease, box-shadow 0.14s ease; }
           .jrn-mark:hover .jrn-node, .jrn-mark:focus .jrn-node { transform: scale(1.14); box-shadow: 0 6px 16px rgba(55,2,60,0.18); }
+          .jrn-dot-mark { transition: transform 0.12s ease, width 0.12s ease, height 0.12s ease; display: block; }
+          .jrn-dot:hover .jrn-dot-mark, .jrn-dot:focus-visible .jrn-dot-mark { transform: scale(1.6); }
           @media (max-width: 900px) { .jrn-scroll { overflow-x: auto; } .jrn-track { min-width: 880px; } }
         `}</style>
 
@@ -6169,7 +6197,7 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
                           <div style={{ fontSize: 11.5, color: F.muted, lineHeight: 1.5 }}>{m.d}</div>
                           <div style={{ marginTop: 9, fontSize: 9, fontWeight: 800, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 5 }}>Who's in</div>
                           <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
-                            {m.who.map(id => (
+                            {effectiveWho(m).map(id => (
                               <span key={id} style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10, fontWeight: 700, color: F.plum, background: F.bg, border: `1px solid ${F.border}`, borderRadius: 999, padding: "2px 8px" }}>{ACTOR_META[id].ic} {ACTOR_META[id].label}</span>
                             ))}
                           </div>
@@ -6182,7 +6210,7 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
 
               {/* actor swimlanes — who threads through every phase */}
               <div style={{ marginTop: 18, borderTop: `1px solid ${F.border}`, paddingTop: 12 }}>
-                <div style={{ fontSize: 9.5, fontWeight: 800, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>Who's involved — across every phase</div>
+                <div style={{ fontSize: 9.5, fontWeight: 800, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>Who's involved — across every phase <span style={{ fontWeight: 600, textTransform: "none", letterSpacing: 0 }}>(click a dot to toggle)</span></div>
                 {LANES.map((L) => {
                   const meta = ACTOR_META[L.id];
                   return (
@@ -6198,12 +6226,19 @@ function PrioritizationPage({ subRoute, setSubRoute }) {
                       <div style={{ flex: 1, display: "flex", position: "relative", alignItems: "center" }}>
                         <div style={{ position: "absolute", left: "3%", right: "3%", height: 2, background: F.border, zIndex: 0 }} />
                         {M.map((m) => {
-                          const active = m.who.includes(L.id);
+                          const active = isWhoActive(m, L.id);
                           const acc = phMeta[m.ph].accent;
                           return (
-                            <div key={m.t} style={{ flex: 1, minWidth: 0, display: "flex", justifyContent: "center", zIndex: 1 }} title={active ? `${meta.label} · ${m.t}` : undefined}>
-                              <span style={{ width: active ? 13 : 5, height: active ? 13 : 5, borderRadius: "50%", background: active ? acc : F.borderStrong, border: active ? `2px solid ${F.surface}` : "none", boxShadow: active ? F.shadowSm : "none" }} />
-                            </div>
+                            <button
+                              key={m.t}
+                              type="button"
+                              onClick={() => toggleWho(m, L.id)}
+                              title={`${active ? "Remove" : "Add"} ${meta.label} · ${m.t} (click to toggle)`}
+                              className="jrn-dot"
+                              style={{ flex: 1, minWidth: 0, display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1, background: "none", border: "none", padding: "9px 0", margin: 0, cursor: "pointer", font: "inherit" }}
+                            >
+                              <span className="jrn-dot-mark" style={{ width: active ? 13 : 5, height: active ? 13 : 5, borderRadius: "50%", background: active ? acc : F.borderStrong, border: active ? `2px solid ${F.surface}` : "none", boxShadow: active ? F.shadowSm : "none" }} />
+                            </button>
                           );
                         })}
                       </div>

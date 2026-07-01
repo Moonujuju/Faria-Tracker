@@ -479,16 +479,72 @@ const DEFAULT_MONETIZATION = {
         "ManageBac+": ["AI"], "Atlas": ["AI"], "SchoolsBuddy": ["AI"], "Vectare": ["AI"],
       }[p] || ["AI"];
       return [p, {
-        aiName: `${brand} AI`,
-        aiTagline: "The full AI module, à la carte",
+        aiName: `${brand} AI Max`,
+        aiTagline: "The full AI module, sold on its own",
         aiBullets: ["Every AI feature, unthrottled", "Add-on to your current plan", "One product"],
         availableOn: ["Essential", "Standard"],
         proName: `${brand} Pro`,
         proPrice: 0,
-        proTagline: "Everything — all modules, AI included",
+        proTagline: "Everything included, with AI Max built in",
         modules: modulesSeed,
       }];
     })),
+  },
+  // Overview subpage — the plan in plain language: goals, pricing and margin, the upsell path,
+  // a worked package example (OpenApply), the launch timeline, and open notes for UX & GTM.
+  overview: {
+    goals: [
+      { id: "g1", title: "Schools get real value", desc: "AI has to be genuinely easy to use and lead to results schools can point to, not just a feature on a list." },
+      { id: "g2", title: "Grow revenue fast", desc: "AI Max becomes one of our fastest growing sources of revenue across every product." },
+      { id: "g3", title: "Reach every product", desc: "AI Max is live and selling on all five products, not just one flagship, so no school is left behind." },
+    ],
+    goalIdeas: [
+      "Category leadership: schools see us as the trusted AI partner in our space.",
+      "Stickiness: AI becomes a real reason schools renew and expand with us.",
+      "Team readiness: every product team can ship and support AI Max on their own.",
+    ],
+    marginTarget: { low: 50, high: 75 },
+    introPricing: {
+      price: 1000,
+      windowLabel: "For schools that buy between September and December 2026",
+      reasons: [
+        "AI Max modules will still be new and improving during this window.",
+        "Schools are more willing to buy something unproven at a lower price.",
+        "It lets us collect real usage data and feedback early.",
+      ],
+    },
+    standardPricing: {
+      startLabel: "Starting January 2027",
+      note: "The price may change again based on feedback and usage we see.",
+    },
+    fleetProfitProduct: "OpenApply",
+    upsell: {
+      productName: "AI Max",
+      path1Note: "Schools on the Essential or Standard plan can buy AI Max on its own, for one product at a time.",
+      path2Note: "Or they upgrade to that product's Pro plan, which includes AI Max plus everything else.",
+      exampleModuleLabel: "ManageBac+ AI Max",
+      strategyNote: "We'll price Pro so upgrading saves schools money overall and means they stop buying small add-ons one at a time, while growing our revenue per school.",
+    },
+    packageExample: {
+      product: "OpenApply",
+      alaCarte: [
+        { id: "ac1", name: "AI Max", price: 3000 },
+        { id: "ac2", name: "Enrollment Contract", price: 2000 },
+        { id: "ac3", name: "WhatsApp", price: 3000 },
+        { id: "ac4", name: "SMS", price: 2000 },
+      ],
+      tiers: [
+        { id: "t1", name: "OpenApply Essential", avgPrice: 5000, modules: ["Admissions"] },
+        { id: "t2", name: "OpenApply Standard", avgPrice: 10000, modules: ["Admissions", "CRM"] },
+        { id: "t3", name: "OpenApply Pro", avgPrice: 18000, modules: ["Everything in Standard", "Advancement", "AI Max", "Enrollment Contract", "WhatsApp", "SMS", "Others (to be decided)"] },
+      ],
+    },
+    timeline: [
+      { id: "tl1", label: "AI Max launches as its own module", when: "September 2026" },
+      { id: "tl2", label: "Pro is repackaged to include AI Max and other add-ons", when: "End of 2026" },
+    ],
+    uxNotes: "",
+    gtmNotes: "",
   },
 };
 
@@ -1570,7 +1626,40 @@ function mergeMonz(saved) {
         ...dp, ...sp,
         free: { ...dp.free, ...(sp.free || {}) },
         plans: sp.plans || dp.plans,
-        products: Object.fromEntries(MONZ_PRODUCTS.map(p => [p, { ...dp.products[p], ...((sp.products || {})[p] || {}) }])),
+        products: Object.fromEntries(MONZ_PRODUCTS.map(p => {
+          const merged = { ...dp.products[p], ...((sp.products || {})[p] || {}) };
+          // one-time rename: an untouched "<Brand> AI" from before AI Max was named picks up the new name.
+          const brand = dp.products[p].aiName.replace(/ AI Max$/, "");
+          if ((sp.products || {})[p]?.aiName === `${brand} AI`) merged.aiName = dp.products[p].aiName;
+          return [p, merged];
+        })),
+      };
+    })(),
+    // forward-fill overview: deep-merge id-keyed lists over defaults so new fields/rows backfill, saved edits win.
+    overview: (() => {
+      const dp = DEFAULT_MONETIZATION.overview, sp = saved.overview || {};
+      const idMerge = (defArr, savedArr) => {
+        if (!savedArr) return defArr;
+        const defById = Object.fromEntries(defArr.map(d => [d.id, d]));
+        const ids = new Set(savedArr.map(r => r.id));
+        const merged = savedArr.map(r => (defById[r.id] ? { ...defById[r.id], ...r } : r));
+        return [...merged, ...defArr.filter(d => !ids.has(d.id))];
+      };
+      const spPE = sp.packageExample || {};
+      return {
+        ...dp, ...sp,
+        goals: idMerge(dp.goals, sp.goals),
+        goalIdeas: sp.goalIdeas || dp.goalIdeas,
+        marginTarget: { ...dp.marginTarget, ...(sp.marginTarget || {}) },
+        introPricing: { ...dp.introPricing, ...(sp.introPricing || {}), reasons: sp.introPricing?.reasons || dp.introPricing.reasons },
+        standardPricing: { ...dp.standardPricing, ...(sp.standardPricing || {}) },
+        upsell: { ...dp.upsell, ...(sp.upsell || {}) },
+        packageExample: {
+          ...dp.packageExample, ...spPE,
+          alaCarte: idMerge(dp.packageExample.alaCarte, spPE.alaCarte),
+          tiers: idMerge(dp.packageExample.tiers, spPE.tiers),
+        },
+        timeline: idMerge(dp.timeline, sp.timeline),
       };
     })(),
   };
@@ -2052,10 +2141,10 @@ const PRODUCT_SLUG = {
 const SLUG_PRODUCT = Object.fromEntries(Object.entries(PRODUCT_SLUG).map(([k, v]) => [v, k]));
 
 function AiMonetizationPage({ subRoute, setSubRoute, deepRoute, setDeepRoute }) {
-  // view derived from URL sub-route. Valid: "plan" | "usage" | "competitive" | "market" | "finance".
-  // Empty / unknown subRoute → default "plan".
-  const VALID_VIEWS = ["plan", "usage", "competitive", "market", "finance", "packages"];
-  const view = VALID_VIEWS.includes(subRoute) ? subRoute : "plan";
+  // view derived from URL sub-route. Valid: "overview" | "plan" | "usage" | "competitive" | "market" | "finance" | "packages".
+  // Empty / unknown subRoute → default "overview" (the landing subpage).
+  const VALID_VIEWS = ["overview", "plan", "usage", "competitive", "market", "finance", "packages"];
+  const view = VALID_VIEWS.includes(subRoute) ? subRoute : "overview";
   const setView = (v) => setSubRoute(v);
   // For the Framework view, the third URL segment selects a single product.
   // Empty string = "Overview" (summary cards for all 5 products).
@@ -2130,7 +2219,8 @@ function AiMonetizationPage({ subRoute, setSubRoute, deepRoute, setDeepRoute }) 
     <>
       {(() => {
         const titles = {
-          plan:        { t: "Monetization Framework", s: "Working framework for AI Essential vs AI Pro across Faria products. Edit anything inline — this is a living document." },
+          overview:    { t: "Overview", s: "The plan in plain language: our goals, the AI Max pricing and margin, how the upsell works, and what's next." },
+          plan:        { t: "Monetization Framework", s: "Working framework for AI Essential vs AI Pro across Faria products. Edit anything inline, this is a living document." },
           usage:       { t: "Usage & cost", s: "AI cost model — FAIF model pricing in the Overview; pick a product to price each AI feature by scenario (schools × usage level) into $/school/mo and a fleet total." },
           competitive: { t: "Competitive Analysis", s: "Track how competitors are pricing and packaging AI. Use this to calibrate our Pro tier and bundle pricing." },
           market:      { t: "Market Validation", s: "Per-product school validation — pilots, willingness to pay, and which Pro outcomes schools have confirmed." },
@@ -2146,9 +2236,10 @@ function AiMonetizationPage({ subRoute, setSubRoute, deepRoute, setDeepRoute }) 
         );
       })()}
 
-      {/* Sub-tab strip: Framework · Usage · Competitive Analysis · Market Validation · Finance */}
+      {/* Sub-tab strip: Overview · Framework · Usage · Competitive Analysis · Market Validation · Finance · Pricing Packages */}
       <div style={{ display: "flex", gap: 8, marginBottom: 22, flexWrap: "wrap" }}>
         {[
+          { id: "overview",    label: "Overview" },
           { id: "plan",        label: "Framework" },
           { id: "usage",       label: "Usage" },
           { id: "competitive", label: "Competitive Analysis" },
@@ -2171,6 +2262,7 @@ function AiMonetizationPage({ subRoute, setSubRoute, deepRoute, setDeepRoute }) 
         })}
       </div>
 
+      {view === "overview"    && <MonzOverviewPage monz={mz} setMonz={setMz} />}
       {view === "usage"       && <FairUseExample monz={mz} setMonz={setMz} deepRoute={deepRoute} setDeepRoute={setDeepRoute} />}
       {view === "competitive" && <MonzCompetitivePage />}
       {view === "market"      && <MonzMarketPage />}
@@ -3968,6 +4060,313 @@ function MonzFinancePage({ monz, setMonz, deepRoute, setDeepRoute }) {
     <>
       {chipNav}
       {focusedProduct ? renderProduct() : renderOverview()}
+    </>
+  );
+}
+
+/* ── Overview (first sub-page of AI Monetization) ─────────
+   Exec / SLT / CAB-facing plan in plain language: 3 goals, the
+   AI Max pricing and margin goal, the upsell path, a worked
+   package example (OpenApply), the launch timeline, and open
+   notes for UX and GTM. The AI Max price here is the same
+   monz.products.OpenApply.price used by Finance and Pricing
+   Packages, so it only has to be set once. */
+function MonzOverviewPage({ monz, setMonz }) {
+  const ov = monz.overview;
+  const [fin, setFin] = useState(DEFAULT_FINANCE);
+  useEffect(() => { (async () => { const s = await loadState("faria-monz-finance-v1"); setFin(mergeFinance(s)); })(); }, []);
+
+  const patchOv = (patch) => setMonz(prev => ({ ...prev, overview: { ...prev.overview, ...patch } }));
+  const setGoal = (id, patch) => patchOv({ goals: ov.goals.map(g => g.id === id ? { ...g, ...patch } : g) });
+  const useIdea = (text) => patchOv({ goals: ov.goals.map(g => g.id === "g3" ? { ...g, desc: text } : g) });
+  const setMarginTarget = (key, val) => patchOv({ marginTarget: { ...ov.marginTarget, [key]: Math.max(0, Math.min(100, parseFloat(val) || 0)) } });
+  const setIntro = (patch) => patchOv({ introPricing: { ...ov.introPricing, ...patch } });
+  const setIntroReason = (i, val) => { const r = [...ov.introPricing.reasons]; r[i] = val; setIntro({ reasons: r }); };
+  const addIntroReason = () => setIntro({ reasons: [...ov.introPricing.reasons, ""] });
+  const delIntroReason = (i) => setIntro({ reasons: ov.introPricing.reasons.filter((_, ix) => ix !== i) });
+  const setStandard = (patch) => patchOv({ standardPricing: { ...ov.standardPricing, ...patch } });
+  const aiMaxPrice = Number(monz.products["OpenApply"]?.price) || 0;
+  const setAiMaxPrice = (v) => setMonz(prev => ({ ...prev, products: { ...prev.products, OpenApply: { ...prev.products.OpenApply, price: v === "" ? null : (parseFloat(v) || 0) } } }));
+  const setUpsell = (patch) => patchOv({ upsell: { ...ov.upsell, ...patch } });
+  const pe = ov.packageExample;
+  const setPE = (patch) => patchOv({ packageExample: { ...pe, ...patch } });
+  const setAla = (id, patch) => setPE({ alaCarte: pe.alaCarte.map(a => a.id === id ? { ...a, ...patch } : a) });
+  const addAla = () => setPE({ alaCarte: [...pe.alaCarte, { id: "ac" + (pe.alaCarte.length + 1) + Math.random().toString(36).slice(2, 6), name: "", price: 0 }] });
+  const delAla = (id) => setPE({ alaCarte: pe.alaCarte.filter(a => a.id !== id) });
+  const setTier = (id, patch) => setPE({ tiers: pe.tiers.map(t => t.id === id ? { ...t, ...patch } : t) });
+  const tierModules = (tid) => pe.tiers.find(t => t.id === tid)?.modules || [];
+  const setTierModule = (tid, i, val) => { const m = [...tierModules(tid)]; m[i] = val; setTier(tid, { modules: m }); };
+  const addTierModule = (tid) => setTier(tid, { modules: [...tierModules(tid), ""] });
+  const delTierModule = (tid, i) => setTier(tid, { modules: tierModules(tid).filter((_, ix) => ix !== i) });
+  const setTimelineItem = (id, patch) => patchOv({ timeline: ov.timeline.map(t => t.id === id ? { ...t, ...patch } : t) });
+  const addTimelineItem = () => patchOv({ timeline: [...ov.timeline, { id: "tl" + (ov.timeline.length + 1) + Math.random().toString(36).slice(2, 6), label: "", when: "" }] });
+  const delTimelineItem = (id) => patchOv({ timeline: ov.timeline.filter(t => t.id !== id) });
+
+  // ── cost engine, OpenApply only (same math as Usage & Finance) ──
+  const fModelById = Object.fromEntries((monz.modelCosts || []).map(m => [m.id, m]));
+  const usageLevels = monz.usageLevels || { low: 0.4, expected: 1, heavy: 2 };
+  const modelOf = (r) => r.modelId || r.proModelId || r.freeModelId || "m-sonnet";
+  const tokenCost = (r, id) => { const m = fModelById[id]; if (!m || !r) return 0; return (r.inputTokens || 0) / 1e6 * m.inPer1M + (r.outputTokens || 0) / 1e6 * m.outPer1M; };
+  const runCostOf = (r) => tokenCost(r, modelOf(r)) * Math.max(1, r.runsPerAction || 1);
+  const baseOf = (r) => (typeof r.baseRuns === "number" ? r.baseRuns : Math.round((r.reach || 0) * ((r.adoptionPct || 0) / 100) * (r.usesPer || 0)));
+  const runsAt = (r, lvl) => Math.round(baseOf(r) * (usageLevels[lvl] ?? 1));
+  const featPerSchool = (r, lvl) => runCostOf(r) * runsAt(r, lvl);
+  const oaRows = (monz.costLab || []).filter(r => r.product === "OpenApply" && r.enabled !== false);
+  const proServeMo = oaRows.reduce((s, r) => s + featPerSchool(r, "expected"), 0); // $/school/mo, all AI an OpenApply Pro school uses
+  const costYr = proServeMo * 12;
+  const calcMargin = (price) => { const priceMo = price / 12; const marginMo = priceMo - proServeMo; return { priceMo, marginMo, marginPct: priceMo > 0 ? (marginMo / priceMo) * 100 : NaN }; };
+  const standardCalc = calcMargin(aiMaxPrice);
+  const introCalc = calcMargin(ov.introPricing.price || 0);
+  const finSchools = fin?.proPricing?.OpenApply?.schoolsOnPro ?? 0;
+  const fleetProfitYr = (aiMaxPrice - costYr) * finSchools;
+
+  const usd0 = (n) => isFinite(n) ? `$${Math.round(n).toLocaleString()}` : "not set";
+  const pctf = (n) => isFinite(n) ? `${n.toFixed(0)}%` : "not set";
+  const inBand = (n) => isFinite(n) && n >= ov.marginTarget.low && n <= ov.marginTarget.high;
+
+  const card = { background: F.surface, border: `1px solid ${F.border}`, borderRadius: 12, padding: "20px 24px", marginBottom: 18, boxShadow: F.shadowSm, scrollMarginTop: 16 };
+  const sectionTitle = { fontSize: 11, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 };
+  const eInp = { ...inp, border: `1px dashed ${F.border}`, background: "transparent", padding: "3px 6px" };
+  const ta = { ...inp, width: "100%", resize: "vertical", fontFamily: "inherit", lineHeight: 1.5 };
+  const goToSec = (id) => { const el = document.getElementById(id); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); };
+  const numBadge = (n, bg, fg) => <div style={{ width: 26, height: 26, borderRadius: 999, background: bg, color: fg, fontSize: 13, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{n}</div>;
+
+  const marginBar = (pct) => {
+    const clamped = isFinite(pct) ? Math.max(0, Math.min(100, pct)) : null;
+    const lowPct = Math.max(0, Math.min(100, ov.marginTarget.low));
+    const highPct = Math.max(0, Math.min(100, ov.marginTarget.high));
+    return (
+      <div style={{ marginTop: 10 }}>
+        <div style={{ position: "relative", height: 16, background: F.bg, border: `1px solid ${F.border}`, borderRadius: 999, overflow: "hidden" }}>
+          <div style={{ position: "absolute", left: `${lowPct}%`, width: `${Math.max(0, highPct - lowPct)}%`, top: 0, bottom: 0, background: F.green + "33" }} />
+          {clamped !== null && <div title={`${pct.toFixed(0)}% margin`} style={{ position: "absolute", left: `${clamped}%`, top: -3, width: 3, height: 22, background: F.plum, borderRadius: 2, transform: "translateX(-1px)" }} />}
+        </div>
+        <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4, fontSize: 10.5, color: F.muted2 }}>
+          <span>0%</span><span>Goal: {ov.marginTarget.low}% to {ov.marginTarget.high}%</span><span>100%</span>
+        </div>
+      </div>
+    );
+  };
+
+  const sections = [
+    { id: "ov-goals",   label: "Goals" },
+    { id: "ov-revenue", label: "Revenue & Cost" },
+    { id: "ov-upsell",  label: "Upsell Experience" },
+    { id: "ov-ux",      label: "UX" },
+    { id: "ov-gtm",     label: "GTM" },
+  ];
+  const goalAccents = [F.yellow, F.orange, F.pink];
+
+  return (
+    <>
+      {/* section nav */}
+      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 18, position: "sticky", top: 0, zIndex: 5, background: F.bg, paddingBottom: 8 }}>
+        {sections.map(s => (
+          <button key={s.id} onClick={() => goToSec(s.id)} style={{ padding: "5px 13px", borderRadius: 999, fontSize: 12, fontWeight: 700, cursor: "pointer", background: F.surface, color: F.plum, border: `1px solid ${F.borderStrong}`, fontFamily: "inherit" }}>{s.label}</button>
+        ))}
+      </div>
+
+      {/* GOALS */}
+      <div id="ov-goals" style={card}>
+        <div style={sectionTitle}>1. Goals</div>
+        <p style={{ margin: "-2px 0 16px", fontSize: 12.5, color: F.muted, lineHeight: 1.5, maxWidth: 800 }}>Three things we are aiming for with AI Max. Everything else on this page should serve one of these.</p>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))", gap: 14 }}>
+          {ov.goals.map((g, i) => (
+            <div key={g.id} style={{ background: F.bg, border: `1px solid ${F.border}`, borderTop: `4px solid ${goalAccents[i % 3]}`, borderRadius: 12, padding: "16px 18px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                {numBadge(i + 1, F.plum, F.paper)}
+                <input value={g.title} onChange={e => setGoal(g.id, { title: e.target.value })} style={{ ...eInp, flex: 1, fontSize: 15, fontWeight: 800, color: F.plum }} />
+              </div>
+              <textarea value={g.desc} onChange={e => setGoal(g.id, { desc: e.target.value })} rows={3} style={{ ...ta, border: `1px dashed ${F.border}`, background: "transparent", fontSize: 12.5, color: F.muted }} />
+            </div>
+          ))}
+        </div>
+        <div style={{ marginTop: 14, background: F.lightYellow + "33", border: `1px solid ${F.border}`, borderRadius: 10, padding: "12px 16px" }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: F.muted2, marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.05em" }}>Other ideas for goal 3</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {ov.goalIdeas.map((idea, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 12.5, color: F.muted }}>
+                <span>{idea}</span>
+                <button onClick={() => useIdea(idea)} style={{ marginLeft: "auto", flexShrink: 0, padding: "3px 10px", borderRadius: 7, border: `1px solid ${F.borderStrong}`, background: F.surface, color: F.plum, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>Use this</button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* REVENUE & COST */}
+      <div id="ov-revenue" style={card}>
+        <div style={sectionTitle}>2. Revenue & Cost</div>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 10, flexWrap: "wrap", marginBottom: 6 }}>
+          <span style={{ fontSize: 16, fontWeight: 800, color: F.plum }}>Profit margin goal</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <input type="number" min="0" max="100" value={ov.marginTarget.low} onChange={e => setMarginTarget("low", e.target.value)} style={{ ...inp, width: 55, textAlign: "center", padding: "4px 6px", fontSize: 13, fontWeight: 700 }} />
+            <span style={{ fontSize: 13, color: F.muted }}>% to</span>
+            <input type="number" min="0" max="100" value={ov.marginTarget.high} onChange={e => setMarginTarget("high", e.target.value)} style={{ ...inp, width: 55, textAlign: "center", padding: "4px 6px", fontSize: 13, fontWeight: 700 }} />
+            <span style={{ fontSize: 13, color: F.muted }}>% profit margin on AI usage</span>
+          </div>
+        </div>
+        {marginBar(standardCalc.marginPct)}
+        <p style={{ margin: "10px 0 20px", fontSize: 11.5, color: F.muted2, fontStyle: "italic" }}>The dark marker shows where the standard AI Max price for OpenApply lands today. It moves automatically when the price below changes.</p>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 14, marginBottom: 16 }}>
+          {/* introductory price */}
+          <div style={{ background: F.bg, border: `1px solid ${F.border}`, borderTop: `4px solid ${F.orange}`, borderRadius: 12, padding: "16px 18px" }}>
+            <div style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: "0.07em", color: F.orange, marginBottom: 8 }}>INTRODUCTORY PRICE</div>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 8 }}>
+              <span style={{ fontSize: 20, fontWeight: 800, color: F.plum }}>$</span>
+              <input type="number" min="0" value={ov.introPricing.price || ""} placeholder="0" onChange={e => setIntro({ price: e.target.value === "" ? 0 : (parseFloat(e.target.value) || 0) })} style={{ ...inp, width: 100, fontSize: 20, fontWeight: 800, padding: "4px 8px" }} />
+              <span style={{ fontSize: 12, color: F.muted2 }}>/ year</span>
+            </div>
+            <input value={ov.introPricing.windowLabel} onChange={e => setIntro({ windowLabel: e.target.value })} style={{ ...eInp, width: "100%", fontSize: 12.5, color: F.muted, marginBottom: 10 }} />
+            <div style={{ fontSize: 10.5, fontWeight: 700, color: F.muted2, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 6 }}>Why a lower price to start</div>
+            <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 6 }}>
+              {ov.introPricing.reasons.map((r, i) => (
+                <li key={i} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12.5, color: F.muted }}>
+                  <span style={{ color: F.orange, fontWeight: 800 }}>•</span>
+                  <input value={r} onChange={e => setIntroReason(i, e.target.value)} style={{ ...eInp, flex: 1, fontSize: 12.5, color: F.muted }} />
+                  <button onClick={() => delIntroReason(i)} style={{ border: "none", background: "transparent", color: F.muted2, cursor: "pointer", fontSize: 13, fontFamily: "inherit" }}>×</button>
+                </li>
+              ))}
+            </ul>
+            <button onClick={addIntroReason} style={{ marginTop: 8, padding: "3px 10px", borderRadius: 7, border: `1px dashed ${F.borderStrong}`, background: "transparent", color: F.muted, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>+ reason</button>
+            <div style={{ marginTop: 12, paddingTop: 10, borderTop: `1px solid ${F.border}`, fontSize: 11.5, color: F.muted }}>At this price, margin on OpenApply AI Max would be about <strong style={{ color: inBand(introCalc.marginPct) ? F.green : F.orange }}>{pctf(introCalc.marginPct)}</strong>. That is expected to be low or even negative while we prove the value.</div>
+          </div>
+
+          {/* standard price */}
+          <div style={{ background: F.plum, border: `1px solid ${F.plum}`, borderRadius: 12, padding: "16px 18px" }}>
+            <div style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: "0.07em", color: F.lightYellow, marginBottom: 8 }}>STANDARD PRICE</div>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 8 }}>
+              <span style={{ fontSize: 20, fontWeight: 800, color: F.paper }}>$</span>
+              <input type="number" min="0" value={aiMaxPrice || ""} placeholder="0" onChange={e => setAiMaxPrice(e.target.value)} style={{ ...inp, width: 100, fontSize: 20, fontWeight: 800, padding: "4px 8px", background: F.lightPlum + "44", color: F.paper, borderColor: F.lightPlum }} />
+              <span style={{ fontSize: 12, color: F.lightPink }}>/ year</span>
+            </div>
+            <input value={ov.standardPricing.startLabel} onChange={e => setStandard({ startLabel: e.target.value })} style={{ ...eInp, width: "100%", fontSize: 12.5, color: F.lightPink, borderColor: F.lightPlum, marginBottom: 8 }} />
+            <textarea value={ov.standardPricing.note} onChange={e => setStandard({ note: e.target.value })} rows={2} style={{ ...ta, border: `1px dashed ${F.lightPlum}`, background: "transparent", fontSize: 12.5, color: F.lightPink }} />
+            <div style={{ marginTop: 12, paddingTop: 10, borderTop: `1px solid ${F.lightPlum}`, fontSize: 11.5, color: F.lightPink }}>
+              At this price, margin is about <strong style={{ color: inBand(standardCalc.marginPct) ? F.yellow : F.pink }}>{pctf(standardCalc.marginPct)}</strong>, {inBand(standardCalc.marginPct) ? "inside our goal range." : "outside our goal range, worth a second look."}
+            </div>
+            <div style={{ marginTop: 8, fontSize: 10.5, color: F.lightPink, fontStyle: "italic" }}>This is the same price used on the Finance and Pricing Packages pages. Change it once, here or there, and it updates everywhere.</div>
+          </div>
+        </div>
+
+        {/* fleet gross profit, pulled live from Finance */}
+        <div style={{ background: F.bg, border: `1px solid ${F.border}`, borderTop: `4px solid ${F.green}`, borderRadius: 12, padding: "16px 18px" }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: F.muted2, marginBottom: 6 }}>Fleet gross profit, OpenApply, at the standard price</div>
+          <div style={{ fontSize: 26, fontWeight: 800, color: fleetProfitYr >= 0 ? F.green : F.pink }}>{aiMaxPrice > 0 ? usd0(fleetProfitYr) : "not set"}<span style={{ fontSize: 12, color: F.muted2, fontWeight: 600 }}> / year</span></div>
+          <div style={{ fontSize: 11.5, color: F.muted2, marginTop: 4 }}>{aiMaxPrice > 0 ? `(${usd0(aiMaxPrice)} minus ${usd0(costYr)} cost) times ${finSchools.toLocaleString()} schools on Pro` : "Set the standard price above to see this number"}</div>
+          <div style={{ fontSize: 10.5, color: F.muted2, marginTop: 8, fontStyle: "italic" }}>This is the same tile shown on Finance, OpenApply. The number of schools on Pro is set there; the price is set here or there, it is the same value either way.</div>
+        </div>
+      </div>
+
+      {/* UPSELL EXPERIENCE */}
+      <div id="ov-upsell" style={card}>
+        <div style={sectionTitle}>3. Upsell Experience</div>
+        <p style={{ margin: "-2px 0 16px", fontSize: 12.5, color: F.muted, lineHeight: 1.5, maxWidth: 800 }}>A simple sales structure. Schools reach <strong style={{ color: F.plum }}>{ov.upsell.productName}</strong> one of two ways.</p>
+
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: 6 }}>
+          <div style={{ background: F.bg, border: `1px solid ${F.borderStrong}`, borderRadius: 999, padding: "8px 18px", fontSize: 13, fontWeight: 700, color: F.plum }}>A school on an <span style={{ color: F.pink }}>Essential</span> or <span style={{ color: F.pink }}>Standard</span> plan</div>
+        </div>
+        <div style={{ textAlign: "center", color: F.muted2, fontSize: 18, lineHeight: 1, marginBottom: 6 }}>↓</div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 14, marginBottom: 16 }}>
+          <div style={{ background: F.surface, border: `1px solid ${F.border}`, borderLeft: `4px solid ${F.orange}`, borderRadius: 12, padding: "16px 18px" }}>
+            <div style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: "0.07em", color: F.orange, marginBottom: 6 }}>PATH 1, BUY IT ON ITS OWN</div>
+            <textarea value={ov.upsell.path1Note} onChange={e => setUpsell({ path1Note: e.target.value })} rows={2} style={{ ...ta, border: `1px dashed ${F.border}`, background: "transparent", fontSize: 12.5, color: F.muted }} />
+            <div style={{ marginTop: 12, background: F.bg, border: `1px solid ${F.border}`, borderRadius: 8, padding: "8px 12px", display: "inline-block" }}>
+              <span style={{ fontSize: 11, color: F.muted2, marginRight: 6 }}>Example:</span>
+              <input value={ov.upsell.exampleModuleLabel} onChange={e => setUpsell({ exampleModuleLabel: e.target.value })} style={{ ...eInp, fontSize: 13, fontWeight: 700, color: F.plum }} />
+            </div>
+          </div>
+          <div style={{ background: F.plum, border: `1px solid ${F.plum}`, borderLeft: `4px solid ${F.pink}`, borderRadius: 12, padding: "16px 18px" }}>
+            <div style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: "0.07em", color: F.lightYellow, marginBottom: 6 }}>PATH 2, UPGRADE TO PRO</div>
+            <textarea value={ov.upsell.path2Note} onChange={e => setUpsell({ path2Note: e.target.value })} rows={2} style={{ ...ta, border: `1px dashed ${F.lightPlum}`, background: "transparent", fontSize: 12.5, color: F.lightPink }} />
+          </div>
+        </div>
+
+        <div style={{ background: F.bg, border: `1px solid ${F.border}`, borderRadius: 10, padding: "12px 16px", marginBottom: 20 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: F.muted2, marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.05em" }}>Why we price it this way</div>
+          <textarea value={ov.upsell.strategyNote} onChange={e => setUpsell({ strategyNote: e.target.value })} rows={2} style={{ ...ta, border: `1px dashed ${F.border}`, background: "transparent", fontSize: 12.5, color: F.muted }} />
+        </div>
+
+        {/* package example */}
+        <div style={{ ...sectionTitle, marginTop: 4 }}>A closer look at {pe.product}</div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 14, marginBottom: 14 }}>
+          <div style={{ background: F.surface, border: `1px solid ${F.border}`, borderRadius: 12, padding: "14px 16px" }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: F.muted2, marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.05em" }}>À la carte, on Essential or Standard</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              {pe.alaCarte.map(a => (
+                <div key={a.id} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <input value={a.name} onChange={e => setAla(a.id, { name: e.target.value })} style={{ ...eInp, flex: 1, fontSize: 12.5, color: F.plum, fontWeight: 600 }} />
+                  <span style={{ fontSize: 12, color: F.muted2 }}>$</span>
+                  <input type="number" min="0" value={a.price || ""} placeholder="0" onChange={e => setAla(a.id, { price: parseFloat(e.target.value) || 0 })} style={{ ...inp, width: 70, textAlign: "right", padding: "4px 7px", fontSize: 12 }} />
+                  <button onClick={() => delAla(a.id)} style={{ border: "none", background: "transparent", color: F.muted2, cursor: "pointer", fontSize: 13, fontFamily: "inherit" }}>×</button>
+                </div>
+              ))}
+            </div>
+            <button onClick={addAla} style={{ marginTop: 8, padding: "3px 10px", borderRadius: 7, border: `1px dashed ${F.borderStrong}`, background: "transparent", color: F.muted, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>+ item</button>
+          </div>
+
+          {pe.tiers.map((t, ti) => {
+            const isPro = ti === pe.tiers.length - 1;
+            return (
+              <div key={t.id} style={{ background: isPro ? F.plum : F.surface, border: `1px solid ${isPro ? F.plum : F.border}`, borderTop: isPro ? "none" : `4px solid ${F.borderStrong}`, borderRadius: 12, padding: "14px 16px", position: "relative", overflow: "hidden" }}>
+                {isPro && <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 4, background: F.gradient }} />}
+                <input value={t.name} onChange={e => setTier(t.id, { name: e.target.value })} style={{ ...eInp, width: "100%", fontSize: 14, fontWeight: 800, color: isPro ? F.paper : F.plum, borderColor: isPro ? F.lightPlum : F.border, marginBottom: 6 }} />
+                <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 10 }}>
+                  <span style={{ fontSize: 11, color: isPro ? F.lightPink : F.muted2 }}>avg</span>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: isPro ? F.paper : F.plum }}>$</span>
+                  <input type="number" min="0" value={t.avgPrice || ""} placeholder="0" onChange={e => setTier(t.id, { avgPrice: parseFloat(e.target.value) || 0 })} style={{ ...inp, width: 80, fontSize: 14, fontWeight: 700, padding: "3px 6px", background: isPro ? F.lightPlum + "44" : F.surface, color: isPro ? F.paper : F.plum, borderColor: isPro ? F.lightPlum : F.borderStrong }} />
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                  {t.modules.map((m, i) => {
+                    const isAI = (m || "").toLowerCase().includes("ai max");
+                    return (
+                      <div key={i} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <span style={{ color: isAI ? F.yellow : (isPro ? F.lightPink : F.green), fontWeight: 800, fontSize: 12 }}>✓</span>
+                        <input value={m} onChange={e => setTierModule(t.id, i, e.target.value)} style={{ ...eInp, flex: 1, fontSize: 12, fontWeight: isAI ? 800 : 500, color: isAI ? F.yellow : (isPro ? F.paper : F.muted), borderColor: isPro ? F.lightPlum : F.border }} />
+                        <button onClick={() => delTierModule(t.id, i)} style={{ border: "none", background: "transparent", color: isPro ? F.lightPink : F.muted2, cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>×</button>
+                      </div>
+                    );
+                  })}
+                </div>
+                <button onClick={() => addTierModule(t.id)} style={{ marginTop: 8, padding: "3px 10px", borderRadius: 7, border: `1px dashed ${isPro ? F.lightPlum : F.borderStrong}`, background: "transparent", color: isPro ? F.lightPink : F.muted, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>+ module</button>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* implementation timeline */}
+        <div style={{ ...sectionTitle, marginTop: 8 }}>Implementation timeline</div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
+          {ov.timeline.map((t, i) => (
+            <div key={t.id} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{ background: F.bg, border: `1px solid ${F.border}`, borderRadius: 10, padding: "10px 14px", minWidth: 200 }}>
+                <input value={t.when} onChange={e => setTimelineItem(t.id, { when: e.target.value })} style={{ ...eInp, fontSize: 11, fontWeight: 800, color: F.pink, marginBottom: 4 }} />
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <textarea value={t.label} onChange={e => setTimelineItem(t.id, { label: e.target.value })} rows={2} style={{ ...ta, flex: 1, border: `1px dashed ${F.border}`, background: "transparent", fontSize: 12.5, color: F.plum, fontWeight: 600 }} />
+                  <button onClick={() => delTimelineItem(t.id)} style={{ border: "none", background: "transparent", color: F.muted2, cursor: "pointer", fontSize: 13, fontFamily: "inherit", alignSelf: "flex-start" }}>×</button>
+                </div>
+              </div>
+              {i < ov.timeline.length - 1 && <span style={{ color: F.muted2, fontSize: 18 }}>→</span>}
+            </div>
+          ))}
+          <button onClick={addTimelineItem} style={{ padding: "8px 14px", borderRadius: 10, border: `1px dashed ${F.borderStrong}`, background: "transparent", color: F.muted, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", alignSelf: "center" }}>+ milestone</button>
+        </div>
+      </div>
+
+      {/* UX */}
+      <div id="ov-ux" style={card}>
+        <div style={sectionTitle}>4. UX</div>
+        <p style={{ margin: "-2px 0 12px", fontSize: 12.5, color: F.muted2, fontStyle: "italic" }}>Coming soon. Add notes below as this takes shape.</p>
+        <textarea value={ov.uxNotes} onChange={e => patchOv({ uxNotes: e.target.value })} rows={4} placeholder="Notes on the UX for AI Max: how schools discover it, try it, and buy it." style={ta} />
+      </div>
+
+      {/* GTM */}
+      <div id="ov-gtm" style={card}>
+        <div style={sectionTitle}>5. GTM</div>
+        <p style={{ margin: "-2px 0 12px", fontSize: 12.5, color: F.muted2, fontStyle: "italic" }}>Coming soon. Add notes below as this takes shape.</p>
+        <textarea value={ov.gtmNotes} onChange={e => patchOv({ gtmNotes: e.target.value })} rows={4} placeholder="Notes on go to market: sales enablement, launch communications, who owns what." style={ta} />
+      </div>
     </>
   );
 }
@@ -6915,7 +7314,9 @@ function parseHash() {
   const [pageSlug = "", subSlug = "", deepSlug = ""] = parts;
   const page = SLUG_PAGE[pageSlug] || "product";
   let sub = subSlug;
-  if (SLUG_SUB[page]) sub = SLUG_SUB[page][subSlug] || "";
+  // Mirrors buildHash's fallback: an unmapped slug (e.g. "packages", "overview") passes through
+  // as-is instead of being silently dropped to "" and defaulting to the wrong view.
+  if (SLUG_SUB[page]) sub = SLUG_SUB[page][subSlug] || subSlug;
   return { page, sub, deep: deepSlug };
 }
 function buildHash(page, sub, deep) {
